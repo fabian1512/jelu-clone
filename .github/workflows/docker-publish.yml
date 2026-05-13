@@ -50,7 +50,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/jelu
+          images: ghcr.io/${{ github.repository_owner }}/jelu-clone
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=frontend-refactor,enable=${{ github.ref == 'refs/heads/frontend-refactor' }}
