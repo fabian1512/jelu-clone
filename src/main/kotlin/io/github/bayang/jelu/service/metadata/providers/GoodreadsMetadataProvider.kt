@@ -12,6 +12,9 @@ import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import java.net.URLEncoder
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Optional
 
 private val logger = KotlinLogging.logger {}
@@ -115,6 +118,7 @@ class GoodreadsMetadataProvider(
                 val dto = MetadataDto()
                 parseJsonLd(searchDoc, dto)
                 parseHtmlInto(searchDoc, dto)
+                parseNextData(html, dto)
                 val canonical = searchDoc.selectFirst("link[rel=canonical]")?.attr("href")
                 if (canonical != null) {
                     dto.goodreadsId = extractBookId(canonical)
@@ -298,6 +302,7 @@ class GoodreadsMetadataProvider(
         val dto = MetadataDto()
         parseJsonLd(doc, dto)
         parseHtmlInto(doc, dto)
+        parseNextData(html, dto)
 
         logger.info(
             "goodreads parse: title={}, summary={}, authors={}, isbn13={}",
@@ -426,6 +431,94 @@ class GoodreadsMetadataProvider(
         }
         dto.tags = tags
     }
+
+    private fun parseNextData(
+        html: String,
+        dto: MetadataDto,
+    ) {
+        try {
+            val prefix = "window.__NEXT_DATA__ = "
+            val idx = html.indexOf(prefix)
+            if (idx < 0) return
+            val jsonStart = idx + prefix.length
+            val raw = html.substring(jsonStart)
+
+            var depth = 0
+            var endPos = -1
+            var i = 0
+            while (i < raw.length) {
+                when (raw[i]) {
+                    '{' -> depth++
+                    '}' -> {
+                        depth--
+                        if (depth == 0) {
+                            endPos = i + 1
+                            break
+                        }
+                    }
+                    '"' -> {
+                        i++
+                        while (i < raw.length) {
+                            if (raw[i] == '\\') {
+                                i += 2
+                                continue
+                            }
+                            if (raw[i] == '"') break
+                            i++
+                        }
+                    }
+                }
+                i++
+            }
+            if (endPos <= 0) return
+            val root = objectMapper.readTree(raw.substring(0, endPos))
+
+            val apolloState = root.at("/props/pageProps/apolloState")
+            if (apolloState.isMissingNode || !apolloState.isObject) return
+
+            val fields = apolloState.fieldNames()
+            while (fields.hasNext()) {
+                val value = apolloState.get(fields.next())
+                if (value == null || !value.isObject) continue
+                val type = value.get("__typename")?.asText()
+                if (type == "BookDetails") {
+                    if (dto.publishedDate == null) {
+                        value.get("publicationTime")?.asLong()?.let { epochMs ->
+                            dto.publishedDate =
+                                dateFromEpochMs(epochMs)
+                        }
+                    }
+                    if (dto.publisher == null) {
+                        value.get("publisher")?.asText()?.let { dto.publisher = it }
+                    }
+                    if (dto.isbn13 == null) {
+                        value.get("isbn13")?.asText()?.let { dto.isbn13 = it }
+                    }
+                    if (dto.isbn10 == null) {
+                        value.get("isbn")?.asText()?.let { dto.isbn10 = it }
+                    }
+                    if (dto.pageCount == null) {
+                        value.get("numPages")?.asInt()?.let { dto.pageCount = it }
+                    }
+                }
+                if (type == "WorkDetails" && dto.publishedDate == null) {
+                    value.get("publicationTime")?.asLong()?.let { epochMs ->
+                        dto.publishedDate =
+                            dateFromEpochMs(epochMs)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.debug { "Failed to parse __NEXT_DATA__: ${e.message}" }
+        }
+    }
+
+    private fun dateFromEpochMs(epochMs: Long): String =
+        Instant
+            .ofEpochMilli(epochMs)
+            .atZone(ZoneId.of("UTC"))
+            .toLocalDate()
+            .format(DateTimeFormatter.ISO_LOCAL_DATE)
 
     private fun parseJsonLd(
         doc: Document,
