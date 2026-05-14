@@ -111,7 +111,7 @@ const fetchMetadata = async () => {
   }
 }
 
-const handleSearchResultSelect = (result: Book | Metadata) => {
+const handleSearchResultSelect = async (result: Book | Metadata) => {
   // Prepare metadata to pass to EditBookModal
   let metadataToSend: Metadata
   
@@ -145,6 +145,24 @@ const handleSearchResultSelect = (result: Book | Metadata) => {
   } else {
     // It's Metadata from external provider
     metadataToSend = result as Metadata
+    
+    // Lazy load full metadata if it's a Goodreads result with partial data
+    if (metadataToSend.goodreadsId && !metadataToSend.isbn13 && !metadataToSend.summary) {
+      try {
+        progress.value = true
+        const fullMetadata = await dataService.fetchMetadataWithPlugins({
+          goodreadsId: metadataToSend.goodreadsId,
+          plugins: [{ name: 'goodreads', order: 0 }]
+        })
+        if (fullMetadata && fullMetadata.title) {
+          metadataToSend = fullMetadata
+        }
+      } catch (e) {
+        console.error('Failed to lazy load Goodreads metadata', e)
+      } finally {
+        progress.value = false
+      }
+    }
   }
   
   // Check if there's an existing book (was passed as prop)
