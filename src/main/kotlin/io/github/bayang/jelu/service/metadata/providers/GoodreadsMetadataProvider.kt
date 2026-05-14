@@ -82,7 +82,7 @@ class GoodreadsMetadataProvider(
         }
 
         return try {
-            val searchUrl = "$baseUrl/search?q=${URLEncoder.encode(query, "UTF-8")}"
+            val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}"
             val html = fetchHtmlWithCookie(searchUrl, cookie) ?: return emptyList()
             val searchDoc = Jsoup.parse(html)
 
@@ -189,7 +189,7 @@ class GoodreadsMetadataProvider(
     ): String? {
         // 1: search URL
         try {
-            val searchUrl = "$baseUrl/search?q=$isbn"
+            val searchUrl = "$baseUrl/search/index.html?q=$isbn"
             val html = fetchHtmlWithCookie(searchUrl, cookie)
             if (html != null) {
                 val doc = Jsoup.parse(html)
