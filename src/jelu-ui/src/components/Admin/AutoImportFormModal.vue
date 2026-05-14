@@ -146,8 +146,13 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
     // It's Metadata from external provider
     metadataToSend = result as Metadata
     
-    // Lazy load full metadata if it's a Goodreads result
-    if (metadataToSend.goodreadsId) {
+    // Check if Goodreads is activated in settings
+    const goodreadsActive = serverSettings.value?.metadataPlugins?.some(
+      p => p.name === 'goodreads'
+    )
+    
+    // Lazy load full metadata from Goodreads
+    if (goodreadsActive && metadataToSend.goodreadsId) {
       try {
         progress.value = true
         const fullMetadata = await dataService.fetchMetadataWithPlugins({
@@ -155,10 +160,50 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
           plugins: [{ name: 'goodreads', order: 0 }]
         })
         if (fullMetadata && fullMetadata.title) {
-          metadataToSend = fullMetadata
+          // Validate: check that lazy loaded title matches the search result
+          const origTitle = metadataToSend.title?.toLowerCase()?.trim()
+          const fetchedTitle = fullMetadata.title?.toLowerCase()?.trim()
+          const titlesMatch = origTitle && fetchedTitle && (
+            origTitle.includes(fetchedTitle) || fetchedTitle.includes(origTitle)
+          )
+          if (titlesMatch) {
+            metadataToSend = fullMetadata
+          } else {
+            console.warn('Goodreads edition mismatch, keeping original',
+              { expected: metadataToSend.title, got: fullMetadata.title })
+          }
         }
       } catch (e) {
         console.error('Failed to lazy load Goodreads metadata', e)
+      } finally {
+        progress.value = false
+      }
+    }
+    
+    // Fallback: try to fetch via ISBN if search result has no ISBN
+    if (!metadataToSend.isbn13 && !metadataToSend.isbn10 && metadataToSend.title) {
+      try {
+        const isbn = metadataToSend.isbn13 || metadataToSend.isbn10
+        if (!isbn) {
+          // Build plugins list from active providers (skip Goodreads if already tried)
+          const activePlugins = serverSettings.value?.metadataPlugins
+            ?.filter(p => p.isEnabled && p.name !== 'goodreads')
+            ?.map(p => ({ name: p.name, order: p.order })) || []
+          if (activePlugins.length > 0) {
+            progress.value = true
+            const fallbackMetadata = await dataService.fetchMetadataWithPlugins({
+              title: metadataToSend.title,
+              authors: metadataToSend.authors?.join(', '),
+              plugins: activePlugins
+            })
+            if (fallbackMetadata && fallbackMetadata.title) {
+              // Merge: keep existing fields, fill in missing
+              metadataToSend = { ...metadataToSend, ...fallbackMetadata }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch fallback metadata', e)
       } finally {
         progress.value = false
       }

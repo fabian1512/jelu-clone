@@ -166,14 +166,17 @@ class InventaireIoMetadataProvider(
             }
         }
 
-    private fun searchByTitleMulti(title: String): List<MetadataDto> =
+    private fun searchByTitleMulti(
+        title: String,
+        authors: String? = null,
+    ): List<MetadataDto> =
         restClient
             .get()
             .uri(inventaireApi) { uriBuilder ->
                 uriBuilder
                     .path("search")
                     .queryParam("types", "works")
-                    .queryParam("search", title)
+                    .queryParam("search", if (!authors.isNullOrBlank()) "$title $authors" else title)
                     .build()
             }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
             .exchange { clientRequest, clientResponse ->
@@ -196,7 +199,7 @@ class InventaireIoMetadataProvider(
             return emptyList()
         }
         if (!metadataRequestDto.title.isNullOrBlank()) {
-            return searchByTitleMulti(metadataRequestDto.title)
+            return searchByTitleMulti(metadataRequestDto.title, metadataRequestDto.authors)
         } else if (!metadataRequestDto.authors.isNullOrBlank()) {
             return searchByTitleMulti(metadataRequestDto.authors)
         }

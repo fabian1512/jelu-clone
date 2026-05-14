@@ -69,6 +69,7 @@
         "delete_this_book": "Dieses Buch löschen?",
         "book_was_deleted": "Buch wurde gelöscht",
         "error_deleting": "Fehler beim Löschen von {msg}",
+        "incomplete_metadata": "Einige Felder (ISBN, Verlag) konnten nicht automatisch ermittelt werden",
         "edit": "Bearbeiten",
         "event": "Ereignis",
         "edit_author": "Autor:in bearbeiten",

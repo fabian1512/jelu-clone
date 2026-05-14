@@ -24,7 +24,7 @@ class FetchMetadataService(
         pluginsToUse.sortWith(PluginInfoComparator)
         logger.trace { "plugins to use : $pluginsToUse" }
         logger.info { "plugins selected: ${pluginsToUse.joinToString { "${it.name}(${it.order})" }}" }
-        val hasExactIsbn = !metadataRequestDto.isbn.isNullOrBlank()
+        val hasExactIdentifier = !metadataRequestDto.isbn.isNullOrBlank() || !metadataRequestDto.goodreadsId.isNullOrBlank()
         val merged = MetadataDto()
         for (plugin in pluginsToUse) {
             logger.trace { "fetching provider for plugin ${plugin.name} with order ${plugin.order} " }
@@ -47,7 +47,7 @@ class FetchMetadataService(
                     }
                 logger.info { "provider ${plugin.name}: $resultStatus (${elapsed}ms)" }
                 if (res != null && res.isPresent) {
-                    if (hasExactIsbn) {
+                    if (hasExactIdentifier) {
                         mergeInto(merged, res.get())
                     } else {
                         return res.get()
@@ -90,11 +90,14 @@ class FetchMetadataService(
             }
         }
 
-        // Deduplicate by title+authors
+        // Deduplicate by title+authors+isbn
         val seen = mutableSetOf<String>()
         val deduplicated =
             allResults.filter { dto ->
-                val key = "${dto.title?.lowercase()}_${dto.authors?.joinToString()?.lowercase()}"
+                val key =
+                    "${dto.title?.lowercase()?.trim()}_${
+                        dto.authors?.joinToString { normalizeAuthor(it) }
+                    }_${dto.isbn13 ?: dto.isbn10 ?: ""}"
                 if (seen.contains(key)) {
                     false
                 } else {
@@ -106,6 +109,13 @@ class FetchMetadataService(
         logger.info { "searchMetadata done: total ${deduplicated.size} results after deduplication" }
         return deduplicated
     }
+
+    private fun normalizeAuthor(name: String): String =
+        name
+            .trim()
+            .lowercase()
+            .replace(",", "")
+            .replace("  ", " ")
 
     private fun mergeInto(
         acc: MetadataDto,
