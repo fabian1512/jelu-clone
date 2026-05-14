@@ -437,41 +437,13 @@ class GoodreadsMetadataProvider(
         dto: MetadataDto,
     ) {
         try {
-            val prefix = "window.__NEXT_DATA__ = "
-            val idx = html.indexOf(prefix)
-            if (idx < 0) return
-            val jsonStart = idx + prefix.length
-            val raw = html.substring(jsonStart)
-
-            var depth = 0
-            var endPos = -1
-            var i = 0
-            while (i < raw.length) {
-                when (raw[i]) {
-                    '{' -> depth++
-                    '}' -> {
-                        depth--
-                        if (depth == 0) {
-                            endPos = i + 1
-                            break
-                        }
-                    }
-                    '"' -> {
-                        i++
-                        while (i < raw.length) {
-                            if (raw[i] == '\\') {
-                                i += 2
-                                continue
-                            }
-                            if (raw[i] == '"') break
-                            i++
-                        }
-                    }
-                }
-                i++
-            }
-            if (endPos <= 0) return
-            val root = objectMapper.readTree(raw.substring(0, endPos))
+            val tag = "<script id=\"__NEXT_DATA__\" type=\"application/json\">"
+            val tagIdx = html.indexOf(tag)
+            if (tagIdx < 0) return
+            val jsonStart = tagIdx + tag.length
+            val jsonEnd = html.indexOf("</script>", jsonStart)
+            if (jsonEnd < 0) return
+            val root = objectMapper.readTree(html.substring(jsonStart, jsonEnd))
 
             val apolloState = root.at("/props/pageProps/apolloState")
             if (apolloState.isMissingNode || !apolloState.isObject) return
@@ -480,32 +452,26 @@ class GoodreadsMetadataProvider(
             while (fields.hasNext()) {
                 val value = apolloState.get(fields.next())
                 if (value == null || !value.isObject) continue
-                val type = value.get("__typename")?.asText()
-                if (type == "BookDetails") {
-                    if (dto.publishedDate == null) {
-                        value.get("publicationTime")?.asLong()?.let { epochMs ->
-                            dto.publishedDate =
-                                dateFromEpochMs(epochMs)
-                        }
-                    }
-                    if (dto.publisher == null) {
-                        value.get("publisher")?.asText()?.let { dto.publisher = it }
-                    }
-                    if (dto.isbn13 == null) {
-                        value.get("isbn13")?.asText()?.let { dto.isbn13 = it }
-                    }
-                    if (dto.isbn10 == null) {
-                        value.get("isbn")?.asText()?.let { dto.isbn10 = it }
-                    }
-                    if (dto.pageCount == null) {
-                        value.get("numPages")?.asInt()?.let { dto.pageCount = it }
+                val details = value.get("details")
+                if (details == null || !details.isObject) continue
+                if (details.get("__typename")?.asText() != "BookDetails") continue
+
+                if (dto.publishedDate == null) {
+                    details.get("publicationTime")?.asLong()?.let { epochMs ->
+                        dto.publishedDate = dateFromEpochMs(epochMs)
                     }
                 }
-                if (type == "WorkDetails" && dto.publishedDate == null) {
-                    value.get("publicationTime")?.asLong()?.let { epochMs ->
-                        dto.publishedDate =
-                            dateFromEpochMs(epochMs)
-                    }
+                if (dto.publisher == null) {
+                    details.get("publisher")?.asText()?.let { dto.publisher = it }
+                }
+                if (dto.isbn13 == null) {
+                    details.get("isbn13")?.asText()?.let { dto.isbn13 = it }
+                }
+                if (dto.isbn10 == null) {
+                    details.get("isbn")?.asText()?.let { dto.isbn10 = it }
+                }
+                if (dto.pageCount == null) {
+                    details.get("numPages")?.asInt()?.let { dto.pageCount = it }
                 }
             }
         } catch (e: Exception) {
