@@ -1,45 +1,113 @@
 package io.github.bayang.jelu.service.metadata.providers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.bayang.jelu.config.JeluProperties
+import io.github.bayang.jelu.dao.MetadataProviderSettingRepository
 import io.github.bayang.jelu.dto.MetadataDto
 import io.github.bayang.jelu.dto.MetadataRequestDto
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.annotation.Resource
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
 import java.net.URLEncoder
 import java.util.Optional
 
+private val logger = KotlinLogging.logger {}
+
 @Service
 class GoodreadsMetadataProvider(
+    @Resource(name = "springRestClient") private val restClient: RestClient,
     private val objectMapper: ObjectMapper,
+    private val properties: JeluProperties,
+    private val settingsRepository: MetadataProviderSettingRepository,
 ) : IMetaDataProvider {
-    private val logger = LoggerFactory.getLogger(GoodreadsMetadataProvider::class.java)
+    private val name = "goodreads"
     private val baseUrl = "https://www.goodreads.com"
 
-    override fun name(): String = "goodreads"
+    override fun name(): String = name
+
+    private fun getGoodreadsCookie(): String? {
+        val dbSetting = settingsRepository.findAll().find { it.name.equals(name, true) }
+        if (dbSetting != null && !dbSetting.config.isNullOrBlank()) {
+            return dbSetting.config
+        }
+        return properties.metadataProviders?.find { it.isEnabled && it.name == name }?.config
+    }
+
+    private fun hasValidCookie(): Boolean {
+        val cookie = getGoodreadsCookie()
+        if (cookie.isNullOrBlank()) {
+            logger.debug("No Goodreads cookie configured")
+            return false
+        }
+        return true
+    }
+
+    private fun verifySession(): Boolean {
+        val cookie = getGoodreadsCookie() ?: return false
+        return try {
+            val response = restClient.get()
+                .uri("$baseUrl/user/show/1")
+                .header("Cookie", cookie)
+                .header("User-Agent", userAgent)
+                .retrieve()
+                .body(String::class.java)
+            response?.contains("Edit profile") == true || response?.contains("Edit my profile") == true
+        } catch (e: Exception) {
+            logger.warn("Goodreads session verification failed: ${e.message}")
+            false
+        }
+    }
 
     override fun searchMetadata(
         metadataRequestDto: MetadataRequestDto,
         config: Map<String, String>,
     ): List<MetadataDto> {
+        val cookie = getGoodreadsCookie()
+
+        if (cookie.isNullOrBlank()) {
+            logger.warn("Goodreads: No cookie configured. Search skipped.")
+            return emptyList()
+        }
+
         val title = metadataRequestDto.title ?: ""
         val authors = metadataRequestDto.authors ?: ""
         val query = "$title $authors".trim()
         if (query.isBlank()) {
             return emptyList()
         }
+
         return try {
             val searchUrl = "$baseUrl/search?q=${URLEncoder.encode(query, "UTF-8")}"
-            val searchDoc = fetchDocument(searchUrl) ?: return emptyList()
-            val bookLinks =
-                searchDoc
-                    .select("a.bookTitle")
-                    .map { it.attr("href") }
-                    .filter { it.isNotBlank() }
-                    .take(5)
+            val html = fetchHtmlWithCookie(searchUrl, cookie) ?: return emptyList()
+            val searchDoc = Jsoup.parse(html)
+
+            // Improved selectors based on katalog project
+            val bookLinks = mutableListOf<String>()
+
+            // Try multiple selectors
+            val links = searchDoc.select("td.field.title a.bookTitle")
+            if (links.isNotEmpty()) {
+                bookLinks.addAll(links.map { it.attr("href") }.filter { it.isNotBlank() }.take(5))
+            }
+
+            // Fallback: try alternative selectors
+            if (bookLinks.isEmpty()) {
+                searchDoc.select("a.bookTitle[href*=/book/show/]").take(5).forEach {
+                    val href = it.attr("href")
+                    if (href.isNotBlank()) bookLinks.add(href)
+                }
+            }
+
+            if (bookLinks.isEmpty()) {
+                logger.warn("Goodreads search for '$query': No book links found. HTML sample: ${html.take(500)}")
+            }
+
             bookLinks.mapNotNull { link ->
-                parseBookPage("$baseUrl$link").orElse(null)
+                val fullUrl = if (link.startsWith("http")) link else "$baseUrl$link"
+                parseBookPage(fullUrl, cookie).orElse(null)
             }
         } catch (e: Exception) {
             logger.warn("Goodreads search failed for query '$query': ${e.message}")
@@ -51,6 +119,12 @@ class GoodreadsMetadataProvider(
         metadataRequestDto: MetadataRequestDto,
         config: Map<String, String>,
     ): Optional<MetadataDto> {
+        val cookie = getGoodreadsCookie()
+        if (cookie.isNullOrBlank()) {
+            logger.warn("Goodreads: No cookie configured. ISBN lookup skipped.")
+            return Optional.empty()
+        }
+
         val isbn =
             metadataRequestDto.isbn
                 ?.replace("-", "", true)
@@ -58,15 +132,31 @@ class GoodreadsMetadataProvider(
         if (isbn.isNullOrBlank()) {
             return Optional.empty()
         }
-        val bookUrl = searchByIsbn(isbn)
+        val bookUrl = searchByIsbn(isbn, cookie)
         if (bookUrl == null) {
             logger.debug("No Goodreads page found for isbn $isbn")
             return Optional.empty()
         }
-        return parseBookPage(bookUrl)
+        return parseBookPage(bookUrl, cookie)
     }
 
-    private fun searchByIsbn(isbn: String): String? {
+    private fun fetchHtmlWithCookie(url: String, cookie: String): String? {
+        return try {
+            restClient.get()
+                .uri(url)
+                .header("Cookie", cookie)
+                .header("User-Agent", userAgent)
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "en-US,en;q=0.9")
+                .retrieve()
+                .body(String::class.java)
+        } catch (e: Exception) {
+            logger.warn("Failed to fetch $url: ${e.message}")
+            null
+        }
+    }
+
+    private fun searchByIsbn(isbn: String, cookie: String): String? {
         // try original ISBN first
         val result = trySearchIsbn(isbn)
         if (result != null) return result
@@ -85,16 +175,18 @@ class GoodreadsMetadataProvider(
         return null
     }
 
-    private fun trySearchIsbn(isbn: String): String? {
+    private fun trySearchIsbn(isbn: String, cookie: String): String? {
         // 1: search URL
         try {
             val searchUrl = "$baseUrl/search?q=$isbn"
-            val searchDoc = fetchDocument(searchUrl)
-            if (searchDoc != null) {
-                val link = searchDoc.selectFirst("a.bookTitle")?.attr("href")
+            val html = fetchHtmlWithCookie(searchUrl, cookie)
+            if (html != null) {
+                val doc = Jsoup.parse(html)
+                val link = doc.selectFirst("td.field.title a.bookTitle")?.attr("href")
                 if (link != null) return "$baseUrl$link"
-                // single result page directly shows book data
-                if (searchDoc.selectFirst("h1[data-testid=bookTitle]") != null) {
+                val altLink = doc.selectFirst("a.bookTitle")?.attr("href")
+                if (altLink != null) return "$baseUrl$altLink"
+                if (doc.selectFirst("h1[data-testid=bookTitle]") != null) {
                     return searchUrl
                 }
             }
@@ -104,9 +196,12 @@ class GoodreadsMetadataProvider(
         // 2: fallback to direct URL
         try {
             val directUrl = "$baseUrl/book/isbn/$isbn"
-            val doc = fetchDocument(directUrl)
-            if (doc != null && doc.selectFirst("h1[data-testid=bookTitle]") != null) {
-                return directUrl
+            val html = fetchHtmlWithCookie(directUrl, cookie)
+            if (html != null) {
+                val doc = Jsoup.parse(html)
+                if (doc.selectFirst("h1[data-testid=bookTitle]") != null || doc.selectFirst("h1#bookTitle") != null) {
+                    return directUrl
+                }
             }
         } catch (_: Exception) {
         }
@@ -137,8 +232,9 @@ class GoodreadsMetadataProvider(
         return base + if (check == 10) "X" else check.toString()
     }
 
-    private fun parseBookPage(url: String): Optional<MetadataDto> {
-        val doc = fetchDocument(url) ?: return Optional.empty()
+    private fun parseBookPage(url: String, cookie: String): Optional<MetadataDto> {
+        val html = fetchHtmlWithCookie(url, cookie) ?: return Optional.empty()
+        val doc = Jsoup.parse(html)
         val dto = MetadataDto()
 
         // 1. Try JSON-LD first (Goodreads Next.js pages have this)

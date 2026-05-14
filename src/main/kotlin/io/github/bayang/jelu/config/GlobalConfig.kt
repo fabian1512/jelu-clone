@@ -42,7 +42,7 @@ class GlobalConfig {
     fun springRestClient(): RestClient {
         val factory = SimpleClientHttpRequestFactory()
         factory.setConnectTimeout(10_000)
-        factory.setReadTimeout(15_000)
+        factory.setReadTimeout(30_000)
         return RestClient.builder().requestFactory(factory).build()
     }
 

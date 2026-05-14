@@ -124,6 +124,17 @@ class PluginInfoHolder(
             ?.apiKey
     }
 
+    fun getProviderConfig(name: String): String? {
+        val dbSetting =
+            settingsRepository.findAll().find { it.name.equals(name, true) }
+        if (dbSetting != null && !dbSetting.config.isNullOrBlank()) {
+            return dbSetting.config
+        }
+        return properties.metadataProviders
+            ?.find { it.isEnabled && it.name.equals(name, true) }
+            ?.config
+    }
+
     fun calibreEnabled(): Boolean {
         if (calibreComputed) return calibreEnabled
         calibreEnabled =
