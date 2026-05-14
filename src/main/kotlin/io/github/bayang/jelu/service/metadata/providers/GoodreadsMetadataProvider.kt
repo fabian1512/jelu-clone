@@ -119,10 +119,6 @@ class GoodreadsMetadataProvider(
                 parseJsonLd(searchDoc, dto)
                 parseHtmlInto(searchDoc, dto)
                 parseNextData(html, dto)
-                val canonical = searchDoc.selectFirst("link[rel=canonical]")?.attr("href")
-                if (canonical != null) {
-                    dto.goodreadsId = extractBookId(canonical)
-                }
                 if (!dto.title.isNullOrBlank()) {
                     results.add(dto)
                 }
