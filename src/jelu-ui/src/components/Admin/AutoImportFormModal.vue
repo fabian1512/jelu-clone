@@ -146,8 +146,8 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
     // It's Metadata from external provider
     metadataToSend = result as Metadata
     
-    // Lazy load full metadata if it's a Goodreads result with partial data
-    if (metadataToSend.goodreadsId && !metadataToSend.isbn13 && !metadataToSend.summary) {
+    // Lazy load full metadata if it's a Goodreads result
+    if (metadataToSend.goodreadsId) {
       try {
         progress.value = true
         const fullMetadata = await dataService.fetchMetadataWithPlugins({
