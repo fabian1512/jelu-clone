@@ -84,6 +84,7 @@ onMounted(() => {
             <th class="w-20">{{ t('metadata.enabled') }}</th>
             <th class="w-24">{{ t('metadata.order') }}</th>
             <th class="w-48">{{ t('metadata.api_key') }}</th>
+            <th class="w-64">{{ t('metadata.config') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -116,6 +117,16 @@ onMounted(() => {
                 type="text"
                 class="input input-bordered input-sm w-full"
                 :placeholder="t('metadata.api_key')"
+              >
+              <span v-else class="text-base-content/60">&mdash;</span>
+            </td>
+            <td>
+              <input
+                v-if="provider.name === 'goodreads'"
+                v-model="provider.config"
+                type="password"
+                class="input input-bordered input-sm w-full"
+                :placeholder="t('metadata.goodreads_cookie_placeholder')"
               >
               <span v-else class="text-base-content/60">&mdash;</span>
             </td>
