@@ -48,12 +48,14 @@ class GoodreadsMetadataProvider(
     private fun verifySession(): Boolean {
         val cookie = getGoodreadsCookie() ?: return false
         return try {
-            val response = restClient.get()
-                .uri("$baseUrl/user/show/1")
-                .header("Cookie", cookie)
-                .header("User-Agent", userAgent)
-                .retrieve()
-                .body(String::class.java)
+            val response =
+                restClient
+                    .get()
+                    .uri("$baseUrl/user/show/1")
+                    .header("Cookie", cookie)
+                    .header("User-Agent", userAgent)
+                    .retrieve()
+                    .body(String::class.java)
             response?.contains("Edit profile") == true || response?.contains("Edit my profile") == true
         } catch (e: Exception) {
             logger.warn("Goodreads session verification failed: ${e.message}")
@@ -110,7 +112,7 @@ class GoodreadsMetadataProvider(
                 parseBookPage(fullUrl, cookie).orElse(null)
             }
         } catch (e: Exception) {
-            logger.warn("Goodreads search failed for query '$query': ${e.message}")
+            logger.warn { "Goodreads search failed for query '$query': ${e.message}" }
             emptyList()
         }
     }
@@ -140,9 +142,13 @@ class GoodreadsMetadataProvider(
         return parseBookPage(bookUrl, cookie)
     }
 
-    private fun fetchHtmlWithCookie(url: String, cookie: String): String? {
-        return try {
-            restClient.get()
+    private fun fetchHtmlWithCookie(
+        url: String,
+        cookie: String,
+    ): String? =
+        try {
+            restClient
+                .get()
                 .uri(url)
                 .header("Cookie", cookie)
                 .header("User-Agent", userAgent)
@@ -151,14 +157,16 @@ class GoodreadsMetadataProvider(
                 .retrieve()
                 .body(String::class.java)
         } catch (e: Exception) {
-            logger.warn("Failed to fetch $url: ${e.message}")
+            logger.warn { "Failed to fetch $url: ${e.message}" }
             null
         }
-    }
 
-    private fun searchByIsbn(isbn: String, cookie: String): String? {
+    private fun searchByIsbn(
+        isbn: String,
+        cookie: String,
+    ): String? {
         // try original ISBN first
-        val result = trySearchIsbn(isbn)
+        val result = trySearchIsbn(isbn, cookie)
         if (result != null) return result
 
         // if that fails, try converting between ISBN-10 and ISBN-13
@@ -170,12 +178,15 @@ class GoodreadsMetadataProvider(
             }
         if (converted != null && converted != isbn) {
             logger.debug("ISBN $isbn not found, trying converted $converted")
-            return trySearchIsbn(converted)
+            return trySearchIsbn(converted, cookie)
         }
         return null
     }
 
-    private fun trySearchIsbn(isbn: String, cookie: String): String? {
+    private fun trySearchIsbn(
+        isbn: String,
+        cookie: String,
+    ): String? {
         // 1: search URL
         try {
             val searchUrl = "$baseUrl/search?q=$isbn"
@@ -221,7 +232,9 @@ class GoodreadsMetadataProvider(
     }
 
     private fun isbn13to10(isbn13: String): String? {
-        if (isbn13.length != 13 || !isbn13.startsWith("978")) return null
+        if (isbn13.length != 13 || !isbn13.startsWith("978")) {
+            return null
+        }
         val base = isbn13.substring(3, 12)
         var sum = 0
         for (i in base.indices) {
@@ -232,7 +245,10 @@ class GoodreadsMetadataProvider(
         return base + if (check == 10) "X" else check.toString()
     }
 
-    private fun parseBookPage(url: String, cookie: String): Optional<MetadataDto> {
+    private fun parseBookPage(
+        url: String,
+        cookie: String,
+    ): Optional<MetadataDto> {
         val html = fetchHtmlWithCookie(url, cookie) ?: return Optional.empty()
         val doc = Jsoup.parse(html)
         val dto = MetadataDto()
