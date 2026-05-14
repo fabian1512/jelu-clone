@@ -90,9 +90,15 @@ class GoodreadsMetadataProvider(
     ): List<MetadataDto> {
         val cookie = getGoodreadsCookie()
 
-        val title = metadataRequestDto.title ?: ""
-        val authors = metadataRequestDto.authors ?: ""
-        val query = "$title $authors".trim()
+        val query =
+            if (!metadataRequestDto.isbn.isNullOrBlank()) {
+                metadataRequestDto.isbn
+            } else {
+                val title = metadataRequestDto.title ?: ""
+                val authors = metadataRequestDto.authors ?: ""
+                "$title $authors"
+            }.trim()
+
         if (query.isBlank()) {
             return emptyList()
         }
@@ -103,34 +109,60 @@ class GoodreadsMetadataProvider(
             val searchDoc = Jsoup.parse(html)
 
             val results = mutableListOf<MetadataDto>()
-            val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
 
-            for (row in bookRows.take(20)) {
+            // Check if we were redirected to a book detail page directly (e.g. ISBN search)
+            if (searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle") != null) {
                 val dto = MetadataDto()
-                dto.title = row.text().trim()
-
-                val href = row.attr("href")
-                dto.goodreadsId = extractBookId(href)
-
-                val parentTableRow = row.closest("tr")
-                if (parentTableRow != null) {
-                    val authorEl = parentTableRow.selectFirst("a.authorName span[itemprop=name]")
-                    if (authorEl != null) {
-                        dto.authors.add(authorEl.text().trim())
-                    }
-
-                    val coverEl = parentTableRow.selectFirst("img.bookCover")
-                    if (coverEl != null) {
-                        val src = coverEl.attr("src")
-                        dto.image =
-                            src
-                                .replace("._SY75_.jpg", "._SY300_.jpg")
-                                .replace("._SY75_", "._SY300_")
+                parseJsonLd(searchDoc, dto)
+                // Fallback for title if JSON-LD fails
+                if (dto.title.isNullOrBlank()) {
+                    dto.title = searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle")?.text()?.trim()
+                }
+                // Authors fallback
+                if (dto.authors.isEmpty()) {
+                    searchDoc.select("span[data-testid=authorname] a, a.authorName").forEach {
+                        dto.authors.add(it.text().trim())
                     }
                 }
-
+                // Try to get goodreadsId from canonical link
+                val canonical = searchDoc.selectFirst("link[rel=canonical]")?.attr("href")
+                if (canonical != null) {
+                    dto.goodreadsId = extractBookId(canonical)
+                }
                 if (!dto.title.isNullOrBlank()) {
                     results.add(dto)
+                }
+            } else {
+                // Regular search results list
+                val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
+
+                for (row in bookRows.take(20)) {
+                    val dto = MetadataDto()
+                    dto.title = row.text().trim()
+
+                    val href = row.attr("href")
+                    dto.goodreadsId = extractBookId(href)
+
+                    val parentTableRow = row.closest("tr")
+                    if (parentTableRow != null) {
+                        val authorEl = parentTableRow.selectFirst("a.authorName span[itemprop=name]")
+                        if (authorEl != null) {
+                            dto.authors.add(authorEl.text().trim())
+                        }
+
+                        val coverEl = parentTableRow.selectFirst("img.bookCover")
+                        if (coverEl != null) {
+                            val src = coverEl.attr("src")
+                            dto.image =
+                                src
+                                    .replace("._SY75_.jpg", "._SY300_.jpg")
+                                    .replace("._SY75_", "._SY300_")
+                        }
+                    }
+
+                    if (!dto.title.isNullOrBlank()) {
+                        results.add(dto)
+                    }
                 }
             }
 
