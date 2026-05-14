@@ -114,17 +114,7 @@ class GoodreadsMetadataProvider(
             if (searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle") != null) {
                 val dto = MetadataDto()
                 parseJsonLd(searchDoc, dto)
-                // Fallback for title if JSON-LD fails
-                if (dto.title.isNullOrBlank()) {
-                    dto.title = searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle")?.text()?.trim()
-                }
-                // Authors fallback
-                if (dto.authors.isEmpty()) {
-                    searchDoc.select("span[data-testid=authorname] a, a.authorName").forEach {
-                        dto.authors.add(it.text().trim())
-                    }
-                }
-                // Try to get goodreadsId from canonical link
+                parseHtmlInto(searchDoc, dto)
                 val canonical = searchDoc.selectFirst("link[rel=canonical]")?.attr("href")
                 if (canonical != null) {
                     dto.goodreadsId = extractBookId(canonical)
@@ -306,12 +296,28 @@ class GoodreadsMetadataProvider(
         val html = fetchHtml(url, cookie) ?: return Optional.empty()
         val doc = Jsoup.parse(html)
         val dto = MetadataDto()
-
-        // 1. Try JSON-LD first (Goodreads Next.js pages have this)
         parseJsonLd(doc, dto)
+        parseHtmlInto(doc, dto)
 
-        // 2. Fallback: HTML selectors for fields not covered by JSON-LD
+        logger.info(
+            "goodreads parse: title={}, summary={}, authors={}, isbn13={}",
+            dto.title != null,
+            dto.summary != null,
+            dto.authors.size,
+            dto.isbn13 != null,
+        )
 
+        if (dto.title.isNullOrBlank()) {
+            logger.debug("Failed to parse Goodreads page $url – no title found")
+            return Optional.empty()
+        }
+        return Optional.of(dto)
+    }
+
+    private fun parseHtmlInto(
+        doc: Document,
+        dto: MetadataDto,
+    ) {
         // title
         if (dto.title == null) {
             doc.selectFirst("h1[data-testid=bookTitle]")?.text()?.let { dto.title = it }
@@ -337,7 +343,7 @@ class GoodreadsMetadataProvider(
             doc.select("a.ContributorLink")?.eachText()?.let { authors -> dto.authors.addAll(authors.map { it.trim() }) }
         }
 
-        // summary (not in JSON-LD, use HTML selectors)
+        // summary
         doc.selectFirst("div[data-testid=description] span[role=none]")?.text()?.let {
             dto.summary = it.trim()
         }
@@ -412,27 +418,13 @@ class GoodreadsMetadataProvider(
             }
         }
 
-        // tags (genres) — not in JSON-LD
+        // tags (genres)
         val tags = mutableSetOf<String>()
         doc.select("a[data-testid=bookGenre]").forEach { tags.add(it.text().trim()) }
         if (tags.isEmpty()) {
             doc.select("a.bookPageGenreLink[href*=/genres/]").forEach { tags.add(it.text().trim()) }
         }
         dto.tags = tags
-
-        logger.info(
-            "goodreads parse: title={}, summary={}, authors={}, isbn13={}",
-            dto.title != null,
-            dto.summary != null,
-            dto.authors.size,
-            dto.isbn13 != null,
-        )
-
-        if (dto.title.isNullOrBlank()) {
-            logger.debug("Failed to parse Goodreads page $url – no title found")
-            return Optional.empty()
-        }
-        return Optional.of(dto)
     }
 
     private fun parseJsonLd(
