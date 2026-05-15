@@ -230,6 +230,9 @@ class OpenLibraryMetadataProvider(
         if (dto.publishedDate == null) dto.publishedDate = workData.publishedDate
         if (dto.image == null) dto.image = workData.image
         if (dto.language == null) dto.language = workData.language
+        if (dto.isbn10 == null) dto.isbn10 = workData.isbn10
+        if (dto.isbn13 == null) dto.isbn13 = workData.isbn13
+        if (dto.openlibraryId == null) dto.openlibraryId = workData.openlibraryId
         dto.tags.addAll(workData.tags)
     }
 
@@ -246,9 +249,19 @@ class OpenLibraryMetadataProvider(
                 else -> null
             }
 
-        val isbn10 = node.get("isbn_10")?.asText()
+        val isbn10 =
+            if (node.get("isbn_10") != null && node.get("isbn_10").isArray) {
+                node.get("isbn_10")?.get(0)?.asText()
+            } else {
+                node.get("isbn_10")?.asText()
+            }
         if (isbn10 != null) dto.isbn10 = isbn10
-        val isbn13 = node.get("isbn_13")?.asText()
+        val isbn13 =
+            if (node.get("isbn_13") != null && node.get("isbn_13").isArray) {
+                node.get("isbn_13")?.get(0)?.asText()
+            } else {
+                node.get("isbn_13")?.asText()
+            }
         if (isbn13 != null) dto.isbn13 = isbn13
 
         val publishers = node.get("publishers")
