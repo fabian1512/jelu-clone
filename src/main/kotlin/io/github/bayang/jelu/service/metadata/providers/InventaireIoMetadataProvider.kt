@@ -166,6 +166,32 @@ class InventaireIoMetadataProvider(
             }
         }
 
+    private fun parseSearchResultsEnriched(node: JsonNode): List<MetadataDto> {
+        val results = mutableListOf<MetadataDto>()
+        for (result in node) {
+            try {
+                val parsingDto = parseSearchResult(result)
+                if (parsingDto.metadataDto.title.isNullOrBlank()) continue
+                var p: ParsingDto? = parsingDto
+                val initialClaim = p?.editionClaim
+                p = enrichWithEditionResult(p)
+                // If the edition claim changed (e.g. work→edition via Wikidata), reload edition data
+                if (p?.editionClaim != null && p.editionClaim != initialClaim) {
+                    p = enrichWithEditionResult(p)
+                }
+                if (p?.editionClaim != null) {
+                    p = enrichWithAuhors(p)
+                }
+                val dto = p?.metadataDto ?: continue
+                results.add(dto)
+                if (results.size >= 5) break
+            } catch (e: Exception) {
+                logger.warn("failed to enrich search result: ${e.message}")
+            }
+        }
+        return results
+    }
+
     private fun searchByTitleMulti(title: String): List<MetadataDto> =
         restClient
             .get()
@@ -180,27 +206,128 @@ class InventaireIoMetadataProvider(
                 if (clientResponse.statusCode == HttpStatus.OK) {
                     val bodyString = clientResponse.bodyTo(String::class.java)
                     val node = objectMapper.readTree(bodyString).get("results")
-                    parseSearchResultsMulti(node)
+                    parseSearchResultsEnriched(node)
                 } else {
                     logger.error { "error searching metadata from inventaire.io : ${clientResponse.statusCode} " }
                     emptyList()
                 }
             } ?: emptyList()
 
+    private fun enrichAndFilterByAuthor(
+        results: List<MetadataDto>,
+        authorQuery: String,
+    ): List<MetadataDto> {
+        val authorLower = authorQuery.lowercase()
+        return results.filter { dto ->
+            dto.authors.any { it.lowercase().contains(authorLower) }
+        }
+    }
+
     override fun searchMetadata(
         metadataRequestDto: MetadataRequestDto,
         config: Map<String, String>,
     ): List<MetadataDto> {
-        // ISBN search not supported for multi-result search in inventaire.io
+        // ISBN: delegate to fetchMetadata for single-result search
         if (!metadataRequestDto.isbn.isNullOrBlank()) {
+            val result = fetchMetadata(metadataRequestDto, config)
+            if (result != null && result.isPresent) {
+                return listOf(result.get())
+            }
             return emptyList()
         }
+        // Title search (optionally filter by author)
         if (!metadataRequestDto.title.isNullOrBlank()) {
-            return searchByTitleMulti(metadataRequestDto.title)
-        } else if (!metadataRequestDto.authors.isNullOrBlank()) {
-            return searchByTitleMulti(metadataRequestDto.authors)
+            val results = searchByTitleMulti(metadataRequestDto.title)
+            if (!metadataRequestDto.authors.isNullOrBlank()) {
+                return enrichAndFilterByAuthor(results, metadataRequestDto.authors)
+            }
+            return results
+        }
+        // Author-only search
+        if (!metadataRequestDto.authors.isNullOrBlank()) {
+            return searchByAuthorMulti(metadataRequestDto.authors)
         }
         return emptyList()
+    }
+
+    private fun searchByAuthorMulti(author: String): List<MetadataDto> {
+        // 1. Search for humans (authors)
+        val authorUri = findAuthorUri(author) ?: return emptyList()
+        // 2. Get books by this author
+        return fetchAuthorBooks(authorUri)
+    }
+
+    private fun findAuthorUri(author: String): String? =
+        restClient
+            .get()
+            .uri(inventaireApi) { uriBuilder ->
+                uriBuilder
+                    .path("search")
+                    .queryParam("types", "humans")
+                    .queryParam("search", author)
+                    .build()
+            }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
+            .exchange { clientRequest, clientResponse ->
+                if (clientResponse.statusCode == HttpStatus.OK) {
+                    val bodyString = clientResponse.bodyTo(String::class.java)
+                    val node = objectMapper.readTree(bodyString).get("results")
+                    if (node != null && node.isArray && !node.isEmpty) {
+                        val first = node[0]
+                        if (first.has("uri")) {
+                            return@exchange first.get("uri").asText()
+                        }
+                    }
+                    null
+                } else {
+                    logger.error { "error searching author from inventaire.io : ${clientResponse.statusCode} " }
+                    null
+                }
+            } ?: null
+
+    private fun fetchAuthorBooks(authorUri: String): List<MetadataDto> {
+        val node =
+            restClient
+                .get()
+                .uri(inventaireApi) { uriBuilder ->
+                    uriBuilder
+                        .path("entities")
+                        .queryParam("action", "author-works")
+                        .queryParam("uri", authorUri)
+                        .build()
+                }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
+                .exchange { clientRequest, clientResponse ->
+                    if (clientResponse.statusCode == HttpStatus.OK) {
+                        val bodyString = clientResponse.bodyTo(String::class.java)
+                        objectMapper.readTree(bodyString).get("works")
+                    } else {
+                        logger.error { "error fetching author works from inventaire.io : ${clientResponse.statusCode} " }
+                        null
+                    }
+                }
+        if (node == null || !node.isArray) return emptyList()
+        return node.mapNotNull { work ->
+            try {
+                val dto = MetadataDto()
+                if (work.has("uri")) {
+                    val claim = work.get("uri").asText()
+                    var p: ParsingDto? = ParsingDto(dto, claim)
+                    val initialClaim = p?.editionClaim
+                    p = enrichWithEditionResult(p)
+                    if (p?.editionClaim != null && p.editionClaim != initialClaim) {
+                        p = enrichWithEditionResult(p)
+                    }
+                    p = enrichWithAuhors(p)
+                    p = enrichWithSeries(p)
+                    p = enrichWithGenres(p)
+                    p?.metadataDto
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                logger.warn("failed to parse author work: ${e.message}")
+                null
+            }
+        }
     }
 
     private fun parseSearchAuthorsResults(node: JsonNode): String {
@@ -217,17 +344,10 @@ class InventaireIoMetadataProvider(
     ): ParsingDto {
         val dto = MetadataDto()
         val parsingDto = ParsingDto(dto, "")
-        if (node.has("isbn:$isbn")) {
-            val data = node.get("isbn:$isbn")
+        for (entry in node.properties()) {
+            val data = entry.value
             extractIsbnData(data, dto, parsingDto)
-        } else {
-            for (entry in node.properties()) {
-                if (entry.key.startsWith("isbn:")) {
-                    val data = entry.value
-                    extractIsbnData(data, dto, parsingDto)
-                    break
-                }
-            }
+            break
         }
         return parsingDto
     }
@@ -278,8 +398,8 @@ class InventaireIoMetadataProvider(
             val authors = node[Wikidata.AUTHOR].asIterable()
             authors.forEach { dto?.authorsClaims?.add(it.asText()) }
         }
-        if (dto?.editionClaim?.isBlank() == true && node.has(Wikidata.EDITION_OR_TRANSLATION)) {
-            dto.editionClaim = getFieldOrNull(Wikidata.EDITION_OR_TRANSLATION, node).orEmpty()
+        if (node.has(Wikidata.EDITION_OR_TRANSLATION)) {
+            dto?.editionClaim = getFieldOrNull(Wikidata.EDITION_OR_TRANSLATION, node).orEmpty()
         }
         if (node.has(Wikidata.SERIES)) {
             val series = node[Wikidata.SERIES].asIterable()
@@ -303,6 +423,9 @@ class InventaireIoMetadataProvider(
         }
         if (dto?.isbn13 == null) {
             dto?.isbn13 = getFieldOrNull(Wikidata.ISBN13, node)
+        }
+        if (dto?.publisher == null) {
+            dto?.publisher = getFieldOrNull(Wikidata.PUBLISHER, node)
         }
         if (dto?.pageCount == null && node.has(Wikidata.NB_PAGES)) {
             dto?.pageCount = node[Wikidata.NB_PAGES][0].asInt()

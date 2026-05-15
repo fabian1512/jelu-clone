@@ -45,10 +45,10 @@ class PluginInfoHolder(
             if (plugins.any { it.name.equals(name, true) }) return@forEach
             val order =
                 when (name) {
-                    "openlibrary" -> 30
+                    "goodreads" -> 50
+                    "openlibrary" -> 40
+                    "google" -> 30
                     "inventaireio" -> 20
-                    "google" -> 10
-                    "goodreads" -> 8
                     "databazeknih" -> 5
                     else -> 0
                 }
@@ -86,12 +86,12 @@ class PluginInfoHolder(
                 if (name == JELU_DEBUG) return@mapNotNull null
                 val order =
                     when (name) {
-                        "openlibrary" -> 30
+                        "goodreads" -> 50
+                        "openlibrary" -> 40
+                        "google" -> 30
                         "inventaireio" -> 20
-                        "google" -> 10
-                        "goodreads" -> 8
-                        CALIBRE -> -100
                         "databazeknih" -> 5
+                        CALIBRE -> -100
                         else -> 0
                     }
                 MetadataProviderSettingDto(name = name, isEnabled = true, order = order)
@@ -122,6 +122,17 @@ class PluginInfoHolder(
         return properties.metadataProviders
             ?.find { it.isEnabled && it.name.equals(name, true) }
             ?.apiKey
+    }
+
+    fun getProviderConfig(name: String): String? {
+        val dbSetting =
+            settingsRepository.findAll().find { it.name.equals(name, true) }
+        if (dbSetting != null && !dbSetting.config.isNullOrBlank()) {
+            return dbSetting.config
+        }
+        return properties.metadataProviders
+            ?.find { it.isEnabled && it.name.equals(name, true) }
+            ?.config
     }
 
     fun calibreEnabled(): Boolean {
