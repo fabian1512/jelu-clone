@@ -173,7 +173,12 @@ class InventaireIoMetadataProvider(
                 val parsingDto = parseSearchResult(result)
                 if (parsingDto.metadataDto.title.isNullOrBlank()) continue
                 var p: ParsingDto? = parsingDto
+                val initialClaim = p?.editionClaim
                 p = enrichWithEditionResult(p)
+                // If the edition claim changed (e.g. work→edition via Wikidata), reload edition data
+                if (p?.editionClaim != null && p.editionClaim != initialClaim) {
+                    p = enrichWithEditionResult(p)
+                }
                 if (p?.editionClaim != null) {
                     p = enrichWithAuhors(p)
                 }
@@ -306,7 +311,11 @@ class InventaireIoMetadataProvider(
                 if (work.has("uri")) {
                     val claim = work.get("uri").asText()
                     var p: ParsingDto? = ParsingDto(dto, claim)
+                    val initialClaim = p?.editionClaim
                     p = enrichWithEditionResult(p)
+                    if (p?.editionClaim != null && p.editionClaim != initialClaim) {
+                        p = enrichWithEditionResult(p)
+                    }
                     p = enrichWithAuhors(p)
                     p = enrichWithSeries(p)
                     p = enrichWithGenres(p)
@@ -396,8 +405,8 @@ class InventaireIoMetadataProvider(
             val authors = node[Wikidata.AUTHOR].asIterable()
             authors.forEach { dto?.authorsClaims?.add(it.asText()) }
         }
-        if (dto?.editionClaim?.isBlank() == true && node.has(Wikidata.EDITION_OR_TRANSLATION)) {
-            dto.editionClaim = getFieldOrNull(Wikidata.EDITION_OR_TRANSLATION, node).orEmpty()
+        if (node.has(Wikidata.EDITION_OR_TRANSLATION)) {
+            dto?.editionClaim = getFieldOrNull(Wikidata.EDITION_OR_TRANSLATION, node).orEmpty()
         }
         if (node.has(Wikidata.SERIES)) {
             val series = node[Wikidata.SERIES].asIterable()
