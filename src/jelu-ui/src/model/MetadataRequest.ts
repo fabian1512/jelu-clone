@@ -6,4 +6,5 @@ export interface MetadataRequest {
     authors?: string,
     language?: string,
     plugins?: Array<PluginInfo>,
+    goodreadsId?: string,
 }

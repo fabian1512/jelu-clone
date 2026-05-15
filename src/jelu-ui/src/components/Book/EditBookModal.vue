@@ -153,6 +153,8 @@ function copyInput(book: UserBook | Metadata | null): any {
         librarythingId: meta.librarythingId,
         isfdbId: meta.isfdbId,
         openlibraryId: meta.openlibraryId,
+        noosfereId: meta.noosfereId,
+        inventaireId: meta.inventaireId,
       },
       lastReadingEvent: ReadingEventType.FINISHED,
       lastReadingEventDate: null,
@@ -460,6 +462,14 @@ const openMetadataModal = () => {
                 if (mergedData.image) userbook.value.book.image = mergedData.image
                 if (mergedData.tags?.length) userbook.value.book.tags = mergedData.tags.map((t: string) => ({ name: t }))
                 if (mergedData.series) userbook.value.book.series = [{ name: mergedData.series, numberInSeries: mergedData.numberInSeries || 1 }]
+                if (mergedData.goodreadsId) userbook.value.book.goodreadsId = mergedData.goodreadsId
+                if (mergedData.googleId) userbook.value.book.googleId = mergedData.googleId
+                if (mergedData.amazonId) userbook.value.book.amazonId = mergedData.amazonId
+                if (mergedData.openlibraryId) userbook.value.book.openlibraryId = mergedData.openlibraryId
+                if (mergedData.librarythingId) userbook.value.book.librarythingId = mergedData.librarythingId
+                if (mergedData.isfdbId) userbook.value.book.isfdbId = mergedData.isfdbId
+                if (mergedData.inventaireId) userbook.value.book.inventaireId = mergedData.inventaireId
+                if (mergedData.noosfereId) userbook.value.book.noosfereId = mergedData.noosfereId
               }
             }
           })
@@ -542,6 +552,9 @@ watch(() => sliderPercent.value, (newVal) => {
     </div>
 
     <div class="flex-1 overflow-y-auto px-4 pb-8">
+      <div v-if="!userbook?.book?.isbn13 && !userbook?.book?.isbn10" class="alert alert-warning text-xs mb-3 py-2">
+        ⚠ {{ t('labels.incomplete_metadata') }}
+      </div>
     <div class="flex gap-4 mb-6 mt-4">
       <div class="shrink-0 relative">
         <figure v-if="userbook.book.image && !deleteImage" class="w-24 h-36 rounded-lg overflow-hidden shadow-md">

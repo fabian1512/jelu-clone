@@ -69,6 +69,7 @@
         "delete_this_book": "Dieses Buch löschen?",
         "book_was_deleted": "Buch wurde gelöscht",
         "error_deleting": "Fehler beim Löschen von {msg}",
+        "incomplete_metadata": "Einige Felder (ISBN, Verlag) konnten nicht automatisch ermittelt werden",
         "edit": "Bearbeiten",
         "event": "Ereignis",
         "edit_author": "Autor:in bearbeiten",
@@ -416,7 +417,9 @@
         "provider": "Anbieter",
         "order": "Priorität",
         "enabled": "Aktiv",
-        "api_key": "API-Schlüssel"
+        "api_key": "API-Schlüssel",
+        "config": "Konfiguration",
+        "goodreads_cookie_placeholder": "Goodreads Session-Cookie"
     },
     "book_quotes": {
         "edit_quote": "Buchzitat bearbeiten",

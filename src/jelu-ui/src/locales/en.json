@@ -69,6 +69,7 @@
       "delete_this_book" : "Delete this book ?",
       "book_was_deleted" : "Book was deleted",
       "error_deleting" : "Error deleting {msg}",
+      "incomplete_metadata" : "Some fields (ISBN, publisher) could not be determined automatically",
       "edit" : "edit",
       "event" : "event",
       "edit_author" : "edit author",
@@ -416,7 +417,9 @@
         "provider" : "Provider",
         "order" : "Priority",
         "enabled" : "Active",
-        "api_key" : "API Key"
+        "api_key" : "API Key",
+        "config" : "Config",
+        "goodreads_cookie_placeholder" : "Goodreads session cookie"
     },
     "book_quotes" : {
         "edit_quote" : "Edit book quote",

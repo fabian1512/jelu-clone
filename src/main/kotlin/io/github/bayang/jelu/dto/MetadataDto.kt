@@ -32,4 +32,5 @@ data class MetadataRequestDto(
     val authors: String? = null,
     val plugins: List<PluginInfo>? = null,
     val language: String? = null,
+    val goodreadsId: String? = null,
 )
