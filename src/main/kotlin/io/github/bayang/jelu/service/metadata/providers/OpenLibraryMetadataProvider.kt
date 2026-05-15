@@ -170,6 +170,16 @@ class OpenLibraryMetadataProvider(
                     val isbn13 = doc.get("isbn_13")?.firstOrNull()?.asText()
                     if (isbn10 != null) dto.isbn10 = isbn10
                     if (isbn13 != null) dto.isbn13 = isbn13
+                    val editionKey =
+                        doc.get("edition_key")?.firstOrNull()?.asText()
+                            ?: doc.get("cover_edition_key")?.asText()
+                    if (editionKey != null) {
+                        try {
+                            enrichFromEdition(editionKey, dto)
+                        } catch (_: Exception) {
+                            // edition enrichment is optional
+                        }
+                    }
                     dto
                 } catch (e: Exception) {
                     logger.warn { "failed to parse doc: ${e.message}" }

@@ -431,6 +431,9 @@ class InventaireIoMetadataProvider(
         if (dto?.isbn13 == null) {
             dto?.isbn13 = getFieldOrNull(Wikidata.ISBN13, node)
         }
+        if (dto?.publisher == null) {
+            dto?.publisher = getFieldOrNull(Wikidata.PUBLISHER, node)
+        }
         if (dto?.pageCount == null && node.has(Wikidata.NB_PAGES)) {
             dto?.pageCount = node[Wikidata.NB_PAGES][0].asInt()
         }
