@@ -70,6 +70,40 @@ const localResults: Ref<Book[]> = ref([])
 const showLocalResults = ref(false)
 const isBlocked = ref(false)
 
+const storedSearchResults: Ref<Metadata[]> = ref([])
+const storedSearchPlugins: Ref<PluginInfo[]> = ref([])
+let searchResultsModalApi: any = null
+
+const openSearchResultsModal = (results: Metadata[], plugins: PluginInfo[]) => {
+  if (searchResultsModalApi) return  // already open
+  searchResultsModalApi = oruga.modal.open({
+    component: SearchResultsModal,
+    trapFocus: true,
+    active: true,
+    cancelable: ['outside'],
+    scroll: 'keep',
+    props: {
+      results,
+      loading: false
+    },
+    events: {
+      select: async (result: Book | Metadata) => {
+        await handleSearchResultSelect(result)
+      }
+    },
+    onClose: () => {
+      searchResultsModalApi = null
+    }
+  })
+}
+
+const closeSearchResultsModal = () => {
+  if (searchResultsModalApi) {
+    searchResultsModalApi.close()
+    searchResultsModalApi = null
+  }
+}
+
 const fetchMetadata = async () => {
   progress.value = true
   try {
@@ -85,27 +119,13 @@ const fetchMetadata = async () => {
       language: storedLanguage.value
     })
 
-    // Open SearchResultsModal with pre-fetched results
-    oruga.modal.open({
-      component: SearchResultsModal,
-      trapFocus: true,
-      active: true,
-      cancelable: ['outside'],
-      scroll: 'keep',
-      props: {
-        results: results || [],
-        loading: false
-      },
-      events: {
-        select: (result: Book | Metadata) => {
-          handleSearchResultSelect(result)
-        }
-      },
-      onClose: () => {}
-    })
+    storedSearchResults.value = results || []
+    storedSearchPlugins.value = searchPlugins
+
+    openSearchResultsModal(results || [], searchPlugins)
   } catch (error) {
     console.error('Search failed', error)
-    oruga.error('Suche fehlgeschlagen')
+    oruga.info('Suche fehlgeschlagen')
   } finally {
     progress.value = false
   }
@@ -210,6 +230,9 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
     }
   }
   
+  // Close SearchResultsModal before opening edit modal
+  closeSearchResultsModal()
+  
   // Check if there's an existing book (was passed as prop)
   if (props.book) {
     // Open MergeBookModal with existing book and fetched metadata
@@ -246,8 +269,13 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
       props: {
         book: metadataToSend
       },
-      onClose: () => {
-        emit('close')
+      onClose: (reason: any) => {
+        // If user cancelled (didn't save), re-open search results
+        if (reason === 'cancel' && storedSearchResults.value.length > 0) {
+          openSearchResultsModal(storedSearchResults.value, storedSearchPlugins.value)
+        } else {
+          emit('close')
+        }
       }
     })
   }
