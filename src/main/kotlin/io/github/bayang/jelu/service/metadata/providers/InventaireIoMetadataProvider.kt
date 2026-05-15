@@ -187,18 +187,156 @@ class InventaireIoMetadataProvider(
                 }
             } ?: emptyList()
 
+    private fun enrichAndFilterByAuthor(
+        results: List<MetadataDto>,
+        authorQuery: String,
+    ): List<MetadataDto> {
+        // We need the editionClaim URIs to enrich with author info.
+        // Since searchByTitleMulti loses the URIs, re-search and enrich.
+        if (results.isEmpty()) return results
+        // Get the title from the first result to re-search
+        val firstTitle = results.first().title ?: return results
+        val rawResults =
+            restClient
+                .get()
+                .uri(inventaireApi) { uriBuilder ->
+                    uriBuilder
+                        .path("search")
+                        .queryParam("types", "works")
+                        .queryParam("search", firstTitle)
+                        .build()
+                }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
+                .exchange { clientRequest, clientResponse ->
+                    if (clientResponse.statusCode == HttpStatus.OK) {
+                        val bodyString = clientResponse.bodyTo(String::class.java)
+                        objectMapper.readTree(bodyString).get("results")
+                    } else {
+                        null
+                    }
+                } ?: return results
+
+        val authorLower = authorQuery.lowercase()
+        val enriched = mutableListOf<MetadataDto>()
+        for (node in rawResults.take(10)) {
+            try {
+                val parsingDto = parseSearchResult(node)
+                if (parsingDto.metadataDto.title.isNullOrBlank()) continue
+                var p: ParsingDto? = parsingDto
+                p = enrichWithEditionResult(p)
+                p = enrichWithAuhors(p)
+                val dto = p?.metadataDto ?: continue
+                val match = dto.authors.any { it.lowercase().contains(authorLower) }
+                if (match) {
+                    enriched.add(dto)
+                }
+            } catch (e: Exception) {
+                logger.warn { "failed to enrich search result: ${e.message}" }
+            }
+        }
+        return enriched
+    }
+
     override fun searchMetadata(
         metadataRequestDto: MetadataRequestDto,
         config: Map<String, String>,
     ): List<MetadataDto> {
-        // ISBN: use fetchMetadata (single result), not multi-search
+        // ISBN: delegate to fetchMetadata for single-result search
         if (!metadataRequestDto.isbn.isNullOrBlank()) {
+            val result = fetchMetadata(metadataRequestDto, config)
+            if (result != null && result.isPresent) {
+                return listOf(result.get())
+            }
             return emptyList()
         }
+        // Title search (optionally filter by author)
         if (!metadataRequestDto.title.isNullOrBlank()) {
-            return searchByTitleMulti(metadataRequestDto.title)
+            val results = searchByTitleMulti(metadataRequestDto.title)
+            if (!metadataRequestDto.authors.isNullOrBlank()) {
+                return enrichAndFilterByAuthor(results, metadataRequestDto.authors)
+            }
+            return results
+        }
+        // Author-only search
+        if (!metadataRequestDto.authors.isNullOrBlank()) {
+            return searchByAuthorMulti(metadataRequestDto.authors)
         }
         return emptyList()
+    }
+
+    private fun searchByAuthorMulti(author: String): List<MetadataDto> {
+        // 1. Search for humans (authors)
+        val authorUri = findAuthorUri(author) ?: return emptyList()
+        // 2. Get books by this author
+        return fetchAuthorBooks(authorUri)
+    }
+
+    private fun findAuthorUri(author: String): String? =
+        restClient
+            .get()
+            .uri(inventaireApi) { uriBuilder ->
+                uriBuilder
+                    .path("search")
+                    .queryParam("types", "humans")
+                    .queryParam("search", author)
+                    .build()
+            }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
+            .exchange { clientRequest, clientResponse ->
+                if (clientResponse.statusCode == HttpStatus.OK) {
+                    val bodyString = clientResponse.bodyTo(String::class.java)
+                    val node = objectMapper.readTree(bodyString).get("results")
+                    if (node != null && node.isArray && !node.isEmpty) {
+                        val first = node[0]
+                        if (first.has("uri")) {
+                            return@exchange first.get("uri").asText()
+                        }
+                    }
+                    null
+                } else {
+                    logger.error { "error searching author from inventaire.io : ${clientResponse.statusCode} " }
+                    null
+                }
+            } ?: null
+
+    private fun fetchAuthorBooks(authorUri: String): List<MetadataDto> {
+        val node =
+            restClient
+                .get()
+                .uri(inventaireApi) { uriBuilder ->
+                    uriBuilder
+                        .path("entities")
+                        .queryParam("action", "author-works")
+                        .queryParam("uri", authorUri)
+                        .build()
+                }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
+                .exchange { clientRequest, clientResponse ->
+                    if (clientResponse.statusCode == HttpStatus.OK) {
+                        val bodyString = clientResponse.bodyTo(String::class.java)
+                        objectMapper.readTree(bodyString).get("works")
+                    } else {
+                        logger.error { "error fetching author works from inventaire.io : ${clientResponse.statusCode} " }
+                        null
+                    }
+                }
+        if (node == null || !node.isArray) return emptyList()
+        return node.mapNotNull { work ->
+            try {
+                val dto = MetadataDto()
+                if (work.has("uri")) {
+                    val claim = work.get("uri").asText()
+                    var p: ParsingDto? = ParsingDto(dto, claim)
+                    p = enrichWithEditionResult(p)
+                    p = enrichWithAuhors(p)
+                    p = enrichWithSeries(p)
+                    p = enrichWithGenres(p)
+                    p?.metadataDto
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                logger.warn("failed to parse author work: ${e.message}")
+                null
+            }
+        }
     }
 
     private fun parseSearchAuthorsResults(node: JsonNode): String {
