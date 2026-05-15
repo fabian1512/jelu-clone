@@ -166,6 +166,27 @@ class InventaireIoMetadataProvider(
             }
         }
 
+    private fun parseSearchResultsEnriched(node: JsonNode): List<MetadataDto> {
+        val results = mutableListOf<MetadataDto>()
+        for (result in node) {
+            try {
+                val parsingDto = parseSearchResult(result)
+                if (parsingDto.metadataDto.title.isNullOrBlank()) continue
+                var p: ParsingDto? = parsingDto
+                p = enrichWithEditionResult(p)
+                if (p?.editionClaim != null) {
+                    p = enrichWithAuhors(p)
+                }
+                val dto = p?.metadataDto ?: continue
+                results.add(dto)
+                if (results.size >= 5) break
+            } catch (e: Exception) {
+                logger.warn("failed to enrich search result: ${e.message}")
+            }
+        }
+        return results
+    }
+
     private fun searchByTitleMulti(title: String): List<MetadataDto> =
         restClient
             .get()
@@ -180,7 +201,7 @@ class InventaireIoMetadataProvider(
                 if (clientResponse.statusCode == HttpStatus.OK) {
                     val bodyString = clientResponse.bodyTo(String::class.java)
                     val node = objectMapper.readTree(bodyString).get("results")
-                    parseSearchResultsMulti(node)
+                    parseSearchResultsEnriched(node)
                 } else {
                     logger.error { "error searching metadata from inventaire.io : ${clientResponse.statusCode} " }
                     emptyList()
@@ -191,49 +212,10 @@ class InventaireIoMetadataProvider(
         results: List<MetadataDto>,
         authorQuery: String,
     ): List<MetadataDto> {
-        // We need the editionClaim URIs to enrich with author info.
-        // Since searchByTitleMulti loses the URIs, re-search and enrich.
-        if (results.isEmpty()) return results
-        // Get the title from the first result to re-search
-        val firstTitle = results.first().title ?: return results
-        val rawResults =
-            restClient
-                .get()
-                .uri(inventaireApi) { uriBuilder ->
-                    uriBuilder
-                        .path("search")
-                        .queryParam("types", "works")
-                        .queryParam("search", firstTitle)
-                        .build()
-                }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
-                .exchange { clientRequest, clientResponse ->
-                    if (clientResponse.statusCode == HttpStatus.OK) {
-                        val bodyString = clientResponse.bodyTo(String::class.java)
-                        objectMapper.readTree(bodyString).get("results")
-                    } else {
-                        null
-                    }
-                } ?: return results
-
         val authorLower = authorQuery.lowercase()
-        val enriched = mutableListOf<MetadataDto>()
-        for (node in rawResults.take(10)) {
-            try {
-                val parsingDto = parseSearchResult(node)
-                if (parsingDto.metadataDto.title.isNullOrBlank()) continue
-                var p: ParsingDto? = parsingDto
-                p = enrichWithEditionResult(p)
-                p = enrichWithAuhors(p)
-                val dto = p?.metadataDto ?: continue
-                val match = dto.authors.any { it.lowercase().contains(authorLower) }
-                if (match) {
-                    enriched.add(dto)
-                }
-            } catch (e: Exception) {
-                logger.warn { "failed to enrich search result: ${e.message}" }
-            }
+        return results.filter { dto ->
+            dto.authors.any { it.lowercase().contains(authorLower) }
         }
-        return enriched
     }
 
     override fun searchMetadata(
