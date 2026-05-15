@@ -72,37 +72,8 @@ const isBlocked = ref(false)
 
 const storedSearchResults: Ref<Metadata[]> = ref([])
 const storedSearchPlugins: Ref<PluginInfo[]> = ref([])
-let searchResultsModalApi: any = null
-
-const openSearchResultsModal = (results: Metadata[], plugins: PluginInfo[]) => {
-  if (searchResultsModalApi) return  // already open
-  searchResultsModalApi = oruga.modal.open({
-    component: SearchResultsModal,
-    trapFocus: true,
-    active: true,
-    cancelable: ['outside'],
-    scroll: 'keep',
-    props: {
-      results,
-      loading: false
-    },
-    events: {
-      select: async (result: Book | Metadata) => {
-        await handleSearchResultSelect(result)
-      }
-    },
-    onClose: () => {
-      searchResultsModalApi = null
-    }
-  })
-}
-
-const closeSearchResultsModal = () => {
-  if (searchResultsModalApi) {
-    searchResultsModalApi.close()
-    searchResultsModalApi = null
-  }
-}
+const showSearch = ref(false)
+const searchLoading = ref(false)
 
 const fetchMetadata = async () => {
   progress.value = true
@@ -121,8 +92,8 @@ const fetchMetadata = async () => {
 
     storedSearchResults.value = results || []
     storedSearchPlugins.value = searchPlugins
-
-    openSearchResultsModal(results || [], searchPlugins)
+    searchLoading.value = false
+    showSearch.value = true
   } catch (error) {
     console.error('Search failed', error)
     oruga.info('Suche fehlgeschlagen')
@@ -132,6 +103,9 @@ const fetchMetadata = async () => {
 }
 
 const handleSearchResultSelect = async (result: Book | Metadata) => {
+  // Show loading spinner on selected book
+  searchLoading.value = true
+  
   // Prepare metadata to pass to EditBookModal
   let metadataToSend: Metadata
   
@@ -230,8 +204,9 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
     }
   }
   
-  // Close SearchResultsModal before opening edit modal
-  closeSearchResultsModal()
+  // Close SearchResultsModal, open edit modal
+  showSearch.value = false
+  searchLoading.value = false
   
   // Check if there's an existing book (was passed as prop)
   if (props.book) {
@@ -272,7 +247,8 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
       onClose: (reason: any) => {
         // If user cancelled (didn't save), re-open search results
         if (reason === 'cancel' && storedSearchResults.value.length > 0) {
-          openSearchResultsModal(storedSearchResults.value, storedSearchPlugins.value)
+          searchLoading.value = false
+          showSearch.value = true
         } else {
           emit('close')
         }
@@ -639,6 +615,16 @@ const { typographyClasses } = useTypography()
       </div>
     </div>
   </section>
+
+  <!-- Inline search results modal (reactive loading prop) -->
+  <o-modal :active="showSearch" @close="showSearch = false" :can-cancel="['escape', 'outside']">
+    <SearchResultsModal
+      :results="storedSearchResults"
+      :loading="searchLoading"
+      @select="handleSearchResultSelect"
+      @close="showSearch = false"
+    />
+  </o-modal>
 </template>
 
 <style lang="scss">
