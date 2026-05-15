@@ -344,17 +344,10 @@ class InventaireIoMetadataProvider(
     ): ParsingDto {
         val dto = MetadataDto()
         val parsingDto = ParsingDto(dto, "")
-        if (node.has("isbn:$isbn")) {
-            val data = node.get("isbn:$isbn")
+        for (entry in node.properties()) {
+            val data = entry.value
             extractIsbnData(data, dto, parsingDto)
-        } else {
-            for (entry in node.properties()) {
-                if (entry.key.startsWith("isbn:")) {
-                    val data = entry.value
-                    extractIsbnData(data, dto, parsingDto)
-                    break
-                }
-            }
+            break
         }
         return parsingDto
     }
