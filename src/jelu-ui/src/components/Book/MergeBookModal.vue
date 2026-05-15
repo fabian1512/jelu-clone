@@ -30,7 +30,7 @@ const initialIsbn13: Ref<string|undefined> = ref(book.value.isbn13)
 const seriesCopy: Array<SeriesOrder> = book.value.series ?? []
 
 const emit = defineEmits<{
-  (e: 'close'): void
+  (e: 'close', data?: any): void
 }>()
 
 let authors: Ref<Array<string|Author>> = ref([]);
@@ -92,7 +92,7 @@ const importData = async () => {
     dataService.updateBook(book.value.id, {...book.value})
     .then(res => {
           progress.value = false
-          emit('close')
+          emit('close', { ...book.value, ...props.metadata })
         })
         .catch(err => {
           progress.value = false

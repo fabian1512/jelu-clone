@@ -166,17 +166,14 @@ class InventaireIoMetadataProvider(
             }
         }
 
-    private fun searchByTitleMulti(
-        title: String,
-        authors: String? = null,
-    ): List<MetadataDto> =
+    private fun searchByTitleMulti(title: String): List<MetadataDto> =
         restClient
             .get()
             .uri(inventaireApi) { uriBuilder ->
                 uriBuilder
                     .path("search")
                     .queryParam("types", "works")
-                    .queryParam("search", if (!authors.isNullOrBlank()) "$title $authors" else title)
+                    .queryParam("search", title)
                     .build()
             }.header(HttpHeaders.USER_AGENT, USER_AGENT + buildProperties.version)
             .exchange { clientRequest, clientResponse ->
@@ -194,14 +191,12 @@ class InventaireIoMetadataProvider(
         metadataRequestDto: MetadataRequestDto,
         config: Map<String, String>,
     ): List<MetadataDto> {
-        // ISBN search not supported for multi-result search in inventaire.io
+        // ISBN: use fetchMetadata (single result), not multi-search
         if (!metadataRequestDto.isbn.isNullOrBlank()) {
             return emptyList()
         }
         if (!metadataRequestDto.title.isNullOrBlank()) {
-            return searchByTitleMulti(metadataRequestDto.title, metadataRequestDto.authors)
-        } else if (!metadataRequestDto.authors.isNullOrBlank()) {
-            return searchByTitleMulti(metadataRequestDto.authors)
+            return searchByTitleMulti(metadataRequestDto.title)
         }
         return emptyList()
     }
