@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, ref, computed, ComputedRef } from "vue";
+import { nextTick, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Metadata } from "../../model/Metadata";
 
@@ -10,13 +10,27 @@ const { t } = useI18n({
 
 const props = defineProps<{
   results?: Metadata[],
-  loading?: boolean
+  loading?: boolean,
+  scrollOnOpenIndex?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'select', metadata: Metadata): void
 }>()
+
+const listRef = ref<HTMLElement | null>(null)
+
+watch(() => props.scrollOnOpenIndex, (idx) => {
+  if (idx === undefined || idx < 0) return
+  nextTick(() => {
+    if (!listRef.value) return
+    const items = listRef.value.querySelectorAll('.search-result-item')
+    if (items[idx]) {
+      items[idx].scrollIntoView({ block: 'center', behavior: 'auto' })
+    }
+  })
+}, { immediate: true })
 
 const selectResult = (metadata: Metadata) => {
   emit('select', metadata)
@@ -34,20 +48,15 @@ const close = () => {
       <button @click="close" class="btn btn-sm btn-circle">✕</button>
     </div>
 
-    <!-- Loading indicator -->
-    <div v-if="loading" class="text-center py-8">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="mt-2">{{ t('labels.searching_external') }}</p>
-    </div>
-
     <!-- Search Results -->
-    <div v-else-if="results && results.length > 0" class="max-h-80 overflow-y-auto">
+    <div v-if="results && results.length > 0" class="max-h-80 overflow-y-auto relative" ref="listRef">
       <h4 class="text-sm font-semibold mb-2 opacity-60">{{ t('labels.search_results') }} ({{ results.length }})</h4>
       <div class="space-y-2">
         <div
           v-for="(metadata, index) in results"
           :key="index"
-          class="flex items-center gap-3 p-2 border rounded hover:bg-base-200 cursor-pointer"
+          class="search-result-item flex items-center gap-3 p-2 border rounded hover:bg-base-200 cursor-pointer"
+          :class="{ 'opacity-50': loading }"
           @click="selectResult(metadata)"
         >
           <img
@@ -67,11 +76,17 @@ const close = () => {
               {{ metadata.authors?.join(', ') }}
             </p>
           </div>
-          <button class="btn btn-sm btn-primary">
+          <button class="btn btn-sm btn-primary" :disabled="loading">
             <i class="mdi mdi-check"></i>
             {{ t('labels.select') }}
           </button>
         </div>
+      </div>
+      
+      <!-- Loading overlay on top of results -->
+      <div v-if="loading" class="absolute inset-0 bg-base-100/70 flex flex-col items-center justify-center z-10 rounded">
+        <span class="loading loading-spinner loading-md text-primary"></span>
+        <p class="mt-2 text-sm opacity-80">{{ t('labels.searching_external') }}</p>
       </div>
     </div>
 

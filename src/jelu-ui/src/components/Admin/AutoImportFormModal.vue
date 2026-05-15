@@ -72,6 +72,7 @@ const isBlocked = ref(false)
 
 const storedSearchResults: Ref<Metadata[]> = ref([])
 const storedSearchPlugins: Ref<PluginInfo[]> = ref([])
+const selectedSearchIndex = ref<number | undefined>(undefined)
 const showSearch = ref(false)
 const searchLoading = ref(false)
 
@@ -105,6 +106,14 @@ const fetchMetadata = async () => {
 const handleSearchResultSelect = async (result: Book | Metadata) => {
   // Show loading spinner on selected book
   searchLoading.value = true
+  
+  // Store selected index for scroll restoration on re-open
+  if (!('id' in result)) {
+    const meta = result as Metadata
+    selectedSearchIndex.value = storedSearchResults.value.findIndex(
+      r => r.title === meta.title && r.goodreadsId === meta.goodreadsId
+    )
+  }
   
   // Prepare metadata to pass to EditBookModal
   let metadataToSend: Metadata
@@ -621,6 +630,7 @@ const { typographyClasses } = useTypography()
     <SearchResultsModal
       :results="storedSearchResults"
       :loading="searchLoading"
+      :scroll-on-open-index="selectedSearchIndex"
       @select="handleSearchResultSelect"
       @close="showSearch = false"
     />
