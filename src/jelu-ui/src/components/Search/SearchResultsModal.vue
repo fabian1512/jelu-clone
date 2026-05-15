@@ -45,7 +45,7 @@ const close = () => {
   <section class="jl-modal" style="--modal-width: min(676px, calc(100vw - 24px)); --modal-min-height: 12rem;">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-bold">{{ t('labels.search_results') }}</h3>
-      <button @click="close" class="btn btn-sm btn-circle">✕</button>
+      <button @click="close" class="btn btn-sm btn-circle btn-outline"><i class="mdi mdi-close mdi-18px"></i></button>
     </div>
 
     <!-- Search Results -->
