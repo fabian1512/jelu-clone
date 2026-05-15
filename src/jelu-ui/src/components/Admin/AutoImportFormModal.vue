@@ -626,7 +626,7 @@ const { typographyClasses } = useTypography()
   </section>
 
   <!-- Inline search results modal (reactive loading prop) -->
-  <o-modal :active="showSearch" @close="showSearch = false" :can-cancel="['escape', 'outside']" :has-close-button="false">
+  <o-modal :active="showSearch" @close="showSearch = false" :can-cancel="['escape', 'outside']" :closeable="false">
     <SearchResultsModal
       :results="storedSearchResults"
       :loading="searchLoading"
