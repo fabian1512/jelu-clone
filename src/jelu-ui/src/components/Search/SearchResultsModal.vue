@@ -20,7 +20,6 @@ const emit = defineEmits<{
 
 const selectResult = (metadata: Metadata) => {
   emit('select', metadata)
-  emit('close')
 }
 
 const close = () => {
