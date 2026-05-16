@@ -117,9 +117,8 @@ class DataService {
       error => {
         if (error != null && error.response != null && error.response.status === 401) {
           router.push({ name: 'login' })
-        } else {
-          throw error
         }
+        return Promise.reject(error)
       });
   }
 
