@@ -62,7 +62,7 @@ class GoogleBooksIMetaDataProvider(
                         }
                     } else {
                         logger.error { "error fetching metadata from google : ${it.statusCode()}" }
-                        null
+                        Mono.empty()
                     }
                 }.block(Duration.ofSeconds(60))
         if (res == null) {
@@ -111,7 +111,7 @@ class GoogleBooksIMetaDataProvider(
                         }
                     } else {
                         logger.error { "error searching metadata from google : ${it.statusCode()}" }
-                        null
+                        Mono.empty()
                     }
                 }.block(Duration.ofSeconds(60))
         return res ?: emptyList()
