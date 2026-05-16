@@ -556,6 +556,21 @@ class GoodreadsMetadataProvider(
             while (fields.hasNext()) {
                 val value = apolloState.get(fields.next())
                 if (value == null || !value.isObject) continue
+
+                val bookGenres = value.get("bookGenres")
+                if (bookGenres != null && bookGenres.isArray) {
+                    bookGenres.forEach { bookGenre ->
+                        val genreNode = bookGenre.get("genre")
+                        if (genreNode != null && genreNode.isObject) {
+                            genreNode.get("name")?.asText()?.let { genreName ->
+                                if (genreName.isNotBlank()) {
+                                    dto.tags.add(genreName)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 val details = value.get("details")
                 if (details == null || !details.isObject) continue
                 if (details.get("__typename")?.asText() != "BookDetails") continue
