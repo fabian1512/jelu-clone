@@ -180,6 +180,7 @@ class GoodreadsMetadataProvider(
             val bookUrl = "$baseUrl/book/show/${metadataRequestDto.goodreadsId}"
             val dto = parseBookPage(bookUrl, cookie)
             if (dto.isPresent) {
+                dto.get().goodreadsId = metadataRequestDto.goodreadsId
                 return dto
             }
         }
