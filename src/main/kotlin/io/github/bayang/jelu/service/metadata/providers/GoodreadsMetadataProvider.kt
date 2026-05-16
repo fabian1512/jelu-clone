@@ -106,6 +106,26 @@ class GoodreadsMetadataProvider(
             return emptyList()
         }
 
+        val requestedIsbn = normalizeIsbn(metadataRequestDto.isbn)
+
+        // ISBN: use dedicated lookup for accurate single result
+        if (!requestedIsbn.isNullOrBlank()) {
+            val bookUrl = searchByIsbn(requestedIsbn, cookie)
+            if (bookUrl != null) {
+                val dtoOpt = parseBookPage(bookUrl, cookie)
+                if (dtoOpt.isPresent) {
+                    val dto = dtoOpt.get()
+                    if (matchesRequestedIsbn(dto, requestedIsbn)) {
+                        return listOf(dto)
+                    }
+                    logger.warn {
+                        "Goodreads ISBN lookup mismatch for '$requestedIsbn': " +
+                            "got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}, url=$bookUrl"
+                    }
+                }
+            }
+        }
+
         return try {
             val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}"
             val html = fetchHtml(searchUrl, cookie) ?: return emptyList()
@@ -119,18 +139,39 @@ class GoodreadsMetadataProvider(
                 parseJsonLd(searchDoc, dto)
                 parseHtmlInto(searchDoc, dto)
                 parseNextData(html, dto)
-                if (!dto.title.isNullOrBlank()) {
+                searchDoc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
+                    dto.goodreadsId = extractBookId(canonicalUrl)
+                }
+                if (!dto.title.isNullOrBlank() && (requestedIsbn == null || matchesRequestedIsbn(dto, requestedIsbn))) {
                     results.add(dto)
+                } else if (!dto.title.isNullOrBlank() && requestedIsbn != null) {
+                    logger.warn {
+                        "Goodreads redirected result rejected for '$requestedIsbn': " +
+                            "got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}"
+                    }
                 }
             } else {
                 // Regular search results list
                 val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
 
                 for (row in bookRows.take(20)) {
+                    val href = row.attr("href")
+                    if (!requestedIsbn.isNullOrBlank()) {
+                        val candidateUrl = if (href.startsWith("http")) href else "$baseUrl$href"
+                        val dtoOpt = parseBookPage(candidateUrl, cookie)
+                        if (dtoOpt.isPresent) {
+                            val dto = dtoOpt.get()
+                            if (matchesRequestedIsbn(dto, requestedIsbn)) {
+                                results.add(dto)
+                                break
+                            }
+                        }
+                        continue
+                    }
+
                     val dto = MetadataDto()
                     dto.title = row.text().trim()
 
-                    val href = row.attr("href")
                     dto.goodreadsId = extractBookId(href)
 
                     val parentTableRow = row.closest("tr")
@@ -186,10 +227,7 @@ class GoodreadsMetadataProvider(
         }
 
         // Fallback to ISBN search
-        val isbn =
-            metadataRequestDto.isbn
-                ?.replace("-", "", true)
-                ?.replace(" ", "", true)
+        val isbn = normalizeIsbn(metadataRequestDto.isbn)
         if (isbn.isNullOrBlank()) {
             return Optional.empty()
         }
@@ -198,7 +236,31 @@ class GoodreadsMetadataProvider(
             logger.debug("No Goodreads page found for isbn $isbn")
             return Optional.empty()
         }
-        return parseBookPage(bookUrl, cookie)
+        val dto = parseBookPage(bookUrl, cookie)
+        if (dto.isPresent && !matchesRequestedIsbn(dto.get(), isbn)) {
+            logger.warn { "Goodreads fetch mismatch for '$isbn': got isbn13=${dto.get().isbn13}, isbn10=${dto.get().isbn10}, url=$bookUrl" }
+            return Optional.empty()
+        }
+        return dto
+    }
+
+    private fun normalizeIsbn(isbn: String?): String? =
+        isbn
+            ?.replace("-", "", true)
+            ?.replace(" ", "", true)
+            ?.uppercase()
+            ?.takeIf { it.isNotBlank() }
+
+    private fun matchesRequestedIsbn(
+        dto: MetadataDto,
+        requestedIsbn: String,
+    ): Boolean {
+        val requested = normalizeIsbn(requestedIsbn) ?: return false
+        val requested13 = if (requested.length == 13) requested else isbn10to13(requested)
+        val requested10 = if (requested.length == 10) requested else isbn13to10(requested)
+        val dto13 = normalizeIsbn(dto.isbn13)
+        val dto10 = normalizeIsbn(dto.isbn10)
+        return (requested13 != null && dto13 == requested13) || (requested10 != null && dto10 == requested10)
     }
 
     private fun extractBookId(href: String): String? {
@@ -232,7 +294,20 @@ class GoodreadsMetadataProvider(
         isbn: String,
         cookie: String?,
     ): String? {
-        // 1: search URL
+        // 1: direct ISBN URL (most reliable – returns exact match)
+        try {
+            val directUrl = "$baseUrl/book/isbn/$isbn"
+            val html = fetchHtml(directUrl, cookie)
+            if (html != null) {
+                val doc = Jsoup.parse(html)
+                if (doc.selectFirst("h1[data-testid=bookTitle]") != null || doc.selectFirst("h1#bookTitle") != null) {
+                    return directUrl
+                }
+            }
+        } catch (_: Exception) {
+        }
+
+        // 2: fallback to search URL (may return wrong edition)
         try {
             val searchUrl = "$baseUrl/search/index.html?q=$isbn"
             val html = fetchHtml(searchUrl, cookie)
@@ -244,19 +319,6 @@ class GoodreadsMetadataProvider(
                 if (altLink != null) return "$baseUrl$altLink"
                 if (doc.selectFirst("h1[data-testid=bookTitle]") != null) {
                     return searchUrl
-                }
-            }
-        } catch (_: Exception) {
-        }
-
-        // 2: fallback to direct URL
-        try {
-            val directUrl = "$baseUrl/book/isbn/$isbn"
-            val html = fetchHtml(directUrl, cookie)
-            if (html != null) {
-                val doc = Jsoup.parse(html)
-                if (doc.selectFirst("h1[data-testid=bookTitle]") != null || doc.selectFirst("h1#bookTitle") != null) {
-                    return directUrl
                 }
             }
         } catch (_: Exception) {
@@ -294,12 +356,27 @@ class GoodreadsMetadataProvider(
         url: String,
         cookie: String?,
     ): Optional<MetadataDto> {
-        val html = fetchHtml(url, cookie) ?: return Optional.empty()
-        val doc = Jsoup.parse(html)
+        val doc = fetchDocument(url, cookie = cookie) ?: return Optional.empty()
+        val html = doc.html()
         val dto = MetadataDto()
         parseJsonLd(doc, dto)
         parseHtmlInto(doc, dto)
         parseNextData(html, dto)
+
+        dto.goodreadsId = extractBookId(doc.location())
+        doc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
+            if (dto.goodreadsId == null) {
+                dto.goodreadsId = extractBookId(canonicalUrl)
+            }
+        }
+        if (dto.goodreadsId == null) {
+            doc.select("meta[property=og:url]")?.attr("content")?.let { ogUrl ->
+                dto.goodreadsId = extractBookId(ogUrl)
+            }
+        }
+        if (dto.goodreadsId == null) {
+            dto.goodreadsId = extractBookId(url)
+        }
 
         logger.info(
             "goodreads parse: title={}, summary={}, authors={}, isbn13={}",
@@ -329,6 +406,25 @@ class GoodreadsMetadataProvider(
         }
         if (dto.title == null) {
             doc.select("meta[property=og:title]")?.attr("content")?.let { dto.title = it }
+        }
+
+        // authors (ContributorLinks, overrides JSON-LD)
+        val contributorLinks = doc.select("a.ContributorLink")
+        if (contributorLinks.isNotEmpty()) {
+            val realAuthors = mutableSetOf<String>()
+            contributorLinks.forEach { link ->
+                val roleSpan = link.selectFirst("[data-testid=role]")
+                if (roleSpan != null) {
+                    return@forEach
+                }
+                val nameSpan = link.selectFirst(".ContributorLink__name, span[data-testid=name]")
+                if (nameSpan != null) {
+                    realAuthors.add(nameSpan.text().trim())
+                }
+            }
+            if (realAuthors.isNotEmpty()) {
+                dto.authors = realAuthors
+            }
         }
 
         // authors (HTML fallback if JSON-LD didn't have them)
@@ -527,6 +623,16 @@ class GoodreadsMetadataProvider(
             // Language
             root.get("inLanguage")?.asText()?.let { dto.language = it }
 
+            // Genre/Tags from JSON-LD
+            val genreNode = root.get("genre")
+            if (genreNode != null) {
+                if (genreNode.isArray) {
+                    genreNode.forEach { genre -> genre.asText()?.let { dto.tags.add(it) } }
+                } else {
+                    genreNode.asText()?.let { dto.tags.add(it) }
+                }
+            }
+
             logger.debug("JSON-LD parsed: title={}, isbn={}, authors={}", dto.title, isbnText, dto.authors.size)
         } catch (e: Exception) {
             logger.debug("Failed to parse JSON-LD: ${e.message}")
@@ -539,28 +645,37 @@ class GoodreadsMetadataProvider(
 
     private fun fetchDocument(
         url: String,
+        cookie: String? = null,
         retries: Int = 3,
     ): Document? {
         repeat(retries - 1) {
             try {
-                return Jsoup
-                    .connect(url)
-                    .userAgent(userAgent)
-                    .timeout(10_000)
-                    .followRedirects(true)
-                    .get()
+                val connection =
+                    Jsoup
+                        .connect(url)
+                        .userAgent(userAgent)
+                        .timeout(10_000)
+                        .followRedirects(true)
+                if (!cookie.isNullOrBlank()) {
+                    connection.header("Cookie", cookie)
+                }
+                return connection.get()
             } catch (e: Exception) {
                 logger.warn("Attempt ${it + 1} failed for $url: ${e.message}")
                 Thread.sleep(500)
             }
         }
         return try {
-            Jsoup
-                .connect(url)
-                .userAgent(userAgent)
-                .timeout(10_000)
-                .followRedirects(true)
-                .get()
+            val connection =
+                Jsoup
+                    .connect(url)
+                    .userAgent(userAgent)
+                    .timeout(10_000)
+                    .followRedirects(true)
+            if (!cookie.isNullOrBlank()) {
+                connection.header("Cookie", cookie)
+            }
+            connection.get()
         } catch (e: Exception) {
             logger.error("Final attempt failed for $url: ${e.message}", e)
             null
