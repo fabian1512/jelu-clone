@@ -10,6 +10,7 @@ export interface Metadata {
     pageCount?: number,
     publishedDate?: string,
     authors: Array<string>,
+    translators: Array<string>,
     tags: Array<string>,
     series?: string,
     numberInSeries?: number,

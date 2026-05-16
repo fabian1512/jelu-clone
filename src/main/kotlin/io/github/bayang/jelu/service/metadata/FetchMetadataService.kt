@@ -141,6 +141,7 @@ class FetchMetadataService(
         if (acc.inventaireId == null) acc.inventaireId = next.inventaireId
         if (acc.noosfereId == null) acc.noosfereId = next.noosfereId
         acc.authors.addAll(next.authors)
+        acc.translators.addAll(next.translators)
         acc.tags.addAll(next.tags)
     }
 
