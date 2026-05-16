@@ -118,7 +118,10 @@ class GoodreadsMetadataProvider(
                     if (matchesRequestedIsbn(dto, requestedIsbn)) {
                         return listOf(dto)
                     }
-                    logger.warn { "Goodreads ISBN lookup mismatch for '$requestedIsbn': got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}, url=$bookUrl" }
+                    logger.warn {
+                        "Goodreads ISBN lookup mismatch for '$requestedIsbn': " +
+                            "got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}, url=$bookUrl"
+                    }
                 }
             }
         }
@@ -142,7 +145,10 @@ class GoodreadsMetadataProvider(
                 if (!dto.title.isNullOrBlank() && (requestedIsbn == null || matchesRequestedIsbn(dto, requestedIsbn))) {
                     results.add(dto)
                 } else if (!dto.title.isNullOrBlank() && requestedIsbn != null) {
-                    logger.warn { "Goodreads redirected result rejected for '$requestedIsbn': got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}" }
+                    logger.warn {
+                        "Goodreads redirected result rejected for '$requestedIsbn': " +
+                            "got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}"
+                    }
                 }
             } else {
                 // Regular search results list
