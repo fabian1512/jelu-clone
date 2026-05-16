@@ -585,17 +585,15 @@ watch(() => sliderPercent.value, (newVal) => {
 
     <div class="mb-4">
       <div class="text-xs font-semibold uppercase opacity-60 tracking-wider mb-1 px-1">{{ t('book.summary') }}</div>
-      <details class="bg-base-100 rounded-xl border border-base-300 overflow-hidden group">
-        <summary class="px-4 py-3 cursor-pointer flex justify-between items-center select-none list-none">
-          <span class="text-sm truncate pr-4 opacity-60">
-            {{ userbook.book.summary ? userbook.book.summary.substring(0, 60) + '...' : t('labels.no_summary') }}
-          </span>
-          <span class="text-base-content/60 transition-transform group-open:rotate-90">›</span>
-        </summary>
-        <div class="px-4 pb-3">
-          <textarea v-model="userbook.book.summary" rows="4" class="w-full bg-transparent resize-none outline-none text-sm" :placeholder="t('book.summary')"></textarea>
+      <div class="bg-base-100 rounded-xl border border-base-300 overflow-hidden">
+        <div class="px-4 py-3">
+          <textarea
+            v-model="userbook.book.summary"
+            rows="5"
+            class="w-full bg-transparent resize-none outline-none text-sm overflow-y-auto"
+            :placeholder="t('book.summary')"></textarea>
         </div>
-      </details>
+      </div>
     </div>
 
     <div class="mb-4">
