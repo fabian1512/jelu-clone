@@ -533,7 +533,7 @@ class GoodreadsMetadataProvider(
         if (tags.isEmpty()) {
             doc.select("a.bookPageGenreLink[href*=/genres/]").forEach { tags.add(it.text().trim()) }
         }
-        dto.tags = tags
+        dto.tags.addAll(tags.filter { it.isNotBlank() })
     }
 
     private fun parseNextData(
