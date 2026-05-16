@@ -201,7 +201,7 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
             })
             if (fallbackMetadata && fallbackMetadata.title) {
               // Merge: keep existing fields, fill in missing
-              metadataToSend = { ...metadataToSend, ...fallbackMetadata }
+              metadataToSend = { ...fallbackMetadata, ...metadataToSend }
             }
           }
         }
