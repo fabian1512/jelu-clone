@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useTitle } from '@vueuse/core';
 import { useRouteQuery } from '@vueuse/router';
-import { computed, Ref, ref, watch } from 'vue';
+import axios from 'axios';
+import { computed, onUnmounted, Ref, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import usePagination from '../../composables/pagination';
 import useSort from '../../composables/sort';
@@ -37,6 +38,8 @@ const libraryFilter: Ref<LibraryFilter> = useRouteQuery('libraryFilter', 'ONLY_U
 const open = ref(false)
 
 const progress: Ref<boolean> = ref(false)
+const searchRequestCounter: Ref<number> = ref(0)
+let searchAbortController: AbortController | null = null
 
 const eventTypes: Ref<Array<ReadingEventType>> = useRouteQuery('lastEventTypes', [])
 const toRead: Ref<string|null> = useRouteQuery('toRead', "null")
@@ -77,6 +80,9 @@ const borrowedAsBool = computed(() => {
 )
 
 const search = () => {
+    searchAbortController?.abort()
+    searchAbortController = new AbortController()
+    const requestId = ++searchRequestCounter.value
     progress.value = true
     updatePageLoading(true)
       dataService.findBooks(
@@ -84,9 +90,13 @@ const search = () => {
       pageAsNumber.value - 1, perPage.value, 
       sortQuery.value, libraryFilter.value,
       eventTypes.value, toReadAsBool.value, 
-      ownedAsBool.value, borrowedAsBool.value
+      ownedAsBool.value, borrowedAsBool.value,
+      searchAbortController.signal
       )
     .then(res => {
+      if (requestId !== searchRequestCounter.value) {
+        return
+      }
       progress.value = false
       updatePageLoading(false)
           total.value = res.totalElements
@@ -100,10 +110,20 @@ const search = () => {
     }
     )
     .catch(e => {
+      if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+        return
+      }
+      if (requestId !== searchRequestCounter.value) {
+        return
+      }
       progress.value = false
       updatePageLoading(false)
     })
 }
+
+onUnmounted(() => {
+  searchAbortController?.abort()
+})
 
 watch([page, sortQuery, libraryFilter, eventTypes, toRead, owned, borrowed], (newVal, oldVal) => {
   if (newVal !== oldVal) {
