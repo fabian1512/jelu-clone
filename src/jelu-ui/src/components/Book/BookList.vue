@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useThrottleFn, useTitle } from '@vueuse/core';
 import { useRouteQuery } from '@vueuse/router';
-import { computed, onMounted, Ref, ref, watch } from "vue";
+import axios from 'axios';
+import { computed, onMounted, onUnmounted, Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import useBulkEdition from '../../composables/bulkEdition';
 import usePagination from '../../composables/pagination';
@@ -31,6 +32,8 @@ const { showSelect, selectAll, checkedCards, cardChecked, toggleEdit } = useBulk
 const open = ref(false)
 
 const getBookIsLoading: Ref<boolean> = ref(false)
+const booksRequestCounter: Ref<number> = ref(0)
+let booksAbortController: AbortController | null = null
 
 // Filters
 const toRead: Ref<string|null> = useRouteQuery('toRead', "null")
@@ -136,11 +139,17 @@ const borrowedAsBool = computed(() => {
 )
 
 const getBooks = () => {
+  booksAbortController?.abort()
+  booksAbortController = new AbortController()
+  const requestId = ++booksRequestCounter.value
   getBookIsLoading.value = true
   dataService.findUserBookByCriteria(eventTypes.value, null, userId.value,
   toReadAsBool.value, ownedAsBool.value, borrowedAsBool.value,
-  pageAsNumber.value - 1, perPage.value, sortQuery.value)
+  pageAsNumber.value - 1, perPage.value, sortQuery.value, booksAbortController.signal)
   .then(res => {
+        if (requestId !== booksRequestCounter.value) {
+          return
+        }
           total.value = res.totalElements
           books.value = res.content
         if (! res.empty) {
@@ -155,6 +164,12 @@ const getBooks = () => {
     }
     )
     .catch(e => {
+      if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+        return
+      }
+      if (requestId !== booksRequestCounter.value) {
+        return
+      }
       getBookIsLoading.value = false
       updatePageLoading(false)
     })
@@ -172,6 +187,10 @@ const removeIds = () => {
 const throttledGetBooks = useThrottleFn(() => {
   getBooks()
 }, 100, false)
+
+onUnmounted(() => {
+  booksAbortController?.abort()
+})
 
 onMounted(() => {
 });

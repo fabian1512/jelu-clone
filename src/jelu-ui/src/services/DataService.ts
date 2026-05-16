@@ -438,7 +438,7 @@ class DataService {
 
   findUserBookByCriteria = async (lastEventTypes?: Array<ReadingEventType> | null, bookId?: string|null,
     userId?: string|null, toRead?: boolean | null, owned?: boolean | null, borrowed?: boolean | null,
-    page?: number, size?: number, sort?: string) => {
+    page?: number, size?: number, sort?: string, signal?: AbortSignal) => {
     try {
       const response = await this.apiClient.get<Page<UserBook>>(`${this.API_USERBOOK}`, {
         params: {
@@ -456,10 +456,14 @@ class DataService {
           serialize : (params) => {
             return qs.stringify(params, { arrayFormat: 'comma' })
         }},
+        signal,
       });
       return response.data;
     }
     catch (error) {
+      if (axios.isAxiosError(error) && error.code === 'ERR_CANCELED') {
+        throw error
+      }
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error get userBook by eventType " + error)
@@ -803,7 +807,7 @@ class DataService {
 
   findBooks = async (query?: string, page?: number, size?: number, sort?: string,
     libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null,
-    toRead?: boolean | null, owned?: boolean | null, borrowed?: boolean | null,) => {
+    toRead?: boolean | null, owned?: boolean | null, borrowed?: boolean | null, signal?: AbortSignal) => {
     try {
       const response = await this.apiClient.get<Page<Book>>(`${this.API_BOOK}`, {
         params: {
@@ -821,10 +825,14 @@ class DataService {
           serialize : (params) => {
             return qs.stringify(params, { arrayFormat: 'comma' })
         }},
+        signal,
       });
       return response.data;
     }
     catch (error) {
+      if (axios.isAxiosError(error) && error.code === 'ERR_CANCELED') {
+        throw error
+      }
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error find books " + error)
