@@ -112,6 +112,7 @@
       "external_result": "External Result",
       "searching_external": "Searching external providers...",
       "no_results_found": "No results found",
+      "load_more_results": "Show more results",
       "choose_plugins": "Choose providers",
       "select": "Select",
       "orphan-tags" : "orphan tags",

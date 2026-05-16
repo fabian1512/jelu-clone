@@ -90,7 +90,7 @@ class DatabazeKnihMetadataProvider : IMetaDataProvider {
 
         // If search result page lists multiple books, collect all links
         if (doc.title().startsWith("Vyhledávání")) {
-            val bookLinks = doc.select("p.new a.new").map { it.attr("href") }.take(10)
+            val bookLinks = doc.select("p.new a.new").map { it.attr("href") }.take(15)
             if (bookLinks.isEmpty()) {
                 return emptyList()
             }

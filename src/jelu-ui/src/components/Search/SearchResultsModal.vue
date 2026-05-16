@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Metadata } from "../../model/Metadata";
 
@@ -18,6 +18,19 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'select', metadata: Metadata): void
 }>()
+
+const PAGE_SIZE = 15
+const displayCount = ref(PAGE_SIZE)
+const visibleResults = computed(() => props.results?.slice(0, displayCount.value) ?? [])
+const hasMore = computed(() => (props.results?.length ?? 0) > displayCount.value)
+
+watch(() => props.results, () => {
+  displayCount.value = PAGE_SIZE
+})
+
+const loadMore = () => {
+  displayCount.value += PAGE_SIZE
+}
 
 const listRef = ref<HTMLElement | null>(null)
 
@@ -54,7 +67,7 @@ const close = () => {
         <h4 class="text-sm font-semibold mb-2 opacity-60">{{ t('labels.search_results') }} ({{ results.length }})</h4>
         <div class="space-y-2">
           <div
-            v-for="(metadata, index) in results"
+            v-for="(metadata, index) in visibleResults"
             :key="index"
             class="search-result-item flex items-center gap-3 p-2 border rounded hover:bg-base-200 cursor-pointer"
             :class="{ 'opacity-50': loading }"
@@ -82,6 +95,13 @@ const close = () => {
               {{ t('labels.select') }}
             </button>
           </div>
+        </div>
+
+        <!-- Load more button -->
+        <div v-if="hasMore" class="flex justify-center mt-3">
+          <button @click="loadMore" class="btn btn-sm btn-outline" :disabled="loading">
+            {{ t('labels.load_more_results') }}
+          </button>
         </div>
       </div>
       
