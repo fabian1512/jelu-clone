@@ -107,26 +107,32 @@ class GoodreadsMetadataProvider(
         }
 
         return try {
-            val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}"
-            val html = fetchHtml(searchUrl, cookie) ?: return emptyList()
-            val searchDoc = Jsoup.parse(html)
-
             val results = mutableListOf<MetadataDto>()
+            var page = 1
 
-            // Check if we were redirected to a book detail page directly (e.g. ISBN search)
-            if (searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle") != null) {
-                val dto = MetadataDto()
-                parseJsonLd(searchDoc, dto)
-                parseHtmlInto(searchDoc, dto)
-                parseNextData(html, dto)
-                if (!dto.title.isNullOrBlank()) {
-                    results.add(dto)
+            while (results.size < 40) {
+                val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}&page=$page"
+                val html = fetchHtml(searchUrl, cookie) ?: break
+                val searchDoc = Jsoup.parse(html)
+
+                // Check if we were redirected to a book detail page directly (only on page 1, e.g. ISBN search)
+                if (page == 1 && searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle") != null) {
+                    val dto = MetadataDto()
+                    parseJsonLd(searchDoc, dto)
+                    parseHtmlInto(searchDoc, dto)
+                    parseNextData(html, dto)
+                    if (!dto.title.isNullOrBlank()) {
+                        results.add(dto)
+                    }
+                    break
                 }
-            } else {
+
                 // Regular search results list
                 val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
+                if (bookRows.isEmpty()) break
 
-                for (row in bookRows.take(40)) {
+                val remaining = 40 - results.size
+                for (row in bookRows.take(remaining)) {
                     val dto = MetadataDto()
                     dto.title = row.text().trim()
 
@@ -154,10 +160,13 @@ class GoodreadsMetadataProvider(
                         results.add(dto)
                     }
                 }
+
+                if (bookRows.size < 20) break // last page (page < 20 means incomplete)
+                page++
             }
 
             if (results.isEmpty()) {
-                logger.warn { "Goodreads search for '$query': No book links found. HTML sample: ${html.take(500)}" }
+                logger.warn { "Goodreads search for '$query': No book links found" }
             } else {
                 logger.info { "Goodreads search for '$query': ${results.size} results" }
             }
