@@ -139,7 +139,7 @@ const { typographyClasses } = useTypography()
           v-if="message.link"
           class="link mx-3 uppercase"
           :href="message.link"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >{{ t('user-messages.link') }}
           <svg
             xmlns="http://www.w3.org/2000/svg"

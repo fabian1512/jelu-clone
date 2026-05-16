@@ -489,7 +489,7 @@ const { typographyClasses } = useTypography()
             class="link hover:link-accent tooltip self-center"
             :data-tip="t('labels.search_documentation')"
             href="https://bayang.github.io/jelu-web/usage/search/"
-            target="_blank"
+            target="_blank" rel="noopener noreferrer"
           ><svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

@@ -349,7 +349,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://www.goodreads.com/book/show/' + props.book.goodreadsId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >goodreads</a>
       </span>
       <span
@@ -358,7 +358,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://books.google.com/books?id=' + props.book.googleId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >google</a>
       </span>
       <span
@@ -367,7 +367,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://www.amazon.com/dp/' + props.book.amazonId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >amazon</a>
       </span>
       <span
@@ -376,7 +376,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://www.librarything.com/work/' + props.book.librarythingId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >librarything</a>
       </span>
       <span
@@ -385,7 +385,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://www.isfdb.org/cgi-bin/title.cgi?' + props.book.isfdbId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >ISFDB</a>
       </span>
       <span
@@ -394,7 +394,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="`https://openlibrary.org/works/${props.book.openlibraryId}?mode=all`"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >Openlibrary</a>
       </span>
       <span
@@ -403,7 +403,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://www.noosfere.org/livres/EditionsLivre.asp?numitem=' + props.book.noosfereId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >Noosfere</a>
       </span>
       <span
@@ -412,7 +412,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://inventaire.io/entity/isbn:' + getIsbn()"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >inventaire</a>
       </span>
       <span
@@ -421,7 +421,7 @@ const { typographyClasses } = useTypography()
       >
         <a
           :href="'https://inventaire.io/entity/inv:' + props.book.inventaireId"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
         >inventaire</a>
       </span>
     </div>

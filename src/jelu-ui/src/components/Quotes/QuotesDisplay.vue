@@ -61,7 +61,7 @@ catch (err) {
           <a
             v-if="quote.link"
             :href="quote.link"
-            target="_blank"
+            target="_blank" rel="noopener noreferrer"
             class="link"
           >{{ quote.origin }}</a>
         </p>

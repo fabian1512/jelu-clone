@@ -287,25 +287,25 @@ getBooks()
         <a
           v-if="author.officialPage"
           :href="author.officialPage"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
           class="link link-accent"
         ><i class="mdi mdi-24px mdi-web" /></a>
         <a
           v-if="author.wikipediaPage"
           :href="author.wikipediaPage"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
           class="link link-accent"
         ><i class="mdi mdi-24px mdi-wikipedia" /></a>
         <a
           v-if="author.goodreadsPage"
           :href="author.goodreadsPage"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
           class="link link-accent"
         ><i class="mdi mdi-24px mdi-goodreads" /></a>
         <a
           v-if="author.twitterPage"
           :href="author.twitterPage"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
           class="link link-accent"
         >
           <svg
@@ -336,13 +336,13 @@ getBooks()
         <a
           v-if="author.facebookPage"
           :href="author.facebookPage"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
           class="link link-accent"
         ><i class="mdi mdi-24px mdi-facebook" /></a>
         <a
           v-if="author.instagramPage"
           :href="author.instagramPage"
-          target="_blank"
+          target="_blank" rel="noopener noreferrer"
           class="link link-accent"
         ><i class="mdi mdi-24px mdi-instagram" /></a>
       </div>
