@@ -248,7 +248,20 @@ class GoodreadsMetadataProvider(
         isbn: String,
         cookie: String?,
     ): String? {
-        // 1: search URL
+        // 1: direct ISBN URL (most reliable – returns exact match)
+        try {
+            val directUrl = "$baseUrl/book/isbn/$isbn"
+            val html = fetchHtml(directUrl, cookie)
+            if (html != null) {
+                val doc = Jsoup.parse(html)
+                if (doc.selectFirst("h1[data-testid=bookTitle]") != null || doc.selectFirst("h1#bookTitle") != null) {
+                    return directUrl
+                }
+            }
+        } catch (_: Exception) {
+        }
+
+        // 2: fallback to search URL (may return wrong edition)
         try {
             val searchUrl = "$baseUrl/search/index.html?q=$isbn"
             val html = fetchHtml(searchUrl, cookie)
@@ -260,19 +273,6 @@ class GoodreadsMetadataProvider(
                 if (altLink != null) return "$baseUrl$altLink"
                 if (doc.selectFirst("h1[data-testid=bookTitle]") != null) {
                     return searchUrl
-                }
-            }
-        } catch (_: Exception) {
-        }
-
-        // 2: fallback to direct URL
-        try {
-            val directUrl = "$baseUrl/book/isbn/$isbn"
-            val html = fetchHtml(directUrl, cookie)
-            if (html != null) {
-                val doc = Jsoup.parse(html)
-                if (doc.selectFirst("h1[data-testid=bookTitle]") != null || doc.selectFirst("h1#bookTitle") != null) {
-                    return directUrl
                 }
             }
         } catch (_: Exception) {
