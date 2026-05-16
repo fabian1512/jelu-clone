@@ -18,6 +18,7 @@ import SortFilterBarVue from '../Global/SortFilterBar.vue';
 import { useRoute } from 'vue-router';
 import { Role } from "../../model/Role";
 import useTypography from "../../composables/typography";
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 const { t } = useI18n({
       inheritLocale: true,
@@ -376,7 +377,7 @@ getBooks()
         </p>
         <p
           class="prose prose-base"
-          v-html="author.biography"
+          v-html="sanitizeHtml(author.biography)"
         />
         <p
           v-if="author.dateOfBirth"
@@ -399,7 +400,7 @@ getBooks()
         </p>
         <p
           class="prose prose-base"
-          v-html="author.notes"
+          v-html="sanitizeHtml(author.notes)"
         />
       </div>
     </div>
