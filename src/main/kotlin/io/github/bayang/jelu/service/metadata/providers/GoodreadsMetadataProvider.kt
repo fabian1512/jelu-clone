@@ -107,32 +107,26 @@ class GoodreadsMetadataProvider(
         }
 
         return try {
+            val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}"
+            val html = fetchHtml(searchUrl, cookie) ?: return emptyList()
+            val searchDoc = Jsoup.parse(html)
+
             val results = mutableListOf<MetadataDto>()
-            var page = 1
 
-            while (results.size < 40) {
-                val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}&page=$page"
-                val html = fetchHtml(searchUrl, cookie) ?: break
-                val searchDoc = Jsoup.parse(html)
-
-                // Check if we were redirected to a book detail page directly (only on page 1, e.g. ISBN search)
-                if (page == 1 && searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle") != null) {
-                    val dto = MetadataDto()
-                    parseJsonLd(searchDoc, dto)
-                    parseHtmlInto(searchDoc, dto)
-                    parseNextData(html, dto)
-                    if (!dto.title.isNullOrBlank()) {
-                        results.add(dto)
-                    }
-                    break
+            // Check if we were redirected to a book detail page directly (e.g. ISBN search)
+            if (searchDoc.selectFirst("h1[data-testid=bookTitle], h1#bookTitle") != null) {
+                val dto = MetadataDto()
+                parseJsonLd(searchDoc, dto)
+                parseHtmlInto(searchDoc, dto)
+                parseNextData(html, dto)
+                if (!dto.title.isNullOrBlank()) {
+                    results.add(dto)
                 }
-
+            } else {
                 // Regular search results list
                 val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
-                if (bookRows.isEmpty()) break
 
-                val remaining = 40 - results.size
-                for (row in bookRows.take(remaining)) {
+                for (row in bookRows.take(20)) {
                     val dto = MetadataDto()
                     dto.title = row.text().trim()
 
@@ -160,13 +154,10 @@ class GoodreadsMetadataProvider(
                         results.add(dto)
                     }
                 }
-
-                if (bookRows.size < 20) break // last page (page < 20 means incomplete)
-                page++
             }
 
             if (results.isEmpty()) {
-                logger.warn { "Goodreads search for '$query': No book links found" }
+                logger.warn { "Goodreads search for '$query': No book links found. HTML sample: ${html.take(500)}" }
             } else {
                 logger.info { "Goodreads search for '$query': ${results.size} results" }
             }
@@ -339,13 +330,23 @@ class GoodreadsMetadataProvider(
             doc.select("meta[property=og:title]")?.attr("content")?.let { dto.title = it }
         }
 
-        // authors (ContributorLinks with role filtering, overrides JSON-LD)
+        // authors + translators (ContributorLinks with role filtering, overrides JSON-LD)
         val contributorLinks = doc.select("a.ContributorLink")
         if (contributorLinks.isNotEmpty()) {
             val realAuthors = mutableSetOf<String>()
+            val translators = mutableSetOf<String>()
             contributorLinks.forEach { link ->
                 val roleSpan = link.selectFirst("[data-testid=role]")
-                if (roleSpan != null) return@forEach
+                if (roleSpan != null) {
+                    val nameSpan = link.selectFirst(".ContributorLink__name, span[data-testid=name]")
+                    if (nameSpan != null) {
+                        val roleText = roleSpan.text().trim()
+                        if (roleText.contains("Translator")) {
+                            translators.add(nameSpan.text().trim())
+                        }
+                    }
+                    return@forEach
+                }
                 val nameSpan = link.selectFirst(".ContributorLink__name, span[data-testid=name]")
                 if (nameSpan != null) {
                     realAuthors.add(nameSpan.text().trim())
@@ -353,6 +354,9 @@ class GoodreadsMetadataProvider(
             }
             if (realAuthors.isNotEmpty()) {
                 dto.authors = realAuthors
+            }
+            if (translators.isNotEmpty()) {
+                dto.translators = translators
             }
         }
 

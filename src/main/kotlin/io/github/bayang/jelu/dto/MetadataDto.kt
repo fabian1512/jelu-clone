@@ -10,6 +10,7 @@ data class MetadataDto(
     var pageCount: Int? = null,
     var publishedDate: String? = null,
     var authors: MutableSet<String> = mutableSetOf(),
+    var translators: MutableSet<String> = mutableSetOf(),
     var tags: MutableSet<String> = mutableSetOf(),
     var series: String? = null,
     var numberInSeries: Double? = null,
