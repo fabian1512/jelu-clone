@@ -95,7 +95,7 @@ Recent relevant commits (already done):
 ### T4 - Build path dedup (M)
 - Scope: `build.gradle.kts`, `src/jelu-ui/package.json`
 - Goal: remove duplicate install work and improve cacheability
-- Status: `todo`
+- Status: `done`
 
 ### T5 - Request cancellation baseline (M)
 - Scope: DataService + top search/list pages
@@ -107,3 +107,4 @@ Recent relevant commits (already done):
 - 2026-05-16: T1 done - fixed Axios response interceptor to always `Promise.reject(error)` after 401 handling.
 - 2026-05-16: T2 done - added `rel="noopener noreferrer"` to all Vue links using `target="_blank"` (8 files).
 - 2026-05-16: T3 done - introduced shared DOMPurify helper and sanitized all `v-html` render paths.
+- 2026-05-16: T4 done - `npmBuild` now runs `npm run build` (no double `npm ci`), added `package-lock.json` as task input, removed cache disable flag.
