@@ -106,6 +106,19 @@ class GoodreadsMetadataProvider(
             return emptyList()
         }
 
+        // ISBN: use dedicated lookup for accurate single result
+        if (!metadataRequestDto.isbn.isNullOrBlank()) {
+            val cleanIsbn = metadataRequestDto.isbn.replace("-", "").replace(" ", "")
+            val bookUrl = searchByIsbn(cleanIsbn, cookie)
+            if (bookUrl != null) {
+                val dtoOpt = parseBookPage(bookUrl, cookie)
+                if (dtoOpt.isPresent) {
+                    dtoOpt.get().goodreadsId = extractBookId(bookUrl)
+                    return listOf(dtoOpt.get())
+                }
+            }
+        }
+
         return try {
             val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}"
             val html = fetchHtml(searchUrl, cookie) ?: return emptyList()
@@ -201,7 +214,11 @@ class GoodreadsMetadataProvider(
             logger.debug("No Goodreads page found for isbn $isbn")
             return Optional.empty()
         }
-        return parseBookPage(bookUrl, cookie)
+        val dto = parseBookPage(bookUrl, cookie)
+        if (dto.isPresent) {
+            dto.get().goodreadsId = extractBookId(bookUrl)
+        }
+        return dto
     }
 
     private fun extractBookId(href: String): String? {
