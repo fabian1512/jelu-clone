@@ -305,7 +305,7 @@ class InventaireIoMetadataProvider(
                     }
                 }
         if (node == null || !node.isArray) return emptyList()
-        return node.mapNotNull { work ->
+        return node.take(40).mapNotNull { work ->
             try {
                 val dto = MetadataDto()
                 if (work.has("uri")) {
