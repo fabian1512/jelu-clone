@@ -560,6 +560,16 @@ class GoodreadsMetadataProvider(
             // Language
             root.get("inLanguage")?.asText()?.let { dto.language = it }
 
+            // Genre/Tags from JSON-LD
+            val genreNode = root.get("genre")
+            if (genreNode != null) {
+                if (genreNode.isArray) {
+                    genreNode.forEach { genre -> genre.asText()?.let { dto.tags.add(it) } }
+                } else {
+                    genreNode.asText()?.let { dto.tags.add(it) }
+                }
+            }
+
             logger.debug("JSON-LD parsed: title={}, isbn={}, authors={}", dto.title, isbnText, dto.authors.size)
         } catch (e: Exception) {
             logger.debug("Failed to parse JSON-LD: ${e.message}")
