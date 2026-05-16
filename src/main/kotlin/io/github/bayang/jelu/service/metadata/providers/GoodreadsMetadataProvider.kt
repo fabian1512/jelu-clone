@@ -106,14 +106,19 @@ class GoodreadsMetadataProvider(
             return emptyList()
         }
 
+        val requestedIsbn = normalizeIsbn(metadataRequestDto.isbn)
+
         // ISBN: use dedicated lookup for accurate single result
-        if (!metadataRequestDto.isbn.isNullOrBlank()) {
-            val cleanIsbn = metadataRequestDto.isbn.replace("-", "").replace(" ", "")
-            val bookUrl = searchByIsbn(cleanIsbn, cookie)
+        if (!requestedIsbn.isNullOrBlank()) {
+            val bookUrl = searchByIsbn(requestedIsbn, cookie)
             if (bookUrl != null) {
                 val dtoOpt = parseBookPage(bookUrl, cookie)
                 if (dtoOpt.isPresent) {
-                    return listOf(dtoOpt.get())
+                    val dto = dtoOpt.get()
+                    if (matchesRequestedIsbn(dto, requestedIsbn)) {
+                        return listOf(dto)
+                    }
+                    logger.warn { "Goodreads ISBN lookup mismatch for '$requestedIsbn': got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}, url=$bookUrl" }
                 }
             }
         }
@@ -134,18 +139,33 @@ class GoodreadsMetadataProvider(
                 searchDoc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
                     dto.goodreadsId = extractBookId(canonicalUrl)
                 }
-                if (!dto.title.isNullOrBlank()) {
+                if (!dto.title.isNullOrBlank() && (requestedIsbn == null || matchesRequestedIsbn(dto, requestedIsbn))) {
                     results.add(dto)
+                } else if (!dto.title.isNullOrBlank() && requestedIsbn != null) {
+                    logger.warn { "Goodreads redirected result rejected for '$requestedIsbn': got isbn13=${dto.isbn13}, isbn10=${dto.isbn10}" }
                 }
             } else {
                 // Regular search results list
                 val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
 
                 for (row in bookRows.take(20)) {
+                    val href = row.attr("href")
+                    if (!requestedIsbn.isNullOrBlank()) {
+                        val candidateUrl = if (href.startsWith("http")) href else "$baseUrl$href"
+                        val dtoOpt = parseBookPage(candidateUrl, cookie)
+                        if (dtoOpt.isPresent) {
+                            val dto = dtoOpt.get()
+                            if (matchesRequestedIsbn(dto, requestedIsbn)) {
+                                results.add(dto)
+                                break
+                            }
+                        }
+                        continue
+                    }
+
                     val dto = MetadataDto()
                     dto.title = row.text().trim()
 
-                    val href = row.attr("href")
                     dto.goodreadsId = extractBookId(href)
 
                     val parentTableRow = row.closest("tr")
@@ -201,10 +221,7 @@ class GoodreadsMetadataProvider(
         }
 
         // Fallback to ISBN search
-        val isbn =
-            metadataRequestDto.isbn
-                ?.replace("-", "", true)
-                ?.replace(" ", "", true)
+        val isbn = normalizeIsbn(metadataRequestDto.isbn)
         if (isbn.isNullOrBlank()) {
             return Optional.empty()
         }
@@ -214,7 +231,30 @@ class GoodreadsMetadataProvider(
             return Optional.empty()
         }
         val dto = parseBookPage(bookUrl, cookie)
+        if (dto.isPresent && !matchesRequestedIsbn(dto.get(), isbn)) {
+            logger.warn { "Goodreads fetch mismatch for '$isbn': got isbn13=${dto.get().isbn13}, isbn10=${dto.get().isbn10}, url=$bookUrl" }
+            return Optional.empty()
+        }
         return dto
+    }
+
+    private fun normalizeIsbn(isbn: String?): String? =
+        isbn
+            ?.replace("-", "", true)
+            ?.replace(" ", "", true)
+            ?.uppercase()
+            ?.takeIf { it.isNotBlank() }
+
+    private fun matchesRequestedIsbn(
+        dto: MetadataDto,
+        requestedIsbn: String,
+    ): Boolean {
+        val requested = normalizeIsbn(requestedIsbn) ?: return false
+        val requested13 = if (requested.length == 13) requested else isbn10to13(requested)
+        val requested10 = if (requested.length == 10) requested else isbn13to10(requested)
+        val dto13 = normalizeIsbn(dto.isbn13)
+        val dto10 = normalizeIsbn(dto.isbn10)
+        return (requested13 != null && dto13 == requested13) || (requested10 != null && dto10 == requested10)
     }
 
     private fun extractBookId(href: String): String? {
