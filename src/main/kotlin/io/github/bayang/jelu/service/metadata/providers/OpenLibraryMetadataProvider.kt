@@ -137,7 +137,7 @@ class OpenLibraryMetadataProvider(
                         .host("openlibrary.org")
                         .path("/search.json")
                         .queryParam("q", query)
-                        .queryParam("limit", 15)
+                        .queryParam("limit", 40)
                         .build()
                 }.retrieve()
                 .body(String::class.java)

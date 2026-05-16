@@ -126,7 +126,7 @@ class GoodreadsMetadataProvider(
                 // Regular search results list
                 val bookRows = searchDoc.select("a.bookTitle[href*=/book/show/]")
 
-                for (row in bookRows.take(15)) {
+                for (row in bookRows.take(40)) {
                     val dto = MetadataDto()
                     dto.title = row.text().trim()
 
