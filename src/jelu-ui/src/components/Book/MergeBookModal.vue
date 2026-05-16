@@ -35,9 +35,13 @@ const emit = defineEmits<{
 
 let authors: Ref<Array<string|Author>> = ref([]);
 let tags: Ref<Array<string|Tag>> = ref([])
+let translators: Ref<Array<string|Author>> = ref([]);
+let narrators: Ref<Array<string|Author>> = ref([]);
 
 let filteredAuthors: Ref<Array<Wrapper>> = ref([]);
 let filteredTags: Ref<Array<Wrapper>> = ref([]);
+let filteredTranslators: Ref<Array<Wrapper>> = ref([]);
+let filteredNarrators: Ref<Array<Wrapper>> = ref([]);
 
 const progress: Ref<boolean> = ref(false)
 const replaceImage: Ref<boolean> = ref(false)
@@ -193,8 +197,78 @@ function tagRemoved(item: string|Tag) {
   }
 }
 
+function beforeAddTranslator(item: Author | string) {
+  let shouldAdd = true
+  if (item instanceof Object) {
+    book.value.translators?.forEach(t => {
+      if (t.name === item.name) shouldAdd = false;
+    });
+  } else {
+    book.value.translators?.forEach(t => {
+      if (t.name === item) shouldAdd = false;
+    });
+  }
+  return shouldAdd
+}
+
+function beforeAddNarrator(item: Author | string) {
+  let shouldAdd = true
+  if (item instanceof Object) {
+    book.value.narrators?.forEach(n => {
+      if (n.name === item.name) shouldAdd = false;
+    });
+  } else {
+    book.value.narrators?.forEach(n => {
+      if (n.name === item) shouldAdd = false;
+    });
+  }
+  return shouldAdd
+}
+
+function translatorAdded(item: string|Author) {
+  if (!book.value.translators) book.value.translators = []
+  itemAdded(item, book.value.translators as Array<Author>)
+}
+
+function narratorAdded(item: string|Author) {
+  if (!book.value.narrators) book.value.narrators = []
+  itemAdded(item, book.value.narrators as Array<Author>)
+}
+
+function translatorRemoved(item: string|Author) {
+  if (typeof item === 'string') {
+    book.value.translators = book.value.translators?.filter(t => t.name !== item)
+  } else {
+    book.value.translators = book.value.translators?.filter(t => t.id !== item.id)
+  }
+}
+
+function narratorRemoved(item: string|Author) {
+  if (typeof item === 'string') {
+    book.value.narrators = book.value.narrators?.filter(n => n.name !== item)
+  } else {
+    book.value.narrators = book.value.narrators?.filter(n => n.id !== item.id)
+  }
+}
+
+function getFilteredTranslators(text: string) {
+  dataService.findAuthorByCriteria(Role.TRANSLATOR, text).then((data) => {
+    filteredTranslators.value.splice(filteredTranslators.value.length)
+    data.content.forEach(a => filteredTranslators.value.push(ObjectUtils.wrapForOptions(a)))
+  })
+}
+
+function getFilteredNarrators(text: string) {
+  dataService.findAuthorByCriteria(Role.NARRATOR, text).then((data) => {
+    filteredNarrators.value.splice(filteredNarrators.value.length)
+    data.content.forEach(a => filteredNarrators.value.push(ObjectUtils.wrapForOptions(a)))
+  })
+}
+
 book.value.authors?.forEach(a => authors.value.push(a.name))
 book.value.tags?.forEach(t => tags.value.push(t.name))
+book.value.translators?.forEach(t => translators.value.push(t.name))
+book.value.narrators?.forEach(n => narrators.value.push(n.name))
 
 const { typographyClasses } = useTypography()
 </script>
@@ -315,6 +389,78 @@ const { typographyClasses } = useTypography()
           <div class="flex">
             <div class="m-2">
               {{ metadata.tags.join(',') }}
+            </div>
+          </div>
+        </div>
+        <!-- translators -->
+        <div class="w-full jelu-authorinput">
+          <label class="label">
+            <span class="label-text first-letter:capitalize">{{ t('book.translator', 2) }}</span>
+          </label>
+          <o-taginput
+            v-model="translators"
+            :options="filteredTranslators"
+            :allow-autocomplete="true"
+            autocomplete="off"
+            :allow-new="true"
+            :allow-duplicates="false"
+            :open-on-focus="true"
+            :validate-item="beforeAddTranslator"
+            :create-item="createAuthor"
+            icon-pack="mdi"
+            icon="account-plus"
+            :placeholder="t('labels.add_translator')"
+            @input="getFilteredTranslators"
+            @add="translatorAdded"
+            @remove="translatorRemoved"
+          >
+            <template #default="{ value }">
+              <div class="jl-taginput-item">
+                {{ value.name }}
+              </div>
+            </template>
+          </o-taginput>
+        </div>
+        <div class="form-control w-full">
+          <div class="flex">
+            <div class="m-2">
+              {{ metadata.translators?.join(', ') }}
+            </div>
+          </div>
+        </div>
+        <!-- narrators -->
+        <div class="w-full jelu-authorinput">
+          <label class="label">
+            <span class="label-text first-letter:capitalize">{{ t('book.narrator', 2) }}</span>
+          </label>
+          <o-taginput
+            v-model="narrators"
+            :options="filteredNarrators"
+            :allow-autocomplete="true"
+            autocomplete="off"
+            :allow-new="true"
+            :allow-duplicates="false"
+            :open-on-focus="true"
+            :validate-item="beforeAddNarrator"
+            :create-item="createAuthor"
+            icon-pack="mdi"
+            icon="account-plus"
+            :placeholder="t('labels.add_narrator')"
+            @input="getFilteredNarrators"
+            @add="narratorAdded"
+            @remove="narratorRemoved"
+          >
+            <template #default="{ value }">
+              <div class="jl-taginput-item">
+                {{ value.name }}
+              </div>
+            </template>
+          </o-taginput>
+        </div>
+        <div class="form-control w-full">
+          <div class="flex">
+            <div class="m-2">
+              {{ metadata.narrators?.join(', ') }}
             </div>
           </div>
         </div>
