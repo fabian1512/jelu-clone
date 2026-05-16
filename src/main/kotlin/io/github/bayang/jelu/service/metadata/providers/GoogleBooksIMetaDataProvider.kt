@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.util.UriBuilder
-import reactor.core.publisher.Mono
 import java.time.Duration
 import java.util.Optional
 
@@ -63,7 +62,7 @@ class GoogleBooksIMetaDataProvider(
                         }
                     } else {
                         logger.error { "error fetching metadata from google : ${it.statusCode()}" }
-                        Mono.empty()
+                        null
                     }
                 }.block(Duration.ofSeconds(60))
         if (res == null) {
@@ -90,7 +89,7 @@ class GoogleBooksIMetaDataProvider(
                         .host("www.googleapis.com")
                         .path("/books/v1/volumes")
                         .queryParam("q", query(metadataRequestDto))
-                        .queryParam("maxResults", 15)
+                        .queryParam("maxResults", 40)
                         .queryParam("key", googleProviderApiKey)
                         .build()
                 }.exchangeToMono {
@@ -112,7 +111,7 @@ class GoogleBooksIMetaDataProvider(
                         }
                     } else {
                         logger.error { "error searching metadata from google : ${it.statusCode()}" }
-                        Mono.empty()
+                        null
                     }
                 }.block(Duration.ofSeconds(60))
         return res ?: emptyList()

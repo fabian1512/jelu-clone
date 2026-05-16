@@ -184,7 +184,7 @@ class InventaireIoMetadataProvider(
                 }
                 val dto = p?.metadataDto ?: continue
                 results.add(dto)
-                if (results.size >= 15) break
+                if (results.size >= 40) break
             } catch (e: Exception) {
                 logger.warn("failed to enrich search result: ${e.message}")
             }
