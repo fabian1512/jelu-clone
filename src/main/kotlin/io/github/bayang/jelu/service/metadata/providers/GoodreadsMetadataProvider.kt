@@ -356,15 +356,18 @@ class GoodreadsMetadataProvider(
         url: String,
         cookie: String?,
     ): Optional<MetadataDto> {
-        val html = fetchHtml(url, cookie) ?: return Optional.empty()
-        val doc = Jsoup.parse(html)
+        val doc = fetchDocument(url, cookie = cookie) ?: return Optional.empty()
+        val html = doc.html()
         val dto = MetadataDto()
         parseJsonLd(doc, dto)
         parseHtmlInto(doc, dto)
         parseNextData(html, dto)
 
+        dto.goodreadsId = extractBookId(doc.location())
         doc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
-            dto.goodreadsId = extractBookId(canonicalUrl)
+            if (dto.goodreadsId == null) {
+                dto.goodreadsId = extractBookId(canonicalUrl)
+            }
         }
         if (dto.goodreadsId == null) {
             doc.select("meta[property=og:url]")?.attr("content")?.let { ogUrl ->
@@ -653,28 +656,37 @@ class GoodreadsMetadataProvider(
 
     private fun fetchDocument(
         url: String,
+        cookie: String? = null,
         retries: Int = 3,
     ): Document? {
         repeat(retries - 1) {
             try {
-                return Jsoup
-                    .connect(url)
-                    .userAgent(userAgent)
-                    .timeout(10_000)
-                    .followRedirects(true)
-                    .get()
+                val connection =
+                    Jsoup
+                        .connect(url)
+                        .userAgent(userAgent)
+                        .timeout(10_000)
+                        .followRedirects(true)
+                if (!cookie.isNullOrBlank()) {
+                    connection.header("Cookie", cookie)
+                }
+                return connection.get()
             } catch (e: Exception) {
                 logger.warn("Attempt ${it + 1} failed for $url: ${e.message}")
                 Thread.sleep(500)
             }
         }
         return try {
-            Jsoup
-                .connect(url)
-                .userAgent(userAgent)
-                .timeout(10_000)
-                .followRedirects(true)
-                .get()
+            val connection =
+                Jsoup
+                    .connect(url)
+                    .userAgent(userAgent)
+                    .timeout(10_000)
+                    .followRedirects(true)
+            if (!cookie.isNullOrBlank()) {
+                connection.header("Cookie", cookie)
+            }
+            connection.get()
         } catch (e: Exception) {
             logger.error("Final attempt failed for $url: ${e.message}", e)
             null
