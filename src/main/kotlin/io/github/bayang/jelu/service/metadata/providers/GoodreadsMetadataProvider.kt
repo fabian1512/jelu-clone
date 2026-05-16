@@ -113,7 +113,6 @@ class GoodreadsMetadataProvider(
             if (bookUrl != null) {
                 val dtoOpt = parseBookPage(bookUrl, cookie)
                 if (dtoOpt.isPresent) {
-                    dtoOpt.get().goodreadsId = extractBookId(bookUrl)
                     return listOf(dtoOpt.get())
                 }
             }
@@ -132,9 +131,6 @@ class GoodreadsMetadataProvider(
                 parseJsonLd(searchDoc, dto)
                 parseHtmlInto(searchDoc, dto)
                 parseNextData(html, dto)
-                searchDoc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
-                    dto.goodreadsId = extractBookId(canonicalUrl)
-                }
                 if (!dto.title.isNullOrBlank()) {
                     results.add(dto)
                 }
@@ -215,9 +211,6 @@ class GoodreadsMetadataProvider(
             return Optional.empty()
         }
         val dto = parseBookPage(bookUrl, cookie)
-        if (dto.isPresent) {
-            dto.get().goodreadsId = extractBookId(bookUrl)
-        }
         return dto
     }
 
