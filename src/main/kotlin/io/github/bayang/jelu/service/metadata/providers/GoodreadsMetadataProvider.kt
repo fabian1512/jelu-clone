@@ -131,6 +131,9 @@ class GoodreadsMetadataProvider(
                 parseJsonLd(searchDoc, dto)
                 parseHtmlInto(searchDoc, dto)
                 parseNextData(html, dto)
+                searchDoc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
+                    dto.goodreadsId = extractBookId(canonicalUrl)
+                }
                 if (!dto.title.isNullOrBlank()) {
                     results.add(dto)
                 }
@@ -313,6 +316,18 @@ class GoodreadsMetadataProvider(
         parseJsonLd(doc, dto)
         parseHtmlInto(doc, dto)
         parseNextData(html, dto)
+
+        doc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
+            dto.goodreadsId = extractBookId(canonicalUrl)
+        }
+        if (dto.goodreadsId == null) {
+            doc.select("meta[property=og:url]")?.attr("content")?.let { ogUrl ->
+                dto.goodreadsId = extractBookId(ogUrl)
+            }
+        }
+        if (dto.goodreadsId == null) {
+            dto.goodreadsId = extractBookId(url)
+        }
 
         logger.info(
             "goodreads parse: title={}, summary={}, authors={}, isbn13={}",
