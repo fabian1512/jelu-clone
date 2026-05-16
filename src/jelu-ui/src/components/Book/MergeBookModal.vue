@@ -265,6 +265,20 @@ function copyNarratorsFromMetadata() {
   props.metadata.narrators.forEach(n => narrators.value.push(n))
 }
 
+function copyAuthorsFromMetadata() {
+  if (!props.metadata.authors?.length) return
+  book.value.authors = props.metadata.authors.map(name => ({ name }))
+  authors.value = []
+  props.metadata.authors.forEach(a => authors.value.push(a))
+}
+
+function copyTagsFromMetadata() {
+  if (!props.metadata.tags?.length) return
+  book.value.tags = props.metadata.tags.map(name => ({ name }))
+  tags.value = []
+  props.metadata.tags.forEach(t => tags.value.push(t))
+}
+
 function getFilteredTranslators(text: string) {
   dataService.findAuthorByCriteria(Role.TRANSLATOR, text).then((data) => {
     filteredTranslators.value.splice(filteredTranslators.value.length)
@@ -365,10 +379,30 @@ const { typographyClasses } = useTypography()
           </o-taginput>
         </div>
         <div class="form-control w-full">
-          <div class="flex">
-            <div class="m-2">
-              {{ metadata.authors.join(',') }}
-            </div>
+          <div class="join w-full">
+            <button
+              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
+              @click="copyAuthorsFromMetadata()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="w-6 h-6"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <input
+              type="text"
+              :value="props.metadata.authors.join(', ')"
+              disabled
+              class="jelu-cursor-text input input-secondary w-full join-item"
+            >
           </div>
         </div>
         <div class="w-full jelu-taginput">
@@ -400,10 +434,30 @@ const { typographyClasses } = useTypography()
           </o-taginput>
         </div>
         <div class="form-control w-full">
-          <div class="flex">
-            <div class="m-2">
-              {{ metadata.tags.join(',') }}
-            </div>
+          <div class="join w-full">
+            <button
+              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
+              @click="copyTagsFromMetadata()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="w-6 h-6"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <input
+              type="text"
+              :value="props.metadata.tags.join(', ')"
+              disabled
+              class="jelu-cursor-text input input-secondary w-full join-item"
+            >
           </div>
         </div>
         <!-- translators -->
