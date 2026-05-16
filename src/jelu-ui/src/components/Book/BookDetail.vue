@@ -27,6 +27,7 @@ import ReviewModalVue from '../Review/ReviewModal.vue'
 import ReviewCard from '../Global/ReviewCard.vue'
 import EditBookModal from './EditBookModal.vue'
 import useTypography from "../../composables/typography"
+import { sanitizeHtml } from '../../utils/sanitizeHtml'
 
 const { t, d } = useI18n({
       inheritLocale: true,
@@ -878,7 +879,7 @@ getBook()
             {{ t('book.summary') }}:
           </p>
           <div class="h-[120px] overflow-y-auto text-left">
-            <p v-html="displaySummary || '-'" :class="displaySummary ? '' : 'opacity-60'" />
+            <p v-html="sanitizeHtml(displaySummary || '-')" :class="displaySummary ? '' : 'opacity-60'" />
           </div>
         </div>
     </div>
@@ -1179,7 +1180,7 @@ getBook()
       <div class="mt-2 capitalize">{{ t('labels.preview') }}:</div>
       <div
         class="inline-block mt-2"
-        v-html="embedCode"
+        v-html="sanitizeHtml(embedCode)"
       />
     </label>
   </label>

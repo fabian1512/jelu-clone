@@ -90,7 +90,7 @@ Recent relevant commits (already done):
 ### T3 - `v-html` sanitization baseline (M)
 - Scope: all `v-html` usages
 - Goal: central sanitize utility + integration in each render path
-- Status: `todo`
+- Status: `done`
 
 ### T4 - Build path dedup (M)
 - Scope: `build.gradle.kts`, `src/jelu-ui/package.json`
@@ -106,3 +106,4 @@ Recent relevant commits (already done):
 - 2026-05-16: Created consolidated hardening worklog and backlog in one file.
 - 2026-05-16: T1 done - fixed Axios response interceptor to always `Promise.reject(error)` after 401 handling.
 - 2026-05-16: T2 done - added `rel="noopener noreferrer"` to all Vue links using `target="_blank"` (8 files).
+- 2026-05-16: T3 done - introduced shared DOMPurify helper and sanitized all `v-html` render paths.

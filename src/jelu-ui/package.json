@@ -24,6 +24,7 @@
     "chart.js": "4.5.1",
     "daisyui": "5.0.35",
     "dayjs": "1.11.19",
+    "dompurify": "^3.4.3",
     "floating-vue": "5.2.2",
     "sweetalert2": "11.26.10",
     "theme-change": "2.5.0",

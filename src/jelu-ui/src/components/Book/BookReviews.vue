@@ -11,6 +11,7 @@ import { key } from '../../store'
 import useDates from '../../composables/dates'
 import { useI18n } from 'vue-i18n'
 import useTypography from "../../composables/typography";
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 const route = useRoute()
 const router = useRouter()
@@ -173,7 +174,7 @@ getReviews()
           v-if="book?.summary"
           class="h-[120px] overflow-y-auto text-left"
         >
-          <p v-html="displaySummary" />
+          <p v-html="sanitizeHtml(displaySummary)" />
         </div>
         <div v-else class="h-[120px] overflow-y-auto text-left opacity-60">
           -

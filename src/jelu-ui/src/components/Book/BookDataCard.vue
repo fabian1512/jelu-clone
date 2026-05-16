@@ -8,6 +8,7 @@ import useDates from '../../composables/dates'
 import { Book, UserBook } from '../../model/Book'
 import dataService from "../../services/DataService"
 import { ObjectUtils } from '../../utils/ObjectUtils'
+import { sanitizeHtml } from '../../utils/sanitizeHtml'
 import EditBookModal from "./EditBookModal.vue"
 import useTypography from "../../composables/typography"
 
@@ -322,7 +323,7 @@ const { typographyClasses } = useTypography()
           <p class="font-semibold capitalize">
             {{ t('book.summary') }} :
           </p>
-          <p class="text-justify" v-html="props.book.summary" />
+          <p class="text-justify" v-html="sanitizeHtml(props.book.summary)" />
         </div>
       </div>
     </div>
