@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.util.UriBuilder
+import reactor.core.publisher.Mono
 import java.time.Duration
 import java.util.Optional
 
@@ -62,7 +63,7 @@ class GoogleBooksIMetaDataProvider(
                         }
                     } else {
                         logger.error { "error fetching metadata from google : ${it.statusCode()}" }
-                        null
+                        Mono.empty()
                     }
                 }.block(Duration.ofSeconds(60))
         if (res == null) {
@@ -111,7 +112,7 @@ class GoogleBooksIMetaDataProvider(
                         }
                     } else {
                         logger.error { "error searching metadata from google : ${it.statusCode()}" }
-                        null
+                        Mono.empty()
                     }
                 }.block(Duration.ofSeconds(60))
         return res ?: emptyList()
