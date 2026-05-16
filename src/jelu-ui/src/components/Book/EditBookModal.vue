@@ -142,7 +142,7 @@ function copyInput(book: UserBook | Metadata | null): any {
         pageCount: meta.pageCount || null,
         publishedDate: meta.publishedDate || null,
         authors: meta.authors?.map((a: string) => ({ name: a })) || [],
-        translators: [],
+        translators: meta.translators?.map((t: string) => ({ name: t })) || [],
         narrators: [],
         tags: meta.tags?.map((t: string) => ({ name: t })) || [],
         series: meta.series ? [{ name: meta.series, numberInSeries: meta.numberInSeries }] : [],
