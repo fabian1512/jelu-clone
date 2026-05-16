@@ -339,6 +339,23 @@ class GoodreadsMetadataProvider(
             doc.select("meta[property=og:title]")?.attr("content")?.let { dto.title = it }
         }
 
+        // authors (ContributorLinks with role filtering, overrides JSON-LD)
+        val contributorLinks = doc.select("a.ContributorLink")
+        if (contributorLinks.isNotEmpty()) {
+            val realAuthors = mutableSetOf<String>()
+            contributorLinks.forEach { link ->
+                val roleSpan = link.selectFirst("[data-testid=role]")
+                if (roleSpan != null) return@forEach
+                val nameSpan = link.selectFirst(".ContributorLink__name, span[data-testid=name]")
+                if (nameSpan != null) {
+                    realAuthors.add(nameSpan.text().trim())
+                }
+            }
+            if (realAuthors.isNotEmpty()) {
+                dto.authors = realAuthors
+            }
+        }
+
         // authors (HTML fallback if JSON-LD didn't have them)
         if (dto.authors.isEmpty()) {
             doc.select("span[data-testid=authorname] a").forEach { dto.authors.add(it.text().trim()) }
