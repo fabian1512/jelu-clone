@@ -489,6 +489,7 @@ class BookService(
     @Transactional
     fun findUserBookById(userbookId: UUID): UserBookLightDto = bookRepository.findUserBookById(userbookId).toUserBookLightDto()
 
+    @Transactional
     fun findBookAsUserBook(
         bookId: UUID,
         userId: UUID,
