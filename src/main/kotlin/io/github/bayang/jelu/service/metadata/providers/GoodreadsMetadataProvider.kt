@@ -119,6 +119,9 @@ class GoodreadsMetadataProvider(
                 parseJsonLd(searchDoc, dto)
                 parseHtmlInto(searchDoc, dto)
                 parseNextData(html, dto)
+                searchDoc.selectFirst("link[rel=canonical]")?.attr("href")?.let { canonicalUrl ->
+                    dto.goodreadsId = extractBookId(canonicalUrl)
+                }
                 if (!dto.title.isNullOrBlank()) {
                     results.add(dto)
                 }
