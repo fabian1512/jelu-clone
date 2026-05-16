@@ -90,7 +90,7 @@ class GoogleBooksIMetaDataProvider(
                         .host("www.googleapis.com")
                         .path("/books/v1/volumes")
                         .queryParam("q", query(metadataRequestDto))
-                        .queryParam("maxResults", 10)
+                        .queryParam("maxResults", 15)
                         .queryParam("key", googleProviderApiKey)
                         .build()
                 }.exchangeToMono {
