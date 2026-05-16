@@ -85,7 +85,7 @@ Recent relevant commits (already done):
 ### T2 - External links hardening (`noopener`) (S)
 - Scope: book/detail/author/sidebar external links
 - Goal: add `rel="noopener noreferrer"` where `target="_blank"`
-- Status: `todo`
+- Status: `done`
 
 ### T3 - `v-html` sanitization baseline (M)
 - Scope: all `v-html` usages
@@ -105,3 +105,4 @@ Recent relevant commits (already done):
 ## Execution Log
 - 2026-05-16: Created consolidated hardening worklog and backlog in one file.
 - 2026-05-16: T1 done - fixed Axios response interceptor to always `Promise.reject(error)` after 401 handling.
+- 2026-05-16: T2 done - added `rel="noopener noreferrer"` to all Vue links using `target="_blank"` (8 files).

@@ -110,7 +110,7 @@ const adminLinks = computed(() => [
     <div class="p-4 border-t border-base-300 text-sm">
       <a
         href="https://github.com/bayang/jelu"
-        target="_blank"
+        target="_blank" rel="noopener noreferrer"
         class="link link-hover opacity-60"
       >
         <i class="mdi mdi-github" /> Jelu

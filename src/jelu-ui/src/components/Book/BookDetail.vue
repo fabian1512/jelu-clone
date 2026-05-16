@@ -527,16 +527,16 @@ function generateEmbed(book: UserBook) {
   let bookUrl = router.resolve({ name: 'book-detail', params: { bookId: book.id } }).href
   let top = `<div id="embed-body" style="padding: 5px; width: 150px; border: 1px solid #cccccc;}"><div class="embed-element" style="overflow: hidden;list-style: none; text-align: center; padding: 5px; margin: 0px;">`
   if (book.book.image != null) {
-     let couv = `<div class="embed-cover"> <a href="${baseUrl}${bookUrl}" target="_blank"><img src="${baseUrl}/files/${book.book.image}" title="${book.book.title}" alt="${book.book.title}" loading="lazy" decoding="async" style="border: 1px solid #cccccc;border-width:1px; padding: 3px; background-color: #fff;width:80px;"></a></div>`
+     let couv = `<div class="embed-cover"> <a href="${baseUrl}${bookUrl}" target="_blank" rel="noopener noreferrer"><img src="${baseUrl}/files/${book.book.image}" title="${book.book.title}" alt="${book.book.title}" loading="lazy" decoding="async" style="border: 1px solid #cccccc;border-width:1px; padding: 3px; background-color: #fff;width:80px;"></a></div>`
      top = top.concat(couv)
    }
-  let body = `<div class="embed-book" style="margin: 0px 3px 5px 5px;font-size: 13px;font-family:sans-serif; font-weight : bold;"><a href="${baseUrl}${bookUrl}" target="_blank" style="text-decoration:none;">${book.book.title}</a></div>`
+  let body = `<div class="embed-book" style="margin: 0px 3px 5px 5px;font-size: 13px;font-family:sans-serif; font-weight : bold;"><a href="${baseUrl}${bookUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">${book.book.title}</a></div>`
   top = top.concat(body)
   if (book.book.authors != undefined && book.book.authors?.length > 0) {
       let firstAuthor = book?.book.authors[0]
       let authorId = firstAuthor.id
       let rout = router.resolve({ name: 'author-detail', params: { authorId: authorId } }).href
-  let authorPart = `<div class="embed-author" style="margin: 0px 3px 5px 5px;font-size: 12px;color: gray;"><a href="${baseUrl}${rout}" target="_blank" style="text-decoration:none;">${firstAuthor.name}</a></div>`
+  let authorPart = `<div class="embed-author" style="margin: 0px 3px 5px 5px;font-size: 12px;color: gray;"><a href="${baseUrl}${rout}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">${firstAuthor.name}</a></div>`
       top = top.concat(authorPart)
     }
   let bottom = `<div class="embed-tail" style="clear:both;"></div></div></div>`
@@ -845,31 +845,31 @@ getBook()
             <span class="font-semibold capitalize">Extern:</span>
             <span v-if="hasExternalLink">
               <span v-if="book?.book.goodreadsId" class="badge badge-warning ml-1">
-                <a :href="'https://www.goodreads.com/book/show/' + book.book.goodreadsId" target="_blank">goodreads</a>
+                <a :href="'https://www.goodreads.com/book/show/' + book.book.goodreadsId" target="_blank" rel="noopener noreferrer">goodreads</a>
               </span>
               <span v-if="book?.book.googleId" class="badge badge-warning ml-1">
-                <a :href="'https://books.google.com/books?id=' + book.book.googleId" target="_blank">google</a>
+                <a :href="'https://books.google.com/books?id=' + book.book.googleId" target="_blank" rel="noopener noreferrer">google</a>
               </span>
               <span v-if="book?.book.amazonId" class="badge badge-warning ml-1">
-                <a :href="'https://www.amazon.com/dp/' + book.book.amazonId" target="_blank">amazon</a>
+                <a :href="'https://www.amazon.com/dp/' + book.book.amazonId" target="_blank" rel="noopener noreferrer">amazon</a>
               </span>
               <span v-if="book?.book.librarythingId" class="badge badge-warning ml-1">
-                <a :href="'https://www.librarything.com/work/' + book.book.librarythingId" target="_blank">librarything</a>
+                <a :href="'https://www.librarything.com/work/' + book.book.librarythingId" target="_blank" rel="noopener noreferrer">librarything</a>
               </span>
               <span v-if="book?.book.isfdbId" class="badge badge-warning ml-1">
-                <a :href="'https://www.isfdb.org/cgi-bin/title.cgi?' + book.book.isfdbId" target="_blank">ISFDB</a>
+                <a :href="'https://www.isfdb.org/cgi-bin/title.cgi?' + book.book.isfdbId" target="_blank" rel="noopener noreferrer">ISFDB</a>
               </span>
               <span v-if="book?.book.openlibraryId" class="badge badge-warning ml-1">
-                <a :href="`https://openlibrary.org/works/${book.book.openlibraryId}?mode=all`" target="_blank">Openlibrary</a>
+                <a :href="`https://openlibrary.org/works/${book.book.openlibraryId}?mode=all`" target="_blank" rel="noopener noreferrer">Openlibrary</a>
               </span>
               <span v-if="book?.book.noosfereId" class="badge badge-warning ml-1">
-                <a :href="'https://www.noosfere.org/livres/EditionsLivre.asp?numitem=' + book.book.noosfereId" target="_blank">Noosfere</a>
+                <a :href="'https://www.noosfere.org/livres/EditionsLivre.asp?numitem=' + book.book.noosfereId" target="_blank" rel="noopener noreferrer">Noosfere</a>
               </span>
               <span v-if="getIsbn() != null" class="badge badge-warning ml-1">
-                <a :href="'https://inventaire.io/entity/isbn:' + getIsbn()" target="_blank">inventaire</a>
+                <a :href="'https://inventaire.io/entity/isbn:' + getIsbn()" target="_blank" rel="noopener noreferrer">inventaire</a>
               </span>
               <span v-if="book?.book.inventaireId && getIsbn() == null" class="badge badge-warning ml-1">
-                <a :href="'https://inventaire.io/entity/inv:' + book.book.inventaireId" target="_blank">inventaire</a>
+                <a :href="'https://inventaire.io/entity/inv:' + book.book.inventaireId" target="_blank" rel="noopener noreferrer">inventaire</a>
               </span>
             </span>
             <span v-else class="opacity-60">-</span>

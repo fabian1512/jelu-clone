@@ -200,7 +200,7 @@ getReviews()
           >
             <a
               :href="'https://www.goodreads.com/book/show/' + book.goodreadsId"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >goodreads</a>
           </span>
           <span
@@ -209,7 +209,7 @@ getReviews()
           >
             <a
               :href="'https://books.google.com/books?id=' + book.googleId"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >google</a>
           </span>
           <span
@@ -218,7 +218,7 @@ getReviews()
           >
             <a
               :href="'https://www.amazon.com/dp/' + book.amazonId"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >amazon</a>
           </span>
           <span
@@ -227,7 +227,7 @@ getReviews()
           >
             <a
               :href="'https://www.librarything.com/work/' + book.librarythingId"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >librarything</a>
           </span>
           <span
@@ -236,7 +236,7 @@ getReviews()
           >
             <a
               :href="'https://www.isfdb.org/cgi-bin/title.cgi?' + book.isfdbId"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >ISFDB</a>
           </span>
           <span
@@ -245,7 +245,7 @@ getReviews()
           >
             <a
               :href="`https://openlibrary.org/works/${book.openlibraryId}?mode=all`"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >Openlibrary</a>
           </span>
           <span
@@ -254,7 +254,7 @@ getReviews()
           >
             <a
               :href="'https://www.noosfere.org/livres/EditionsLivre.asp?numitem=' + book.noosfereId"
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
             >Noosfere</a>
           </span>
         </div>
