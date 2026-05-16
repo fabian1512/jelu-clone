@@ -55,15 +55,15 @@ const close = () => {
 </script>
 
 <template>
-  <section class="jl-modal" style="--modal-width: min(676px, calc(100vw - 24px)); --modal-min-height: 12rem;">
+  <section class="jl-modal flex flex-col" style="--modal-width: min(676px, calc(100vw - 24px)); --modal-min-height: 12rem;">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-bold">{{ t('labels.search_results') }}</h3>
       <button @click="close" class="btn btn-sm btn-circle btn-outline"><i class="mdi mdi-close mdi-18px"></i></button>
     </div>
 
     <!-- Search Results -->
-    <div v-if="results && results.length > 0" class="relative">
-      <div class="max-h-80 overflow-y-auto" ref="listRef">
+    <div v-if="results && results.length > 0" class="relative flex flex-col flex-1 min-h-0">
+      <div class="flex-1 overflow-y-auto min-h-0" ref="listRef">
         <h4 class="text-sm font-semibold mb-2 opacity-60">{{ t('labels.search_results') }} ({{ results.length }})</h4>
         <div class="space-y-2">
           <div
@@ -113,7 +113,7 @@ const close = () => {
     </div>
 
     <!-- No results -->
-    <div v-else-if="results && results.length === 0" class="text-center py-8">
+    <div v-else-if="results && results.length === 0" class="flex-1 flex items-center justify-center">
       <p class="opacity-60">{{ t('labels.no_results_found') }}</p>
     </div>
   </section>
