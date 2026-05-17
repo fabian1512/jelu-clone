@@ -127,6 +127,16 @@ Recent relevant commits (already done):
   - **CORS**: Restricted methods to `GET,POST,PUT,DELETE,PATCH,OPTIONS`; removed `applyPermitDefaultValues()` conflict with credentials; exposed `XSRF-TOKEN` cookie for JS access
   - Axios on the frontend auto-sends `X-XSRF-TOKEN` header on mutating requests (built-in XSRF support)
 
+### T9 - Harden remote download flow (SSRF, timeouts, limits) (M)
+- Scope: `DownloadService.kt`, `UrlValidation.kt`
+- Goal: prevent SSRF, add timeouts, enforce size limits
+- Status: `done`
+- Details:
+  - **SSRF prevention**: New `UrlValidation.kt` utility blocks private IPs (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, [::1]), link-local addresses, `.local`/`.internal` TLDs, cloud metadata hosts
+  - **Timeouts**: 10s connect + 30s read on `HttpURLConnection`
+  - **Size limit**: 50 MB max download; pre-check via `Content-Length` header + live byte counting during streaming
+  - **Protocol validation**: Only `http`/`https` allowed, all other schemes rejected
+
 ## Execution Log
 - 2026-05-16: Created consolidated hardening worklog and backlog in one file.
 - 2026-05-16: T1 done - fixed Axios response interceptor to always `Promise.reject(error)` after 401 handling.
@@ -137,3 +147,4 @@ Recent relevant commits (already done):
 - 2026-05-16: Fixed CI build (added `dependsOn("npmInstall")` to `npmBuild` task).
 - 2026-05-17: T6/T7 done - comprehensive IDOR hardening across 6 controllers + 4 service classes.
 - 2026-05-17: T8 done - enabled CSRF with `CookieCsrfTokenRepository`, hardened CORS defaults (methods, origin config, exposed CSRF headers).
+- 2026-05-17: T9 done - ssRF-hardened DownloadService with URL validation, timeouts, and 50MB size limit.
