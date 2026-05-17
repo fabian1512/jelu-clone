@@ -60,6 +60,8 @@ class SecurityConfig(
                     "/api/v1/imports",
                     "/api/v1/metadata/**",
                     "/api/v1/search/**",
+                    "/api/v1/books",
+                    "/api/v1/userbooks",
                 )
             }.logout {
                 it
