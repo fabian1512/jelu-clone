@@ -154,6 +154,7 @@ node {
 
 val buildTaskUsingNpm =
     tasks.register<NpmTask>("npmBuild") {
+        dependsOn("npmInstall")
         npmCommand.set(listOf("run", "build"))
         args.set(listOf("--", "--out-dir", "${layout.buildDirectory.get()}/npm-output"))
         inputs.dir("src/jelu-ui/src")
