@@ -3,7 +3,6 @@ package io.github.bayang.jelu.config
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.ClientCodecConfigurer
@@ -54,15 +53,17 @@ class GlobalConfig {
         UrlBasedCorsConfigurationSource().apply {
             registerCorsConfiguration(
                 "/**",
-                CorsConfiguration().applyPermitDefaultValues().apply {
+                CorsConfiguration().apply {
                     allowedOriginPatterns =
                         if (jeluProperties.cors.allowedOrigins.isNullOrEmpty()) listOf("*") else jeluProperties.cors.allowedOrigins
-                    allowedMethods = HttpMethod.values().map { it.name() }
+                    allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                     allowCredentials = true
                     addAllowedHeader(HttpHeaders.AUTHORIZATION)
+                    addAllowedHeader("X-XSRF-TOKEN")
                     addExposedHeader(HttpHeaders.CONTENT_DISPOSITION)
                     addExposedHeader(SESSION_HEADER_NAME)
                     addExposedHeader(HttpHeaders.AUTHORIZATION)
+                    addExposedHeader("XSRF-TOKEN")
                 },
             )
         }

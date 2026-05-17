@@ -118,6 +118,15 @@ Recent relevant commits (already done):
 - Goal: remove any public write endpoints
 - Status: `done` (rolled into T6 — the only one was `/api/v1/custom-lists/remove`)
 
+### T8 - Harden CORS + CSRF model (M)
+- Scope: `SecurityConfig.kt`, `GlobalConfig.kt`
+- Goal: proper CSRF protection with stateless cookie token, restrictive CORS defaults
+- Status: `done`
+- Details:
+  - **CSRF**: Enabled via `CookieCsrfTokenRepository.withHttpOnlyFalse()` — stateless, works with Bearer tokens; public GET endpoints excluded
+  - **CORS**: Restricted methods to `GET,POST,PUT,DELETE,PATCH,OPTIONS`; removed `applyPermitDefaultValues()` conflict with credentials; exposed `XSRF-TOKEN` cookie for JS access
+  - Axios on the frontend auto-sends `X-XSRF-TOKEN` header on mutating requests (built-in XSRF support)
+
 ## Execution Log
 - 2026-05-16: Created consolidated hardening worklog and backlog in one file.
 - 2026-05-16: T1 done - fixed Axios response interceptor to always `Promise.reject(error)` after 401 handling.
@@ -127,3 +136,4 @@ Recent relevant commits (already done):
 - 2026-05-16: T5 done - added AbortController + latest-request guards for `SearchResultsDisplay` and `BookList`; DataService list/search methods now accept `AbortSignal` and preserve cancel semantics.
 - 2026-05-16: Fixed CI build (added `dependsOn("npmInstall")` to `npmBuild` task).
 - 2026-05-17: T6/T7 done - comprehensive IDOR hardening across 6 controllers + 4 service classes.
+- 2026-05-17: T8 done - enabled CSRF with `CookieCsrfTokenRepository`, hardened CORS defaults (methods, origin config, exposed CSRF headers).
