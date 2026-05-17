@@ -56,6 +56,8 @@ class SecurityConfig(
                     "/api/v1/oauth2/providers",
                     "/api/v1/username/**",
                     "/api/v1/api-tokens/scopes",
+                    "/api/v1/exports",
+                    "/api/v1/imports",
                 )
             }.logout {
                 it
