@@ -7,7 +7,6 @@ import io.github.bayang.jelu.dto.JeluUser
 import io.github.bayang.jelu.dto.MonthStatsCentsDto
 import io.github.bayang.jelu.dto.MonthStatsDto
 import io.github.bayang.jelu.dto.ReadingEventDto
-import io.github.bayang.jelu.dto.ReadingEventStatsDto
 import io.github.bayang.jelu.dto.UpdateReadingEventDto
 import io.github.bayang.jelu.dto.YearStatsCentsDto
 import io.github.bayang.jelu.dto.YearStatsDto
@@ -18,7 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.validation.Valid
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -143,61 +141,56 @@ class ReadingEventsController(
 
     @GetMapping(path = ["/stats"])
     fun stats(principal: Authentication): ResponseEntity<List<YearStatsDto>> {
-        var events: Page<ReadingEventStatsDto>
-        var currentPage = 0
-        val pageSize = 200
+        val userId = (principal.principal as JeluUser).user.id
+        val events =
+            repository.findAllForStats(
+                listOf(ReadingEventType.FINISHED, ReadingEventType.DROPPED),
+                userId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Pageable.unpaged(),
+            )
         val yearStats = mutableMapOf<Int, YearStatsCentsDto>()
         val pricesAlreadyAdded = mutableMapOf<Int, MutableSet<UUID>>()
-        do {
-            events =
-                repository.findAllForStats(
-                    listOf(ReadingEventType.FINISHED, ReadingEventType.DROPPED),
-                    (principal.principal as JeluUser).user.id,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    PageRequest.of(currentPage, pageSize, Sort.by("endDate, asc")),
-                )
-            currentPage++
-            events.forEach {
-                val year = OffsetDateTime.ofInstant(it.endDate, ZoneId.systemDefault()).year
-                if (yearStats.containsKey(year)) {
-                    if (it.eventType == ReadingEventType.DROPPED) {
-                        yearStats[year] = yearStats[year]!!.copy(dropped = yearStats[year]!!.dropped + 1)
-                    } else if (it.eventType == ReadingEventType.FINISHED) {
-                        var price: Long = 0
-                        if (it.userBook.id != null) {
-                            if (!pricesAlreadyAdded.containsKey(year)) {
-                                pricesAlreadyAdded[year] = mutableSetOf()
-                            }
-                            if (!pricesAlreadyAdded[year]!!.contains(it.userBook.id)) {
-                                pricesAlreadyAdded[year]!!.add(it.userBook.id)
-                                price = it.priceInCents ?: 0
-                            }
+        events.forEach {
+            val year = it.endDate?.let { OffsetDateTime.ofInstant(it, ZoneId.systemDefault()).year } ?: return@forEach
+            if (yearStats.containsKey(year)) {
+                if (it.eventType == ReadingEventType.DROPPED) {
+                    yearStats[year] = yearStats[year]!!.copy(dropped = yearStats[year]!!.dropped + 1)
+                } else if (it.eventType == ReadingEventType.FINISHED) {
+                    var price: Long = 0
+                    if (it.userBook.id != null) {
+                        if (!pricesAlreadyAdded.containsKey(year)) {
+                            pricesAlreadyAdded[year] = mutableSetOf()
                         }
-                        yearStats[year] =
-                            yearStats[year]!!.copy(
-                                finished = yearStats[year]!!.finished + 1,
-                                pageCount =
-                                    yearStats[year]!!.pageCount + (it.userBook.book.pageCount ?: 0),
-                                priceInCents =
-                                    yearStats[year]!!.priceInCents + price,
-                            )
+                        if (!pricesAlreadyAdded[year]!!.contains(it.userBook.id)) {
+                            pricesAlreadyAdded[year]!!.add(it.userBook.id)
+                            price = it.priceInCents ?: 0
+                        }
                     }
-                } else {
-                    if (it.eventType == ReadingEventType.DROPPED) {
-                        yearStats[year] = YearStatsCentsDto(year = year, dropped = 1)
-                    } else if (it.eventType == ReadingEventType.FINISHED) {
-                        val price = it.priceInCents ?: 0
-                        pricesAlreadyAdded[year] = mutableSetOf(it.userBook.id!!)
-                        yearStats[year] =
-                            YearStatsCentsDto(year = year, finished = 1, pageCount = it.userBook.book.pageCount ?: 0, priceInCents = price)
-                    }
+                    yearStats[year] =
+                        yearStats[year]!!.copy(
+                            finished = yearStats[year]!!.finished + 1,
+                            pageCount =
+                                yearStats[year]!!.pageCount + (it.userBook.book.pageCount ?: 0),
+                            priceInCents =
+                                yearStats[year]!!.priceInCents + price,
+                        )
+                }
+            } else {
+                if (it.eventType == ReadingEventType.DROPPED) {
+                    yearStats[year] = YearStatsCentsDto(year = year, dropped = 1)
+                } else if (it.eventType == ReadingEventType.FINISHED) {
+                    val price = it.priceInCents ?: 0
+                    pricesAlreadyAdded[year] = mutableSetOf(it.userBook.id!!)
+                    yearStats[year] =
+                        YearStatsCentsDto(year = year, finished = 1, pageCount = it.userBook.book.pageCount ?: 0, priceInCents = price)
                 }
             }
-        } while (!events.isEmpty)
+        }
         return ResponseEntity.ok(yearStats.values.map { it.toYearStatsDto() }.sortedBy { it.year })
     }
 
@@ -206,67 +199,63 @@ class ReadingEventsController(
         @PathVariable("year") year: Int,
         principal: Authentication,
     ): ResponseEntity<List<MonthStatsDto>> {
-        var events: Page<ReadingEventStatsDto>
-        var currentPage = 0
-        val pageSize = 200
+        val userId = (principal.principal as JeluUser).user.id
+        val yearStart = LocalDate.of(year, 1, 1)
+        val yearEnd = LocalDate.of(year, 12, 31)
+        val events =
+            repository.findAllForStats(
+                listOf(ReadingEventType.FINISHED, ReadingEventType.DROPPED),
+                userId,
+                null,
+                null,
+                null,
+                yearStart,
+                yearEnd,
+                Pageable.unpaged(),
+            )
         val monthStats = mutableMapOf<Int, MonthStatsCentsDto>()
         val pricesAlreadyAdded = mutableMapOf<Int, MutableSet<UUID>>()
-        do {
-            events =
-                repository.findAllForStats(
-                    listOf(ReadingEventType.FINISHED, ReadingEventType.DROPPED),
-                    (principal.principal as JeluUser).user.id,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    PageRequest.of(currentPage, pageSize),
-                )
-            currentPage++
-            // FIXME use date filtering in repository method now
-            events.filter { OffsetDateTime.ofInstant(it.endDate, ZoneId.systemDefault()).year == year }.forEach {
-                val toDate = OffsetDateTime.ofInstant(it.endDate, ZoneId.systemDefault())
-                val month = toDate.monthValue
-                if (monthStats.containsKey(month)) {
-                    if (it.eventType == ReadingEventType.DROPPED) {
-                        monthStats[month] = monthStats[month]!!.copy(dropped = monthStats[month]!!.dropped + 1)
-                    } else if (it.eventType == ReadingEventType.FINISHED) {
-                        var price: Long = 0
-                        if (!pricesAlreadyAdded.containsKey(year)) {
-                            pricesAlreadyAdded[year] = mutableSetOf()
-                        }
-                        if (it.userBook.id != null && !pricesAlreadyAdded[year]!!.contains(it.userBook.id)) {
-                            pricesAlreadyAdded[year]!!.add(it.userBook.id)
-                            price = it.priceInCents ?: 0
-                        }
-                        monthStats[month] =
-                            monthStats[month]!!.copy(
-                                finished = monthStats[month]!!.finished + 1,
-                                pageCount =
-                                    monthStats[month]!!.pageCount + (it.userBook.book.pageCount ?: 0),
-                                priceInCents =
-                                    monthStats[month]!!.priceInCents + price,
-                            )
+        events.forEach {
+            val eventDate = it.endDate ?: return@forEach
+            val month = OffsetDateTime.ofInstant(eventDate, ZoneId.systemDefault()).monthValue
+            if (monthStats.containsKey(month)) {
+                if (it.eventType == ReadingEventType.DROPPED) {
+                    monthStats[month] = monthStats[month]!!.copy(dropped = monthStats[month]!!.dropped + 1)
+                } else if (it.eventType == ReadingEventType.FINISHED) {
+                    var price: Long = 0
+                    if (!pricesAlreadyAdded.containsKey(month)) {
+                        pricesAlreadyAdded[month] = mutableSetOf()
                     }
-                } else {
-                    if (it.eventType == ReadingEventType.DROPPED) {
-                        monthStats[month] = MonthStatsCentsDto(year = year, dropped = 1, month = month)
-                    } else if (it.eventType == ReadingEventType.FINISHED) {
-                        val price = it.priceInCents ?: 0
-                        pricesAlreadyAdded[year] = mutableSetOf(it.userBook.id!!)
-                        monthStats[month] =
-                            MonthStatsCentsDto(
-                                year = year,
-                                finished = 1,
-                                month = month,
-                                pageCount = it.userBook.book.pageCount ?: 0,
-                                priceInCents = price,
-                            )
+                    if (it.userBook.id != null && !pricesAlreadyAdded[month]!!.contains(it.userBook.id)) {
+                        pricesAlreadyAdded[month]!!.add(it.userBook.id)
+                        price = it.priceInCents ?: 0
                     }
+                    monthStats[month] =
+                        monthStats[month]!!.copy(
+                            finished = monthStats[month]!!.finished + 1,
+                            pageCount =
+                                monthStats[month]!!.pageCount + (it.userBook.book.pageCount ?: 0),
+                            priceInCents =
+                                monthStats[month]!!.priceInCents + price,
+                        )
+                }
+            } else {
+                if (it.eventType == ReadingEventType.DROPPED) {
+                    monthStats[month] = MonthStatsCentsDto(year = year, dropped = 1, month = month)
+                } else if (it.eventType == ReadingEventType.FINISHED) {
+                    val price = it.priceInCents ?: 0
+                    pricesAlreadyAdded[month] = mutableSetOf(it.userBook.id!!)
+                    monthStats[month] =
+                        MonthStatsCentsDto(
+                            year = year,
+                            finished = 1,
+                            month = month,
+                            pageCount = it.userBook.book.pageCount ?: 0,
+                            priceInCents = price,
+                        )
                 }
             }
-        } while (!events.isEmpty)
+        }
         return ResponseEntity.ok(monthStats.values.map { it.toMonthStatsDto() }.sortedBy { it.month })
     }
 

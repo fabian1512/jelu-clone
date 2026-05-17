@@ -49,10 +49,10 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.orWhere
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.sum
 import org.jetbrains.exposed.sql.update
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
@@ -1864,15 +1864,14 @@ class BookRepository(
     }
 
     fun stats(userId: UUID): TotalsStatsCentsDto {
-        val query =
+        val readQuery =
             UserBookTable
                 .join(ReadingEventTable, JoinType.LEFT, onColumn = UserBookTable.id, otherColumn = ReadingEventTable.userBook)
                 .select(UserBookTable.id.countDistinct())
                 .andWhere { UserBookTable.user eq userId }
                 .andWhere { ReadingEventTable.eventType eq ReadingEventType.FINISHED }
                 .distinct()
-        val resultRow = query.single()
-        val readCount = resultRow[UserBookTable.id.countDistinct()]
+        val readCount = readQuery.single()[UserBookTable.id.countDistinct()]
         val droppedQuery =
             UserBookTable
                 .join(ReadingEventTable, JoinType.LEFT, onColumn = UserBookTable.id, otherColumn = ReadingEventTable.userBook)
@@ -1884,39 +1883,29 @@ class BookRepository(
         val totalUserBooks = UserBook.count(UserBookTable.user eq userId)
         val totalUserBooksPrice =
             UserBookTable
-                .selectAll()
+                .select(UserBookTable.priceInCents.sum())
                 .where { UserBookTable.user eq userId }
-                .sumOf { row -> row[UserBookTable.priceInCents] ?: 0L }
+                .single()
+                .let { row -> row[UserBookTable.priceInCents.sum()] ?: 0L }
 
-        var books: Page<UserBook>
-        val pageSize = 100
-        var pageNumber = 0
-        var unread = 0L
-        // ugly perf wise, but have not found a way to get all userbooks with only
-        // one readingevent which is currently reading (to avoid counting books already
-        // read or dropped thata are being re-read)
-        do {
-            books =
-                findUserBookByCriteria(
-                    userId,
-                    null,
-                    listOf(ReadingEventTypeFilter.CURRENTLY_READING, ReadingEventTypeFilter.NONE),
-                    null,
-                    null,
-                    null,
-                    PageRequest.of(pageNumber, pageSize),
-                )
-            books.forEach {
-                if (it.readingEvents.empty() || it.readingEvents.count() < 2) {
-                    unread++
-                }
-            }
-            pageNumber++
+        val unreadQuery =
+            UserBookTable
+                .join(ReadingEventTable, JoinType.LEFT, onColumn = UserBookTable.id, otherColumn = ReadingEventTable.userBook)
+                .select(UserBookTable.id)
+        unreadQuery.andWhere { UserBookTable.user eq userId }
+        unreadQuery.andWhere {
+            UserBookTable.lastReadingEvent.isNull() or
+                (UserBookTable.lastReadingEvent eq ReadingEventType.CURRENTLY_READING)
         }
-        while (books.hasNext())
+        unreadQuery.groupBy(UserBookTable.id).having {
+            (ReadingEventTable.id.count() eq 0L) or
+                (ReadingEventTable.id.count() eq 1L)
+        }
+        val unreadCount = unreadQuery.count()
+
         return TotalsStatsCentsDto(
             read = readCount,
-            unread = unread,
+            unread = unreadCount,
             dropped = droppedCount,
             total = totalUserBooks,
             priceInCents = totalUserBooksPrice,
