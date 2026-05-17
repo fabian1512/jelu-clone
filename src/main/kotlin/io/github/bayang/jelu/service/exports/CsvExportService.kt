@@ -13,14 +13,12 @@ import io.github.bayang.jelu.service.UserMessageService
 import io.github.bayang.jelu.service.imports.CURRENTLY_READING
 import io.github.bayang.jelu.service.imports.TO_READ
 import io.github.bayang.jelu.service.imports.goodreadsDateFormatter
-import io.github.bayang.jelu.utils.lastEventDate
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.QuoteMode
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.io.BufferedWriter
 import java.io.File
@@ -144,6 +142,13 @@ class CsvExportService(
         printer: CSVPrinter,
         userId: UUID,
     ) {
+        val bookIds = books.content.mapNotNull { it.book.id }
+        val eventsByBook =
+            if (bookIds.isNotEmpty()) {
+                readingEventService.findAllByUserAndBookIds(userId, bookIds)
+            } else {
+                emptyMap()
+            }
         books.content.forEach {
             logger.debug { it.book.title }
             printer.printRecord(
@@ -154,14 +159,14 @@ class CsvExportService(
                 dateRead(it),
                 shelves(it),
                 bookShelves(it),
-                listOfDatesForEvent(it, userId, ReadingEventType.FINISHED),
+                listOfDatesForEvent(it, eventsByBook, ReadingEventType.FINISHED),
                 tags(it),
                 authors(it),
                 if (it.book.isbn10.isNullOrBlank()) "" else it.book.isbn10,
                 if (it.book.isbn13.isNullOrBlank()) "" else it.book.isbn13,
                 if (it.owned == true) "true" else "",
-                listOfDatesForEvent(it, userId, ReadingEventType.DROPPED),
-                listOfDatesForEvent(it, userId, ReadingEventType.CURRENTLY_READING),
+                listOfDatesForEvent(it, eventsByBook, ReadingEventType.DROPPED),
+                listOfDatesForEvent(it, eventsByBook, ReadingEventType.CURRENTLY_READING),
             )
         }
     }
@@ -212,19 +217,15 @@ class CsvExportService(
 
     fun listOfDatesForEvent(
         userbook: UserBookWithoutEventsAndUserDto,
-        userId: UUID,
+        eventsByBook: Map<UUID, Map<ReadingEventType, List<Pair<Instant, Instant?>>>>,
         eventType: ReadingEventType,
     ): String {
-        val reads = readingEventService.findAll(listOf(eventType), userId, userbook.book.id, null, null, null, null, Pageable.ofSize(100))
-        if (!reads.isEmpty) {
-            return reads.content
-                .stream()
-                .map { lastEventDate(it) }
-                .sorted()
-                .map { toDateString(it) }
-                .collect(Collectors.joining(","))
-        }
-        return ""
+        val bookEvents = eventsByBook[userbook.book.id] ?: return ""
+        val typedEvents = bookEvents[eventType] ?: return ""
+        return typedEvents
+            .map { (start, end) -> end ?: start }
+            .sorted()
+            .joinToString(",") { toDateString(it) }
     }
 
     fun tags(userbook: UserBookWithoutEventsAndUserDto): String =

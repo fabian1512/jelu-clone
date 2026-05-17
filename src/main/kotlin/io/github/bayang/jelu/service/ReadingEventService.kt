@@ -47,6 +47,12 @@ class ReadingEventService(
     }
 
     @Transactional
+    fun findAllByUserAndBookIds(
+        userId: UUID,
+        bookIds: List<UUID>,
+    ) = readingEventRepository.findAllByUserAndBookIds(userId, bookIds)
+
+    @Transactional
     fun findYears(
         eventTypes: List<ReadingEventType>?,
         userId: UUID?,

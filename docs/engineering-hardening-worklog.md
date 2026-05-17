@@ -148,3 +148,4 @@ Recent relevant commits (already done):
 - 2026-05-17: T6/T7 done - comprehensive IDOR hardening across 6 controllers + 4 service classes.
 - 2026-05-17: T8 done - enabled CSRF with `CookieCsrfTokenRepository`, hardened CORS defaults (methods, origin config, exposed CSRF headers).
 - 2026-05-17: T9 done - ssRF-hardened DownloadService with URL validation, timeouts, and 50MB size limit.
+- 2026-05-17: T10 done - CSV export N+1 eliminated: batch-load all reading events per page (1 query per 100 books instead of 3 queries per book). Added `ReadingEventRepository.findAllByUserAndBookIds()`.
