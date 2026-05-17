@@ -60,8 +60,15 @@ class SecurityConfig(
                     "/api/v1/imports",
                     "/api/v1/metadata/**",
                     "/api/v1/search/**",
-                    "/api/v1/books",
-                    "/api/v1/userbooks",
+                    "/api/v1/books/**",
+                    "/api/v1/userbooks/**",
+                    "/api/v1/reading-events/**",
+                    "/api/v1/shelves/**",
+                    "/api/v1/custom-lists/**",
+                    "/api/v1/book-quotes/**",
+                    "/api/v1/series/**",
+                    "/api/v1/tags/**",
+                    "/api/v1/authors/**",
                 )
             }.logout {
                 it
