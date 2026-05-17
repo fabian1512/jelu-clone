@@ -81,6 +81,32 @@ class ReadingEventRepository {
         )
     }
 
+    fun findAllByUserAndBookIds(
+        userId: UUID,
+        bookIds: List<UUID>,
+    ): Map<UUID, Map<ReadingEventType, List<Pair<Instant, Instant?>>>> {
+        if (bookIds.isEmpty()) return emptyMap()
+        val query =
+            ReadingEventTable
+                .join(UserBookTable, JoinType.INNER)
+                .select(ReadingEventTable.eventType, ReadingEventTable.startDate, ReadingEventTable.endDate, UserBookTable.book)
+                .where {
+                    UserBookTable.user eq userId and
+                        (UserBookTable.book inList bookIds)
+                }
+        val rows =
+            query.map { row ->
+                val bookId = row[UserBookTable.book].value
+                val eventType = row[ReadingEventTable.eventType]
+                val startDate = row[ReadingEventTable.startDate]
+                val endDate = row[ReadingEventTable.endDate]
+                bookId to (eventType to (startDate to endDate))
+            }
+        return rows
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, events) -> events.groupBy({ it.first }, { it.second }) }
+    }
+
     fun findYears(
         eventTypes: List<ReadingEventType>?,
         userId: UUID?,
