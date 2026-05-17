@@ -40,7 +40,10 @@ class ShelvesController(
     fun shelfById(
         @PathVariable("id") shelfId: UUID,
         principal: Authentication,
-    ): ShelfDto = shelvesService.findById(shelfId)
+    ): ShelfDto {
+        val userId = (principal.principal as JeluUser).user.id!!
+        return shelvesService.findById(shelfId, userId)
+    }
 
     @PostMapping(path = ["/shelves"])
     fun saveShelf(
@@ -53,8 +56,10 @@ class ShelvesController(
     @DeleteMapping(path = ["/shelves/{id}"])
     fun deleteShelfById(
         @PathVariable("id") shelfId: UUID,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
-        shelvesService.delete(shelfId)
+        val userId = (principal.principal as JeluUser).user.id!!
+        shelvesService.delete(shelfId, userId)
         return ResponseEntity.noContent().build()
     }
 }

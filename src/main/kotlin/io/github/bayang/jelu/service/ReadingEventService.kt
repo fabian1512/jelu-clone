@@ -6,11 +6,13 @@ import io.github.bayang.jelu.dto.CreateReadingEventDto
 import io.github.bayang.jelu.dto.ReadingEventDto
 import io.github.bayang.jelu.dto.UpdateReadingEventDto
 import io.github.bayang.jelu.dto.UserDto
+import io.github.bayang.jelu.errors.JeluAuthenticationException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.util.UUID
+import io.github.bayang.jelu.dao.ReadingEvent as ReadingEventDao
 
 @Component
 class ReadingEventService(
@@ -61,10 +63,24 @@ class ReadingEventService(
     fun updateReadingEvent(
         readingEventId: UUID,
         updateReadingEventDto: UpdateReadingEventDto,
-    ): ReadingEventDto = readingEventRepository.updateReadingEvent(readingEventId, updateReadingEventDto).toReadingEventDto()
+        userId: UUID? = null,
+    ): ReadingEventDto {
+        if (userId != null) {
+            val entity = ReadingEventDao[readingEventId]
+            if (entity.userBook.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
+        return readingEventRepository.updateReadingEvent(readingEventId, updateReadingEventDto).toReadingEventDto()
+    }
 
     @Transactional
-    fun deleteReadingEventById(eventId: UUID) {
+    fun deleteReadingEventById(
+        eventId: UUID,
+        userId: UUID? = null,
+    ) {
+        if (userId != null) {
+            val entity = ReadingEventDao[eventId]
+            if (entity.userBook.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
         readingEventRepository.deleteReadingEventById(eventId)
     }
 }

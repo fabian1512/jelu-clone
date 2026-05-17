@@ -102,6 +102,22 @@ Recent relevant commits (already done):
 - Goal: abort stale requests and prevent late-response overrides
 - Status: `done`
 
+### T6 - IDOR ownership enforcement (L)
+- Scope: All backend controllers + services
+- Goal: enforce that users can only read/update/delete their own resources
+- Status: `done`
+- Details:
+  - Removed `permitAll()` from `POST /api/v1/custom-lists/remove` (was open public write)
+  - Added `principal: Authentication` + ownership check to every mutating endpoint for user-owned resources
+  - Covered: userbooks, reading-events, reviews, book-quotes, shelves, custom-lists
+  - Protected read-scoped GET endpoints (`?userId=` filters) against cross-user enumeration
+  - Service-layer overloads (with `userId` param) added for UserBook, Shelf, CustomList operations
+
+### T7 - Mutating `permitAll` endpoints (S)
+- Scope: Spring Security config + CustomListsController
+- Goal: remove any public write endpoints
+- Status: `done` (rolled into T6 — the only one was `/api/v1/custom-lists/remove`)
+
 ## Execution Log
 - 2026-05-16: Created consolidated hardening worklog and backlog in one file.
 - 2026-05-16: T1 done - fixed Axios response interceptor to always `Promise.reject(error)` after 401 handling.
@@ -109,3 +125,5 @@ Recent relevant commits (already done):
 - 2026-05-16: T3 done - introduced shared DOMPurify helper and sanitized all `v-html` render paths.
 - 2026-05-16: T4 done - `npmBuild` now runs `npm run build` (no double `npm ci`), added `package-lock.json` as task input, removed cache disable flag.
 - 2026-05-16: T5 done - added AbortController + latest-request guards for `SearchResultsDisplay` and `BookList`; DataService list/search methods now accept `AbortSignal` and preserve cancel semantics.
+- 2026-05-16: Fixed CI build (added `dependsOn("npmInstall")` to `npmBuild` task).
+- 2026-05-17: T6/T7 done - comprehensive IDOR hardening across 6 controllers + 4 service classes.

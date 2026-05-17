@@ -84,7 +84,8 @@ class BooksController(
     @GetMapping(path = ["/userbooks/{id}"])
     fun userbookById(
         @PathVariable("id") userbookId: UUID,
-    ) = repository.findUserBookById(userbookId)
+        principal: Authentication,
+    ) = repository.findUserBookById(userbookId, (principal.principal as JeluUser).user.id!!)
 
     @GetMapping(path = ["/userbooks/from-book/{bookId}"])
     fun userbookByBookId(
@@ -96,8 +97,9 @@ class BooksController(
     @DeleteMapping(path = ["/userbooks/{id}"])
     fun deleteUserbookById(
         @PathVariable("id") userbookId: UUID,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
-        repository.deleteUserBookById(userbookId)
+        repository.deleteUserBookById(userbookId, (principal.principal as JeluUser).user.id!!)
         return ResponseEntity.noContent().build()
     }
 
@@ -199,9 +201,12 @@ class BooksController(
         @PageableDefault(page = 0, size = 20, direction = Sort.Direction.DESC, sort = ["lastReadingEventDate"]) @ParameterObject pageable:
             Pageable,
     ): Page<UserBookWithoutEventsAndUserDto> {
-        assertIsJeluUser(principal.principal)
-        val finalUserId = userId ?: (principal.principal as JeluUser).user.id!!
-        return repository.findUserBookByCriteria(finalUserId, bookId, eventTypes, toRead, owned, borrowed, pageable)
+        val currentUserId = (principal.principal as JeluUser).user.id!!
+        if (userId != null && userId != currentUserId) {
+            throw io.github.bayang.jelu.errors
+                .JeluAuthenticationException("Resource unauthorized")
+        }
+        return repository.findUserBookByCriteria(currentUserId, bookId, eventTypes, toRead, owned, borrowed, pageable)
     }
 
     @GetMapping(path = ["/authors"])
@@ -399,20 +404,23 @@ class BooksController(
         @RequestBody
         @Valid
         book: UserBookUpdateDto,
-    ): UserBookLightDto = repository.update(userBookId, book)
+        principal: Authentication,
+    ): UserBookLightDto = repository.update(userBookId, book, (principal.principal as JeluUser).user.id!!)
 
     @PutMapping(path = ["/userbooks/{id}"], consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun updateUserBook(
         @PathVariable("id") userBookId: UUID,
         @RequestPart("book") @Valid book: UserBookUpdateDto,
         @RequestPart("file", required = false) file: MultipartFile?,
-    ): UserBookLightDto = repository.update(userBookId, book, file)
+        principal: Authentication,
+    ): UserBookLightDto = repository.update(userBookId, book, file, (principal.principal as JeluUser).user.id!!)
 
     @PutMapping(path = ["/userbooks"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun bulkUpdateUserBooks(
         @RequestBody @Valid
         bulkUpdateDto: UserBookBulkUpdateDto,
-    ): Int = repository.bulkEditUserbooks(bulkUpdateDto)
+        principal: Authentication,
+    ): Int = repository.bulkEditUserbooks(bulkUpdateDto, (principal.principal as JeluUser).user.id!!)
 
     @PutMapping(path = ["/series/{id}"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun updateSeries(

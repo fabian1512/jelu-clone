@@ -6,6 +6,7 @@ import io.github.bayang.jelu.dto.CreateBookQuoteDto
 import io.github.bayang.jelu.dto.JeluUser
 import io.github.bayang.jelu.dto.UpdateBookQuoteDto
 import io.github.bayang.jelu.errors.JeluAuthenticationException
+import io.github.bayang.jelu.errors.JeluException
 import io.github.bayang.jelu.service.BookQuoteService
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.validation.Valid
@@ -52,7 +53,15 @@ class BookQuoteController(
         @PathVariable("id") bookQuoteId: UUID,
         @RequestBody @Valid
         updateBookQuoteDto: UpdateBookQuoteDto,
-    ): BookQuoteDto = bookQuoteService.update(bookQuoteId, updateBookQuoteDto)
+        principal: Authentication,
+    ): BookQuoteDto {
+        val quote = bookQuoteService.findById(bookQuoteId)
+        val userId =
+            (principal.principal as JeluUser).user.id
+                ?: throw JeluException("Authenticated user has no id")
+        if (quote.user != userId) throw JeluAuthenticationException("Resource unauthorized")
+        return bookQuoteService.update(bookQuoteId, updateBookQuoteDto)
+    }
 
     @GetMapping(path = ["/book-quotes/{id}"])
     fun getBookQuote(
@@ -70,7 +79,13 @@ class BookQuoteController(
     @DeleteMapping(path = ["/book-quotes/{id}"])
     fun deleteBookQuoteById(
         @PathVariable("id") bookQuoteId: UUID,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
+        val quote = bookQuoteService.findById(bookQuoteId)
+        val userId =
+            (principal.principal as JeluUser).user.id
+                ?: throw JeluException("Authenticated user has no id")
+        if (quote.user != userId) throw JeluAuthenticationException("Resource unauthorized")
         bookQuoteService.delete(bookQuoteId)
         return ResponseEntity.noContent().build()
     }

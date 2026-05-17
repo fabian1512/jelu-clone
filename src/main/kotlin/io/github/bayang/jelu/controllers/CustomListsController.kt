@@ -6,6 +6,7 @@ import io.github.bayang.jelu.dto.CustomListDto
 import io.github.bayang.jelu.dto.CustomListRemoveDto
 import io.github.bayang.jelu.dto.JeluUser
 import io.github.bayang.jelu.errors.JeluAuthenticationException
+import io.github.bayang.jelu.errors.JeluException
 import io.github.bayang.jelu.service.CustomListService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -59,8 +60,12 @@ class CustomListsController(
     fun removeBooksFromList(
         @RequestBody @Valid
         customListRemoveDto: CustomListRemoveDto,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
-        customListService.removeBooksFromList(customListRemoveDto)
+        val userId =
+            (principal.principal as JeluUser).user.id
+                ?: throw JeluException("Authenticated user has no id")
+        customListService.removeBooksFromList(customListRemoveDto, userId)
         return ResponseEntity.noContent().build()
     }
 
@@ -87,8 +92,12 @@ class CustomListsController(
     @DeleteMapping(path = ["/custom-lists/{id}"])
     fun deleteListById(
         @PathVariable("id") listId: UUID,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
-        customListService.delete(listId)
+        val userId =
+            (principal.principal as JeluUser).user.id
+                ?: throw JeluException("Authenticated user has no id")
+        customListService.delete(listId, userId)
         return ResponseEntity.noContent().build()
     }
 }
