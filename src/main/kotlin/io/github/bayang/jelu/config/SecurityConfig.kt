@@ -23,6 +23,7 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 
 @Configuration
 @EnableWebSecurity
@@ -45,8 +46,18 @@ class SecurityConfig(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain? {
         http
             .cors { }
-            .csrf { it.disable() }
-            .logout {
+            .csrf { csrf ->
+                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                csrf.ignoringRequestMatchers(
+                    "/api/v1/token",
+                    "/api/v1/setup/status",
+                    "/api/v1/server-settings",
+                    "/api/v1/reviews/**",
+                    "/api/v1/oauth2/providers",
+                    "/api/v1/username/**",
+                    "/api/v1/api-tokens/scopes",
+                )
+            }.logout {
                 it
                     .logoutUrl("/api/v1/logout")
                     .invalidateHttpSession(true)
