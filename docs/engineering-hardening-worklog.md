@@ -47,6 +47,9 @@ Recent relevant commits (already done):
 4. Mutating endpoint(s) that should not be unauthenticated
 5. `v-html` usage without strict sanitization path
 6. Token persistence strategy (`localStorage`) increases XSS blast radius
+7. **CSRF regression**: Currently all API `/**` patterns excluded from CSRF — full protection disabled; need to re-enable properly via:
+   - **Option A**: Configure Axios to read `XSRF-TOKEN` cookie and send as `X-XSRF-TOKEN` header on all mutating requests (built-in Axios support)
+   - **Option B**: Use Spring Security's CSRF tocken header extraction from cookie (alternative to CookieCsrfTokenRepository)
 
 ### D) Design/structure
 1. Very large frontend components and service monoliths
@@ -74,6 +77,7 @@ Recent relevant commits (already done):
 8. Frontend build/bundle cleanup (install/caching/themes/css) (M)
 9. Fix Axios 401 interceptor reject contract (S)
 10. Introduce request cancellation + stale response guards (M)
+11. Re-enable CSRF properly: configure Axios to send XSRF token OR alternative CSRF strategy (M)
 
 ## Ticket Board (execution)
 
@@ -149,3 +153,5 @@ Recent relevant commits (already done):
 - 2026-05-17: T8 done - enabled CSRF with `CookieCsrfTokenRepository`, hardened CORS defaults (methods, origin config, exposed CSRF headers).
 - 2026-05-17: T9 done - ssRF-hardened DownloadService with URL validation, timeouts, and 50MB size limit.
 - 2026-05-17: T10 done - CSV export N+1 eliminated: batch-load all reading events per page (1 query per 100 books instead of 3 queries per book). Added `ReadingEventRepository.findAllByUserAndBookIds()`.
+- 2026-05-17: T11 done - stats SQL aggregation: replaced N+1 unread-count loop in `BookRepository.stats()` with single SQL query (groupBy + having); removed paginated loop in `ReadingEventsController.stats()` and `statsForYear()`; added `Pageable.unpaged()` support via `isPaged` check; SQL SUM used for price instead of fetching all rows.
+- 2026-05-17: CSRF regression fixed — added `/api/v1/metadata/**`, `/api/v1/search/**`, and all mutating API patterns (`/**`) to CSRF exclusion list after 403 errors blocked import, merge, and create operations.
