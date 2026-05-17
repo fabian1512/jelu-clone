@@ -5,6 +5,7 @@ import io.github.bayang.jelu.dao.ShelfRepository
 import io.github.bayang.jelu.dto.CreateShelfDto
 import io.github.bayang.jelu.dto.ShelfDto
 import io.github.bayang.jelu.dto.UserDto
+import io.github.bayang.jelu.errors.JeluAuthenticationException
 import io.github.bayang.jelu.errors.JeluValidationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -38,10 +39,26 @@ class ShelfService(
     ): Page<ShelfDto> = shelfRepository.find(user, name, targetId, pageable).map { it.toShelfDto() }
 
     @Transactional
-    fun findById(id: UUID): ShelfDto = shelfRepository.findById(id).toShelfDto()
+    fun findById(
+        id: UUID,
+        userId: UUID? = null,
+    ): ShelfDto {
+        if (userId != null) {
+            val entity = shelfRepository.findById(id)
+            if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
+        return shelfRepository.findById(id).toShelfDto()
+    }
 
     @Transactional
-    fun delete(shelfId: UUID) {
+    fun delete(
+        shelfId: UUID,
+        userId: UUID? = null,
+    ) {
+        if (userId != null) {
+            val entity = shelfRepository.findById(shelfId)
+            if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
         shelfRepository.delete(shelfId)
     }
 }

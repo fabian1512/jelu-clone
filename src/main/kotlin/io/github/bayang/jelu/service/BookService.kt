@@ -30,6 +30,7 @@ import io.github.bayang.jelu.dto.UserBookUpdateDto
 import io.github.bayang.jelu.dto.UserBookWithoutEventsAndUserDto
 import io.github.bayang.jelu.dto.UserDto
 import io.github.bayang.jelu.dto.fromBookCreateDto
+import io.github.bayang.jelu.errors.JeluAuthenticationException
 import io.github.bayang.jelu.search.LuceneEntity
 import io.github.bayang.jelu.search.LuceneHelper
 import io.github.bayang.jelu.service.metadata.providers.CalibreMetadataProvider
@@ -224,8 +225,76 @@ class BookService(
     fun update(
         userBookId: UUID,
         book: UserBookUpdateDto,
+        userId: UUID,
+    ): UserBookLightDto {
+        val entity = bookRepository.findUserBookById(userBookId)
+        if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        val res = bookRepository.update(userBookId, book)
+        searchIndexService.bookUpdated(res.book)
+        return res.toUserBookLightDto()
+    }
+
+    @Transactional
+    fun update(
+        userBookId: UUID,
+        book: UserBookUpdateDto,
         file: MultipartFile?,
     ): UserBookLightDto {
+        val updated: UserBook = bookRepository.update(userBookId, book)
+        val previousImage: String? = updated.book.image
+        var backup: File? = null
+        var skipSave = false
+        // no multipart image and url image field is empty in udate dto
+        // it means no new file upload and image has been explicitely set to null in update dto -> remove existing image
+        // otherwise it is impossible to remove an image from the UI without replacing it by a new one
+        if (file == null && book.book?.image.isNullOrBlank()) {
+            skipSave = true
+            // if only userbook is provided (eg if only userbook fields have to be updated)
+            // then don't touch the image
+            if (book.book != null && book.book.image.isNullOrBlank()) {
+                updated.book.image = null
+                if (previousImage != null) {
+                    fileManager.deleteImage(previousImage)
+                }
+            }
+        } else if (file == null &&
+            !book.book?.image.isNullOrBlank() &&
+            !previousImage.isNullOrBlank() &&
+            previousImage.equals(book.book.image, false)
+        ) {
+            // no multipart file and image field in update dto is the same as in BDD -> no change
+            skipSave = true
+        }
+        if (!skipSave) {
+            // if we need to update image and there is already one, backup it
+            if ((file != null || !book.book?.image.isNullOrBlank()) && !previousImage.isNullOrBlank()) {
+                val currentImage = File(properties.files.images, previousImage)
+                if (currentImage.exists()) {
+                    backup = File(properties.files.images, "$previousImage.bak")
+                    Files.move(currentImage.toPath(), backup.toPath())
+                }
+            }
+            val savedImage: String? =
+                saveImages(file, updated.book.title, updated.book.id.toString(), book.book?.image, properties.files.images)
+            updated.book.image = savedImage
+            // we had a previous image and we saved a new one : delete the old one
+            if (backup != null && backup.exists() && !savedImage.isNullOrBlank()) {
+                Files.deleteIfExists(backup.toPath())
+            }
+        }
+        searchIndexService.bookUpdated(updated.book)
+        return updated.toUserBookLightDto()
+    }
+
+    @Transactional
+    fun update(
+        userBookId: UUID,
+        book: UserBookUpdateDto,
+        file: MultipartFile?,
+        userId: UUID,
+    ): UserBookLightDto {
+        val entity = bookRepository.findUserBookById(userBookId)
+        if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
         val updated: UserBook = bookRepository.update(userBookId, book)
         val previousImage: String? = updated.book.image
         var backup: File? = null
@@ -487,7 +556,16 @@ class BookService(
     }
 
     @Transactional
-    fun findUserBookById(userbookId: UUID): UserBookLightDto = bookRepository.findUserBookById(userbookId).toUserBookLightDto()
+    fun findUserBookById(
+        userbookId: UUID,
+        userId: UUID? = null,
+    ): UserBookLightDto {
+        if (userId != null) {
+            val entity = bookRepository.findUserBookById(userbookId)
+            if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
+        return bookRepository.findUserBookById(userbookId).toUserBookLightDto()
+    }
 
     @Transactional
     fun findBookAsUserBook(
@@ -591,7 +669,14 @@ class BookService(
     ): SeriesDto = bookRepository.saveSeries(series, user).toSeriesDto()
 
     @Transactional
-    fun deleteUserBookById(userbookId: UUID) {
+    fun deleteUserBookById(
+        userbookId: UUID,
+        userId: UUID? = null,
+    ) {
+        if (userId != null) {
+            val entity = bookRepository.findUserBookById(userbookId)
+            if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
         bookRepository.deleteUserBookById(userbookId)
     }
 
@@ -742,7 +827,16 @@ class BookService(
     ): Page<BookDto> = bookRepository.findAuthorBooksById(authorId, user, pageable, libaryFilter, role).map { book -> book.toBookDto() }
 
     @Transactional
-    fun bulkEditUserbooks(userBookBulkUpdateDto: UserBookBulkUpdateDto): Int {
+    fun bulkEditUserbooks(
+        userBookBulkUpdateDto: UserBookBulkUpdateDto,
+        userId: UUID? = null,
+    ): Int {
+        if (userId != null) {
+            userBookBulkUpdateDto.ids.forEach { id ->
+                val entity = bookRepository.findUserBookById(id)
+                if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+            }
+        }
         val res = bookRepository.bulkEditUserbooks(userBookBulkUpdateDto)
         if (!userBookBulkUpdateDto.removeTags.isNullOrEmpty() || !userBookBulkUpdateDto.addTags.isNullOrEmpty()) {
             val bookIds =

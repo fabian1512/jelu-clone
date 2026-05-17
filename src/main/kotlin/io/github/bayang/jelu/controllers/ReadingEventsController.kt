@@ -66,8 +66,15 @@ class ReadingEventsController(
         endedBefore: LocalDate?,
         @PageableDefault(page = 0, size = 20, direction = Sort.Direction.DESC, sort = ["modificationDate"]) @ParameterObject pageable:
             Pageable,
-    ): Page<ReadingEventDto> =
-        repository.findAll(eventTypes, userId, bookId, startedAfter, startedBefore, endedAfter, endedBefore, pageable)
+        principal: Authentication,
+    ): Page<ReadingEventDto> {
+        val currentUserId = (principal.principal as JeluUser).user.id!!
+        if (userId != null && userId != currentUserId) {
+            throw io.github.bayang.jelu.errors
+                .JeluAuthenticationException("Resource unauthorized")
+        }
+        return repository.findAll(eventTypes, currentUserId, bookId, startedAfter, startedBefore, endedAfter, endedBefore, pageable)
+    }
 
     @GetMapping(path = ["/reading-events/me"])
     fun myReadingEvents(
@@ -120,15 +127,17 @@ class ReadingEventsController(
         @RequestBody
         @Valid
         readingEvent: UpdateReadingEventDto,
-    ): ReadingEventDto = repository.updateReadingEvent(readingEventId, readingEvent)
+        principal: Authentication,
+    ): ReadingEventDto = repository.updateReadingEvent(readingEventId, readingEvent, (principal.principal as JeluUser).user.id!!)
 
     @ApiResponse(responseCode = "204", description = "Deleted the reading event")
     @DeleteMapping(path = ["/reading-events/{id}"])
     fun deleteEventById(
         @PathVariable("id")
         eventId: UUID,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
-        repository.deleteReadingEventById(eventId)
+        repository.deleteReadingEventById(eventId, (principal.principal as JeluUser).user.id!!)
         return ResponseEntity.noContent().build()
     }
 

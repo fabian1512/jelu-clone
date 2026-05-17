@@ -6,6 +6,7 @@ import io.github.bayang.jelu.dto.JeluUser
 import io.github.bayang.jelu.dto.ReviewDto
 import io.github.bayang.jelu.dto.UpdateReviewDto
 import io.github.bayang.jelu.errors.JeluAuthenticationException
+import io.github.bayang.jelu.errors.JeluException
 import io.github.bayang.jelu.service.ReviewService
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.validation.Valid
@@ -64,7 +65,15 @@ class ReviewsController(
         @PathVariable("id") reviewId: UUID,
         @RequestBody @Valid
         updateReviewDto: UpdateReviewDto,
-    ): ReviewDto = reviewService.update(reviewId, updateReviewDto)
+        principal: Authentication,
+    ): ReviewDto {
+        val review = reviewService.findById(reviewId)
+        val userId =
+            (principal.principal as JeluUser).user.id
+                ?: throw JeluException("Authenticated user has no id")
+        if (review.user != userId) throw JeluAuthenticationException("Resource unauthorized")
+        return reviewService.update(reviewId, updateReviewDto)
+    }
 
     @GetMapping(path = ["/reviews/{id}"])
     fun getReview(
@@ -82,7 +91,13 @@ class ReviewsController(
     @DeleteMapping(path = ["/reviews/{id}"])
     fun deleteReviewById(
         @PathVariable("id") reviewId: UUID,
+        principal: Authentication,
     ): ResponseEntity<Unit> {
+        val review = reviewService.findById(reviewId)
+        val userId =
+            (principal.principal as JeluUser).user.id
+                ?: throw JeluException("Authenticated user has no id")
+        if (review.user != userId) throw JeluAuthenticationException("Resource unauthorized")
         reviewService.delete(reviewId)
         return ResponseEntity.noContent().build()
     }

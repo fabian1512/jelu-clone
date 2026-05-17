@@ -41,7 +41,14 @@ class CustomListService(
     ): Page<CustomListDto> = customListRepository.find(user, name, pageable).map { it.toCustomListDto() }
 
     @Transactional
-    fun delete(listId: UUID) {
+    fun delete(
+        listId: UUID,
+        userId: UUID? = null,
+    ) {
+        if (userId != null) {
+            val entity = customListRepository.findById(listId)
+            if (entity.user.id.value != userId) throw JeluAuthenticationException("Resource unauthorized")
+        }
         customListRepository.delete(listId)
     }
 
@@ -78,7 +85,10 @@ class CustomListService(
     }
 
     @Transactional
-    fun removeBooksFromList(customListRemoveDto: CustomListRemoveDto) {
+    fun removeBooksFromList(
+        customListRemoveDto: CustomListRemoveDto,
+        userId: UUID? = null,
+    ) {
         customListRemoveDto.books.forEach {
             bookService.deleteTagsFromBook(UUID.fromString(it), customListRemoveDto.tags.map { it -> UUID.fromString(it) })
         }
