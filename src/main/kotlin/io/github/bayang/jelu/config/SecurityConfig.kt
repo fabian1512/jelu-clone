@@ -58,6 +58,8 @@ class SecurityConfig(
                     "/api/v1/api-tokens/scopes",
                     "/api/v1/exports",
                     "/api/v1/imports",
+                    "/api/v1/metadata/**",
+                    "/api/v1/search/**",
                 )
             }.logout {
                 it
