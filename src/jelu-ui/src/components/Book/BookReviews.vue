@@ -4,7 +4,7 @@ import { computed, Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from 'vue-router';
 import { Book } from "../../model/Book";
 import { Review } from "../../model/Review";
-import dataService from "../../services/DataService";
+import { bookService } from "../../services/bookService";
 import { reviewService } from "../../services/reviewService";
 import ReviewCard from "../Global/ReviewCard.vue";
 import { useStore } from 'vuex'
@@ -60,7 +60,7 @@ watch(() => route.params.bookId, (newVal, oldVal) => {
 
 const getBook = async () => {
   try {
-    book.value = await dataService.findBookById(route.params.bookId as string)
+    book.value = await bookService.findBookById(route.params.bookId as string)
   } catch (error) {
   }
 };

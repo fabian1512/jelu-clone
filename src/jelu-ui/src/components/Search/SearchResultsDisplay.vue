@@ -9,7 +9,7 @@ import useSort from '../../composables/sort';
 import useBulkEdition from '../../composables/bulkEdition';
 import { Book } from '../../model/Book';
 import { LibraryFilter } from '../../model/LibraryFilter';
-import dataService from "../../services/DataService";
+import { bookService } from "../../services/bookService";
 import { ObjectUtils } from '../../utils/ObjectUtils';
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
@@ -85,7 +85,7 @@ const search = () => {
     const requestId = ++searchRequestCounter.value
     progress.value = true
     updatePageLoading(true)
-      dataService.findBooks(
+      bookService.findBooks(
         searchQuery.value, 
       pageAsNumber.value - 1, perPage.value, 
       sortQuery.value, libraryFilter.value,

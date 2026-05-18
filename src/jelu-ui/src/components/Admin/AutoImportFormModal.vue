@@ -8,6 +8,7 @@ import { Book, UserBook } from "../../model/Book";
 import { Metadata } from "../../model/Metadata";
 import { PluginInfo } from "../../model/PluginInfo";
 import { ServerSettings } from "../../model/ServerSettings";
+import { bookService } from "../../services/bookService";
 import dataService from "../../services/DataService";
 import { key } from '../../store';
 import { StringUtils } from "../../utils/StringUtils";
@@ -278,7 +279,7 @@ const searchLocally = async () => {
   if (form.authors) queryParts.push(form.authors)
   
   if (queryParts.length > 0) {
-    const response = await dataService.findBooks(
+    const response = await bookService.findBooks(
       queryParts.join(' '), 
       0, // page
       10, // size - show top 10
@@ -367,7 +368,7 @@ function toggleScanModal() {
           if (barcode != null) {
             // First search locally by ISBN
             try {
-              const response = await dataService.findBooks(barcode, 0, 1, undefined, 'ANY')
+              const response = await bookService.findBooks(barcode, 0, 1, undefined, 'ANY')
               if (response.content.length > 0) {
                 // Found locally - convert to Metadata and pass to EditBookModal
                 const book = response.content[0]

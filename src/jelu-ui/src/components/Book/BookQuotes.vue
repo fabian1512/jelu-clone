@@ -4,7 +4,7 @@ import { Ref, ref, watch } from "vue";
 import { useRoute } from 'vue-router';
 import { Book } from "../../model/Book";
 import { BookQuote } from "../../model/BookQuote";
-import dataService from "../../services/DataService";
+import { bookService } from "../../services/bookService";
 import { bookQuoteService } from "../../services/bookQuoteService";
 import BookDataCard from "./BookDataCard.vue";
 import BookQuoteCard from "../Global/BookQuoteCard.vue";
@@ -24,7 +24,7 @@ watch(() => route.params.bookId, (newVal, oldVal) => {
 
 const getBook = async () => {
   try {
-    book.value = await dataService.findBookById(route.params.bookId as string)
+    book.value = await bookService.findBookById(route.params.bookId as string)
   } catch (error) {
   }
 };

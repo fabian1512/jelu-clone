@@ -19,7 +19,6 @@ import { WikipediaPageResult } from "../model/WikipediaPageResult";
 
 
 import { Role } from "../model/Role";
-import { StringUtils } from "../utils/StringUtils";
 import { MetadataRequest } from "../model/MetadataRequest";
 
 import { DirectoryListing } from "../model/DirectoryListing";
@@ -279,44 +278,6 @@ class DataService {
     }
   }
 
-  saveBook = async (book: Book) => {
-    try {
-      const resp = await this.apiClient.post<Book>(this.API_BOOK, book)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error saving book " + error.response.status + " " + error)
-      }
-      throw new Error("error saving book " + error)
-    }
-  }
-
-  saveBookImage = async (book: Book, file: File | null, onUploadProgress: any) => {
-    try {
-      const formData = new FormData()
-      if (file != null) {
-        formData.append('file', file);
-      }
-      formData.append('book', new Blob([JSON.stringify(book)], {
-        type: "application/json"
-      }));
-      const resp = await this.apiClient.post<Book>(this.API_BOOK, formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          },
-          onUploadProgress: onUploadProgress
-        })
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error saving book " + error.response.status + " " + error)
-      }
-      throw new Error("error saving book " + error)
-    }
-  }
-
   saveUserBookImage = async (userBook: UserBook, file: File | null, onUploadProgress: any) => {
     try {
       const formData = new FormData()
@@ -446,7 +407,7 @@ class DataService {
   getTagBooksById = async (tagId: string,
     page?: number, size?: number, sort?: string, libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null) => {
     try {
-      const response = await this.apiClient.get<Page<Book>>(`${this.API_TAG}/${tagId}${this.API_BOOK}`, {
+      const response = await this.apiClient.get<Page<Book>>(`${this.API_TAG}/${tagId}/books`, {
         params: {
           page: page,
           size: size,
@@ -543,75 +504,6 @@ class DataService {
     }
   }
 
-  findBooksDetailed = async (title?: string, isbn10?: string, isbn13?: string,
-    series?: string, authors?: Array<string>, translators?: Array<string>,
-    narrators?: Array<string>,
-    tags?: Array<string>, page?: number, size?: number, sort?: string,
-    libraryFilter?: LibraryFilter) => {
-    try {
-      const response = await this.apiClient.get<Page<Book>>(`${this.API_BOOK}`, {
-        params: {
-          isbn10: isbn10,
-          title: title,
-          isbn13: isbn13,
-          series: series,
-          authors: authors,
-          translators: translators,
-          narrators: narrators,
-          tags: tags,
-          page: page,
-          size: size,
-          sort: sort,
-          libraryFilter: libraryFilter
-        },
-        paramsSerializer: {
-          serialize : (params) => {
-            return qs.stringify(params, { arrayFormat: 'comma' })
-        }},
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error find books " + error)
-    }
-  }
-
-  findBooks = async (query?: string, page?: number, size?: number, sort?: string,
-    libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null,
-    toRead?: boolean | null, owned?: boolean | null, borrowed?: boolean | null, signal?: AbortSignal) => {
-    try {
-      const response = await this.apiClient.get<Page<Book>>(`${this.API_BOOK}`, {
-        params: {
-          q: query,
-          page: page,
-          size: size,
-          sort: sort,
-          libraryFilter: libraryFilter,
-          lastEventTypes: lastEventTypes,
-          toRead: toRead,
-          owned: owned,
-          borrowed: borrowed,
-        },
-        paramsSerializer: {
-          serialize : (params) => {
-            return qs.stringify(params, { arrayFormat: 'comma' })
-        }},
-        signal,
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.code === 'ERR_CANCELED') {
-        throw error
-      }
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error find books " + error)
-    }
-  }
-
   deleteUserBook = async (userbookId: string) => {
     try {
       const response = await this.apiClient.delete(`${this.API_USERBOOK}/${userbookId}`);
@@ -621,18 +513,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error delete userbook " + error)
-    }
-  }
-
-  deleteBook = async (bookId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_BOOK}/${bookId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete book " + error)
     }
   }
 
@@ -857,30 +737,6 @@ class DataService {
     }
   }
 
-  updateBook = async (bookId: string, bookUpdateDto: Book) => {
-    try {
-      const response = await this.apiClient.put<Book>(`${this.API_BOOK}/${bookId}`, bookUpdateDto);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error update book " + error)
-    }
-  }
-
-  findBookById = async (bookId: string) => {
-    try {
-      const response = await this.apiClient.get<Book>(`${this.API_BOOK}/${bookId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error book by id " + error)
-    }
-  }
-
   usernameById = async (userId: string) => {
     try {
       const response = await this.apiClient.get(`/username/${userId}`);
@@ -891,22 +747,6 @@ class DataService {
       }
       throw new Error("error username by id " + error)
     }
-  }
-
-  checkIsbnExists = async (isbn10: string|undefined, isbn13: string|undefined) => {
-    if (StringUtils.isNotBlank(isbn10)) {
-      const res = await this.findBooks(`isbn:${isbn10}`)
-      if (!res.empty) {
-        return res.content[0]
-      }
-    }
-    if (StringUtils.isNotBlank(isbn13)) {
-      const res = await this.findBooks(`isbn:${isbn13}`)
-      if (!res.empty) {
-        return res.content[0]
-      }
-    }
-    return null
   }
 
   getDirectoryListing = async (path: string, reason = "metadata") => {
