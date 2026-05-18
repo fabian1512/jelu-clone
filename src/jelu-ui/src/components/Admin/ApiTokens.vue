@@ -5,7 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import { key } from '../../store'
-import dataService from "../../services/DataService"
+import { apiTokenService } from "../../services/apiTokenService"
 import { ObjectUtils } from "../../utils/ObjectUtils"
 import { ApiToken, TokenScope, CreateApiToken } from "../../model/ApiToken"
 import dayjs from "dayjs"
@@ -45,7 +45,7 @@ onMounted(async () => {
 async function loadTokens() {
   loading.value = true
   try {
-    tokens.value = await dataService.getApiTokens()
+    tokens.value = await apiTokenService.getApiTokens()
   } catch (err: any) {
     ObjectUtils.toast(oruga, "danger", t('api_tokens.load_error'), 4000)
   } finally {
@@ -55,7 +55,7 @@ async function loadTokens() {
 
 async function loadScopes() {
   try {
-    scopes.value = await dataService.getApiTokenScopes()
+    scopes.value = await apiTokenService.getApiTokenScopes()
   } catch (err: any) {
   }
 }
@@ -74,7 +74,7 @@ async function createToken() {
       expiresAt = dayjs(customExpiration.value).toISOString()
     }
 
-    const result = await dataService.createApiToken({
+    const result = await apiTokenService.createApiToken({
       name: form.value.name,
       scopes: form.value.scopes,
       expiresAt: expiresAt
@@ -105,7 +105,7 @@ async function revokeToken(token: ApiToken) {
   }
 
   try {
-    await dataService.deleteApiToken(token.id)
+    await apiTokenService.deleteApiToken(token.id)
     await loadTokens()
     ObjectUtils.toast(oruga, "success", t('api_tokens.revoked'), 4000)
   } catch (err: any) {
@@ -115,7 +115,7 @@ async function revokeToken(token: ApiToken) {
 
 async function toggleTokenActive(token: ApiToken) {
   try {
-    await dataService.updateApiToken(token.id, { isActive: !token.isActive })
+    await apiTokenService.updateApiToken(token.id, { isActive: !token.isActive })
     await loadTokens()
     ObjectUtils.toast(oruga, "success", token.isActive ? t('api_tokens.deactivated') : t('api_tokens.activated'), 4000)
   } catch (err: any) {
