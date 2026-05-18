@@ -8,6 +8,7 @@ import useSort from '../../composables/sort';
 import useBulkEdition from '../../composables/bulkEdition';
 import { UserBook } from '../../model/Book';
 import { ReadingEventType } from '../../model/ReadingEvent';
+import { userService } from "../../services/userService";
 import dataService from "../../services/DataService";
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
@@ -35,7 +36,7 @@ const username = ref("")
 
 const getUsername = async () => {
   if (userId.value != null) {
-    username.value = await dataService.usernameById(userId.value)
+    username.value = await userService.usernameById(userId.value)
   }
 }
 

@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { User } from "../../model/User";
-import dataService from "../../services/DataService";
+import { userService } from "../../services/userService";
 import { key } from '../../store';
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import useTypography from "../../composables/typography";
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 async function editUser() {
   if (props.currentUser.id != null) {
     try {
-      const modified = await dataService.updateUser(props.currentUser.id, {"isAdmin": undefined, "password": form.value.password})
+      const modified = await userService.updateUser(props.currentUser.id, {"isAdmin": undefined, "password": form.value.password})
       store.commit('user', modified)
       ObjectUtils.toast(oruga, "success", t('admin_user.user_updated', {name : props.currentUser.login}), 2500)
       emit('close')

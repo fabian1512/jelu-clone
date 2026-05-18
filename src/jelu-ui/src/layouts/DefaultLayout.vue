@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { key } from '../store'
-import dataService from '../services/DataService'
+import { userService } from '../services/userService';
 import AppSidebar from '../components/Global/AppSidebar.vue'
 import SearchBar from '../components/Global/SearchBar.vue'
 import useTypography from '../composables/typography'
@@ -26,7 +26,7 @@ const isLogged = computed(() => store.getters.getLogged)
 const sidebarOpen = ref(false)
 
 const logout = () => {
-  dataService.logout().then(() => {
+  userService.logout().then(() => {
     store.dispatch('logout')
   })
 }

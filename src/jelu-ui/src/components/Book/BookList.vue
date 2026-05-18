@@ -9,6 +9,7 @@ import usePagination from '../../composables/pagination';
 import useSort from "../../composables/sort";
 import { UserBook } from "../../model/Book";
 import { ReadingEventType } from "../../model/ReadingEvent";
+import { userService } from "../../services/userService";
 import dataService from "../../services/DataService";
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
@@ -85,7 +86,7 @@ watch(borrowed, (newVal) => {
 
 const getUsername = async () => {
   if (userId.value != null) {
-    username.value = await dataService.usernameById(userId.value)
+    username.value = await userService.usernameById(userId.value)
   }
 }
 

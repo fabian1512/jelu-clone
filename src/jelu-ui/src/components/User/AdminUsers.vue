@@ -3,7 +3,7 @@ import { useOruga } from "@oruga-ui/oruga-next"
 import { useTitle } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import dataService from "../../services/DataService"
+import { userService } from "../../services/userService";
 import { ObjectUtils } from "../../utils/ObjectUtils"
 import useTypography from "../../composables/typography"
 
@@ -20,7 +20,7 @@ const form = ref({'login' : '', 'password' : '', 'password_confirm': '', 'admin'
 
 async function createUser() {
   try {
-    await dataService.createUser({"login" : form.value.login, "password": form.value.password, "isAdmin" : form.value.admin})
+    await userService.createUser({"login" : form.value.login, "password": form.value.password, "isAdmin" : form.value.admin})
     ObjectUtils.toast(oruga, "success", t('admin_user.user_saved', {name : form.value.login}), 4000)
     form.value.password = ''
     form.value.password_confirm = ''
