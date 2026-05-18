@@ -4,7 +4,7 @@ import { computed, reactive, Ref, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import { OAuth2ClientDto } from '../../model/oauth-client-dto'
-import dataService from "../../services/DataService"
+import { oauth2Service } from "../../services/oauth2Service"
 import { key } from '../../store'
 import urls from '../../urls'
 import { StringUtils } from '../../utils/StringUtils'
@@ -23,7 +23,7 @@ const progress: Ref<boolean> = ref(false)
 const providers: Ref<Array<OAuth2ClientDto>> = ref([])
 
 const getOauthproviders = () => {
-  dataService.oauth2Providers().then(res => {
+  oauth2Service.oauth2Providers().then(res => {
     providers.value = res
   })
 }
