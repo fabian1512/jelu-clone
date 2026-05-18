@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { Book } from "../../model/Book";
 import { Visibility } from "../../model/Review";
 import { BookQuote } from "../../model/BookQuote"
-import dataService from "../../services/DataService";
+import { bookQuoteService } from "../../services/bookQuoteService";
 import useTypography from "../../composables/typography";
 
 const { t } = useI18n({
@@ -34,7 +34,7 @@ watch(visibility, (newVal, oldVal) => {
 const submit = () => {
   if (props.book.id != null) {
     progress.value = true
-    dataService.saveBookQuote({
+    bookQuoteService.saveBookQuote({
       bookId: props.book.id,
       text: quoteText.value,
       visibility: visibility.value,
@@ -53,7 +53,7 @@ const submit = () => {
 const editBookQuote = () => {
   if (props.book.id != null && props.bookQuote?.id != null) {
     progress.value = true
-    dataService.updateBookQuote(props.bookQuote.id, {
+    bookQuoteService.updateBookQuote(props.bookQuote.id, {
       text: quoteText.value,
       visibility: visibility.value,
       position: position.value

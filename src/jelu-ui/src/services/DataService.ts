@@ -23,7 +23,7 @@ import { StringUtils } from "../utils/StringUtils";
 import { MetadataRequest } from "../model/MetadataRequest";
 import { Series, SeriesUpdate } from "../model/Series";
 import { DirectoryListing } from "../model/DirectoryListing";
-import { BookQuote, CreateBookQuoteDto, UpdateBookQuoteDto } from "../model/BookQuote";
+
 import { CustomList, CustomListRemoveDto } from "../model/custom-list";
 import { createApiClient } from "./apiClientFactory";
 
@@ -66,8 +66,6 @@ class DataService {
   private API_USER_MESSAGES = '/user-messages';
 
   private API_REVIEWS = '/reviews';
-
-  private API_BOOK_QUOTES = '/book-quotes';
 
   private API_CUSTOM_LISTS = '/custom-lists';
 
@@ -1371,107 +1369,7 @@ class DataService {
     }
   }
 
-  saveBookQuote = async (quote: CreateBookQuoteDto) => {
-    try {
-      const resp = await this.apiClient.post<BookQuote>(`${this.API_BOOK_QUOTES}`, quote)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error creating book quote " + error.response.status + " " + error)
-      }
-      throw new Error("error creating book quote " + error)
-    }
-  }
 
-  /*
-  * Dates are deserialized as strings, convert to Date instead
-  */
-  transformBookQuotes = (data: string) => {
-    const page = JSON.parse(data)
-    if (page.content) {
-      for (const ev of page.content) {
-        if (ev.modificationDate != null) {
-          ev.modificationDate = dayjs(ev.modificationDate).toDate()
-        }
-        if (ev.creationDate != null) {
-          ev.creationDate = dayjs(ev.creationDate).toDate()
-        }
-      }
-    }
-    return page
-  }
-
-  transformBookQuote = (data: string) => {
-    const ev = JSON.parse(data)
-    if (ev.modificationDate != null) {
-      ev.modificationDate = dayjs(ev.modificationDate).toDate()
-    }
-    if (ev.creationDate != null) {
-      ev.creationDate = dayjs(ev.creationDate).toDate()
-    }
-    return ev
-  }
-
-  findBookQuotes = async (userId?: string, bookId?: string, visibility: Visibility | null = null,
-    page?: number, size?: number, sort: string | null = null) => {
-    try {
-      const response = await this.apiClient.get<Page<BookQuote>>(`${this.API_BOOK_QUOTES}`, {
-        params: {
-          userId: userId,
-          bookId: bookId,
-          visibility: visibility,
-          page: page,
-          size: size,
-          sort: sort
-        },
-        transformResponse: this.transformBookQuotes
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error book quotes " + error)
-    }
-  }
-
-  findBookQuoteById = async (quoteId: string) => {
-    try {
-      const response = await this.apiClient.get<BookQuote>(`${this.API_BOOK_QUOTES}/${quoteId}`, {
-        transformResponse: this.transformBookQuote
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error book quote " + error)
-    }
-  }
-
-  deleteBookQuote = async (quoteId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_BOOK_QUOTES}/${quoteId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete quote " + error)
-    }
-  }
-
-  updateBookQuote = async (quoteId: string, updateDto: UpdateBookQuoteDto) => {
-    try {
-      const response = await this.apiClient.put<BookQuote>(`${this.API_BOOK_QUOTES}/${quoteId}`, updateDto);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error update quote " + error)
-    }
-  }
 
   saveCustomList = async (list: CustomList) => {
     try {

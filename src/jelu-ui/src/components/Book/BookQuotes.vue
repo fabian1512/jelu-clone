@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router';
 import { Book } from "../../model/Book";
 import { BookQuote } from "../../model/BookQuote";
 import dataService from "../../services/DataService";
+import { bookQuoteService } from "../../services/bookQuoteService";
 import BookDataCard from "./BookDataCard.vue";
 import BookQuoteCard from "../Global/BookQuoteCard.vue";
 
@@ -29,7 +30,7 @@ const getBook = async () => {
 };
 
 const getBookQuotes = async () => {
-  dataService.findBookQuotes(undefined, 
+  bookQuoteService.findBookQuotes(undefined, 
     route.params.bookId as string, null, 0, 50, null)
     .then(res => {
         if (!res.empty) {
