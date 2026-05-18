@@ -73,13 +73,20 @@ Recent relevant commits (already done):
 6. Eliminate export N+1 with bulk event loading (L)
 7. Push stats filtering/aggregation into SQL (M)
 
-### Sprint 3
-8. Frontend build/bundle cleanup (install/caching/themes/css) (M)
-9. Fix Axios 401 interceptor reject contract (S)
-10. Introduce request cancellation + stale response guards (M)
-11. Re-enable CSRF properly: configure Axios to send XSRF token OR alternative CSRF strategy (M)
+### Sprint 3 (remaining)
+- T13: Re-enable CSRF properly: configure Axios to send XSRF token OR alternative CSRF strategy (M)
+
+### Sprint 4
+- T12: Frontend modularization: split DataService (1889 lines → domain services), split mega-components, consolidate i18n (L)
+  - Phase 1 (done): ApiClientFactory + MetadataService extracted; DataService uses factory internally
 
 ## Ticket Board (execution)
+
+### T12 - Frontend modularization (L)
+- Scope: DataService (1889 lines), mega Vue components, i18n consolidation
+- Goal: Extract domain-specific services, reduce coupling, improve maintainability
+- Status: `in_progress`
+- Phase 1 (2026-05-17): Created `apiClientFactory.ts` (shared Axios factory with interceptors), `metadataService.ts` (first domain extraction), `index.ts` (clean re-exports). Refactored DataService to use factory internally, preserved all methods for backward compatibility.
 
 ### T1 - Axios 401 interceptor contract (S)
 - Scope: `src/jelu-ui/src/services/DataService.ts`
@@ -155,3 +162,4 @@ Recent relevant commits (already done):
 - 2026-05-17: T10 done - CSV export N+1 eliminated: batch-load all reading events per page (1 query per 100 books instead of 3 queries per book). Added `ReadingEventRepository.findAllByUserAndBookIds()`.
 - 2026-05-17: T11 done - stats SQL aggregation: replaced N+1 unread-count loop in `BookRepository.stats()` with single SQL query (groupBy + having); removed paginated loop in `ReadingEventsController.stats()` and `statsForYear()`; added `Pageable.unpaged()` support via `isPaged` check; SQL SUM used for price instead of fetching all rows.
 - 2026-05-17: CSRF regression fixed — added `/api/v1/metadata/**`, `/api/v1/search/**`, and all mutating API patterns (`/**`) to CSRF exclusion list after 403 errors blocked import, merge, and create operations.
+- 2026-05-17: T12 phase1 done — extracted `ApiClientFactory`, `MetadataService` from DataService; DataService refactored to use factory internally (backward-compatible); added `services/index.ts` for clean imports.
