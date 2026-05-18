@@ -24,7 +24,6 @@ import { MetadataRequest } from "../model/MetadataRequest";
 import { Series, SeriesUpdate } from "../model/Series";
 import { DirectoryListing } from "../model/DirectoryListing";
 import { BookQuote, CreateBookQuoteDto, UpdateBookQuoteDto } from "../model/BookQuote";
-import { OAuth2ClientDto } from "../model/oauth-client-dto";
 import { CustomList, CustomListRemoveDto } from "../model/custom-list";
 import { createApiClient } from "./apiClientFactory";
 
@@ -1590,18 +1589,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error update quote " + error)
-    }
-  }
-
-  oauth2Providers = async () => {
-    try {
-      const response = await this.apiClient.get<Array<OAuth2ClientDto>>("/oauth2/providers");
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error oauth providers " + error)
     }
   }
 
