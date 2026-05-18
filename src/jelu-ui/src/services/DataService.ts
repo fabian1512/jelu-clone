@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
-import { UserBook, Book, UserBookBulkUpdate, UserBookUpdate } from "../model/Book";
+import { Book } from "../model/Book";
 import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUserBook } from "../model/ReadingEvent";
 import { Tag } from "../model/Tag";
 import { Metadata } from "../model/Metadata";
@@ -16,7 +16,6 @@ import { WikipediaPageResult } from "../model/WikipediaPageResult";
 
 
 
-import { Role } from "../model/Role";
 import { MetadataRequest } from "../model/MetadataRequest";
 
 import { DirectoryListing } from "../model/DirectoryListing";
@@ -32,12 +31,6 @@ class DataService {
 
   private TOKEN_KEY = 'jelu-token'
 
-  private API_BOOK = '/books';
-
-  private API_USERBOOK = '/userbooks';
-
-  private API_HISTORY = '/history';
-
   private API_TAG = '/tags';
 
   
@@ -49,12 +42,6 @@ class DataService {
   private API_IMPORTS = '/imports';
 
   private API_EXPORTS = '/exports';
-
-  private API_PAGE = '/page';
-
-  private API_MERGE = '/merge';
-
-  
 
   constructor() {
     this.apiClient = createApiClient(() => this.getToken());
@@ -70,151 +57,6 @@ class DataService {
     }
     else {
       return null
-    }
-  }
-
-  getUserBookById = async (userBookId: string) => {
-    try {
-      const response = await this.apiClient.get<UserBook>(`${this.API_USERBOOK}/${userBookId}`, {
-        transformResponse: this.transformUserbook
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error finding userBook " + userBookId + " " + error)
-    }
-  }
-
-  getBookAsUserBook = async (bookId: string) => {
-    try {
-      const response = await this.apiClient.get<UserBook>(`${this.API_USERBOOK}/from-book/${bookId}`, {
-        transformResponse: this.transformUserbook
-      });
-      return response.data;
-    }
-    catch (error) {
-      throw new Error("error finding book as userbook " + bookId + " " + error)
-    }
-  }
-
-  /*
-  * Dates are deserialized as strings, convert to Date instead
-  */
-  transformUserbook = (data: string) => {
-    const tr = JSON.parse(data)
-    if (tr.readingEvents != null && tr.readingEvents.length > 0) {
-      for (const ev of tr.readingEvents) {
-        if (ev.modificationDate != null) {
-          ev.modificationDate = dayjs(ev.modificationDate).toDate()
-        }
-        if (ev.startDate != null) {
-          ev.startDate = dayjs(ev.startDate).toDate()
-        }
-        if (ev.endDate != null) {
-          ev.endDate = dayjs(ev.endDate).toDate()
-        }
-      }
-    }
-    return tr
-  }
-
-  saveUserBookImage = async (userBook: UserBook, file: File | null, onUploadProgress: any) => {
-    try {
-      const formData = new FormData()
-      if (file != null) {
-        formData.append('file', file);
-      }
-      formData.append('book', new Blob([JSON.stringify(userBook)], {
-        type: "application/json"
-      }));
-      const resp = await this.apiClient.post<UserBook>(this.API_USERBOOK, formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          },
-          onUploadProgress: onUploadProgress
-        })
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error saving book " + error.response.status + " " + error)
-      }
-      throw new Error("error saving book " + error)
-    }
-  }
-
-  updateUserBookImage = async (userBook: UserBook, file: File | null, onUploadProgress: any) => {
-    try {
-      const formData = new FormData()
-      if (file != null) {
-        formData.append('file', file);
-      }
-      formData.append('book', new Blob([JSON.stringify(userBook)], {
-        type: "application/json"
-      }));
-      const resp = await this.apiClient.put<UserBook>(`${this.API_USERBOOK}/${userBook.id}`, formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          },
-          onUploadProgress: onUploadProgress
-        })
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error updating book " + error.response.status + " " + error)
-      }
-      throw new Error("error updating book " + error)
-    }
-  }
-
-  updateUserBook = async (userBook: UserBookUpdate) => {
-    try {
-      const resp = await this.apiClient.put<UserBook>(`${this.API_USERBOOK}/${userBook.id}`, userBook)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error updating book " + error.response.status + " " + error)
-      }
-      throw new Error("error updating book " + error)
-    }
-  }
-
-  findUserBookByCriteria = async (lastEventTypes?: Array<ReadingEventType> | null, bookId?: string|null,
-    userId?: string|null, toRead?: boolean | null, owned?: boolean | null, borrowed?: boolean | null,
-    page?: number, size?: number, sort?: string, signal?: AbortSignal) => {
-    try {
-      const response = await this.apiClient.get<Page<UserBook>>(`${this.API_USERBOOK}`, {
-        params: {
-          lastEventTypes: lastEventTypes,
-          bookId: bookId,
-          userId: userId,
-          toRead: toRead,
-          owned: owned,
-          borrowed: borrowed,
-          page: page,
-          size: size,
-          sort: sort
-        },
-        paramsSerializer: {
-          serialize : (params) => {
-            return qs.stringify(params, { arrayFormat: 'comma' })
-        }},
-        signal,
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.code === 'ERR_CANCELED') {
-        throw error
-      }
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get userBook by eventType " + error)
     }
   }
 
@@ -329,18 +171,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error search metadata " + error)
-    }
-  }
-
-  deleteUserBook = async (userbookId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_USERBOOK}/${userbookId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete userbook " + error)
     }
   }
 
@@ -535,24 +365,6 @@ class DataService {
   /*
   * Dates are deserialized as strings, convert to Date instead
   */
-  bulkEditUserBooks = async (bulkUpdateDto: UserBookBulkUpdate) => {
-    try {
-      const resp = await this.apiClient.put<number>(this.API_USERBOOK, {
-        ids: bulkUpdateDto.ids,
-        addTags: bulkUpdateDto.addTags,
-        removeTags: bulkUpdateDto.removeTags,
-        owned: bulkUpdateDto.owned,
-        toRead: bulkUpdateDto.toRead,
-      })
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error bulk updating " + error.response.status + " " + error)
-      }
-      throw new Error("error bulk updating " + error)
-    }
-  }
-
   getDirectoryListing = async (path: string, reason = "metadata") => {
     try {
       const response = await this.apiClient.post<DirectoryListing>('/filesystem', {'reason' : reason, 'path' : path});

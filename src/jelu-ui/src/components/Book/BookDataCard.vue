@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import useDates from '../../composables/dates'
 import { Book, UserBook } from '../../model/Book'
-import dataService from "../../services/DataService"
+import { userBookService } from "../../services/userBookService";
 import { ObjectUtils } from '../../utils/ObjectUtils'
 import { sanitizeHtml } from '../../utils/sanitizeHtml'
 import EditBookModal from "./EditBookModal.vue"
@@ -49,7 +49,7 @@ const bookCanBeAdded: Ref<boolean> = ref(false)
 const getUserbookId = async () => {
   bookCanBeAdded.value = false
   await until(props.book.id).not.toBeNull()
-  dataService.findUserBookByCriteria(null, props.book.id, null, null, null, null, 0, 10)
+  userBookService.findUserBookByCriteria(null, props.book.id, null, null, null, null, 0, 10)
   .then(res => {
     if (!res.empty) {
       if (res.content.length > 0 && res.content[0].id != null) {

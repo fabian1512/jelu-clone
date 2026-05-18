@@ -15,6 +15,7 @@ import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService"
 import { publisherService } from "../../services/publisherService";
 import { key } from '../../store';
@@ -187,7 +188,7 @@ const importBook = async () => {
     }
     try {
       progress.value = true
-      const res: UserBook = await dataService.saveUserBookImage(
+      const res: UserBook = await userBookService.saveUserBookImage(
         userBook,
         file.value,
         (event: { loaded: number; total: number }) => {

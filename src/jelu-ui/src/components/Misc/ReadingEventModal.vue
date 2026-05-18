@@ -2,6 +2,7 @@
 import { Ref, ref, watch, computed } from "vue";
 import { CreateReadingEvent, ReadingEvent, ReadingEventType } from "../../model/ReadingEvent";
 import { UserBookUpdate } from "../../model/Book";
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { useI18n } from 'vue-i18n'
@@ -114,7 +115,7 @@ const create = () => {
           percentRead: percentRead.value ?? undefined,
           currentPageNumber: currentPageNumber.value ?? undefined
         }
-        dataService.updateUserBook(userBookUpdate).catch(e => console.error('Failed to update progress:', e))
+        userBookService.updateUserBook(userBookUpdate).catch(e => console.error('Failed to update progress:', e))
       }
       progress.value = false
       emit('close')
@@ -139,7 +140,7 @@ const update = () => {
           percentRead: percentRead.value ?? undefined,
           currentPageNumber: currentPageNumber.value ?? undefined
         }
-        dataService.updateUserBook(userBookUpdate).catch(e => console.error('Failed to update progress:', e))
+        userBookService.updateUserBook(userBookUpdate).catch(e => console.error('Failed to update progress:', e))
       }
       progress.value = false
       emit('close')
