@@ -7,5 +7,6 @@ export { apiTokenService } from "./apiTokenService";
 export { quoteService } from "./quoteService";
 export { oauth2Service } from "./oauth2Service";
 export { metadataProviderService } from "./metadataProviderService";
+export { statsService } from "./statsService";
 
 export { default as DataService } from "./DataService";
