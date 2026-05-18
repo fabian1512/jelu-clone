@@ -87,6 +87,7 @@ Recent relevant commits (already done):
 - Goal: Extract domain-specific services, reduce coupling, improve maintainability
 - Status: `in_progress`
 - Phase 1 (2026-05-17): Created `apiClientFactory.ts` (shared Axios factory with interceptors), `metadataService.ts` (first domain extraction), `index.ts` (clean re-exports). Refactored DataService to use factory internally, preserved all methods for backward compatibility.
+- Phase 2 (2026-05-17): Extracted `wikipediaService.ts` (wikipediaSearch + wikipediaPage). DataService retains backward-compat stubs delegating to factory-created client. Removed API_WIKIPEDIA, API_SEARCH constants from DataService.
 
 ### T1 - Axios 401 interceptor contract (S)
 - Scope: `src/jelu-ui/src/services/DataService.ts`
