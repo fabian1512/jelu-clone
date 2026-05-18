@@ -13,7 +13,8 @@ import { Path } from "../../model/DirectoryListing";
 import { Metadata } from "../../model/Metadata";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
-import dataService from "../../services/DataService";
+import dataService from "../../services/DataService"
+import { publisherService } from "../../services/publisherService";
 import { key } from '../../store';
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { StringUtils } from "../../utils/StringUtils";
@@ -305,7 +306,7 @@ function getFilteredTags(text: string) {
 
 function getFilteredPublishers(text: string) {
   form.publisher = text
-  dataService.findPublisherByCriteria(text).then(data => filteredPublishers.value = data.content)
+  publisherService.findPublisherByCriteria(text).then(data => filteredPublishers.value = data.content)
 }
 
 function beforeAdd(item: Author | string, target: Array<Author>) {

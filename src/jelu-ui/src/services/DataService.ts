@@ -456,22 +456,6 @@ class DataService {
     }
   }
 
-  findPublisherByCriteria = async (query?: string | null) => {
-    try {
-      const response = await this.apiClient.get<Page<string>>(`${this.API_BOOK}/publishers`, {
-        params: {
-          name: query
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get publishers by criteria " + error)
-    }
-  }
-
   getTagById = async (tagId: string) => {
     try {
       const response = await this.apiClient.get<Tag>(`${this.API_TAG}/${tagId}`);
