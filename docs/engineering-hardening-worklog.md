@@ -78,7 +78,7 @@ Recent relevant commits (already done):
 
 ### Sprint 4
 - T12: Frontend modularization: split DataService (1889 lines → domain services), split mega-components, consolidate i18n (L)
-  - Phase 1 (done): ApiClientFactory + MetadataService extracted; DataService uses factory internally
+  - Phase 1-4 (done): ApiClientFactory, MetadataService, WikipediaService, TagService, ServerSettingsService extracted; store.ts migrated; DataService refactored to use factory
 
 ## Ticket Board (execution)
 
@@ -88,6 +88,8 @@ Recent relevant commits (already done):
 - Status: `in_progress`
 - Phase 1 (2026-05-17): Created `apiClientFactory.ts` (shared Axios factory with interceptors), `metadataService.ts` (first domain extraction), `index.ts` (clean re-exports). Refactored DataService to use factory internally, preserved all methods for backward compatibility.
 - Phase 2 (2026-05-17): Extracted `wikipediaService.ts` (wikipediaSearch + wikipediaPage). DataService retains backward-compat stubs delegating to factory-created client. Removed API_WIKIPEDIA, API_SEARCH constants from DataService.
+- Phase 3 (2026-05-17): Created `tagService.ts` (5 tag operations: find/criteria, get by id, get books, get orphans, delete). DataService unchanged (too many component consumers). Available for future migration.
+- Phase 4 (2026-05-17): Extracted `serverSettingsService.ts` (getServerSettings). Migrated `store.ts` from `dataService.serverSettings()` to `serverSettingsService.getServerSettings()`. Removed API_SERVER_SETTINGS constant + ServerSettings import from DataService.
 
 ### T1 - Axios 401 interceptor contract (S)
 - Scope: `src/jelu-ui/src/services/DataService.ts`
