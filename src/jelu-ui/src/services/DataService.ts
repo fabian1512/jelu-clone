@@ -15,7 +15,7 @@ import { WikipediaSearchResult } from "../model/WikipediaSearchResult";
 import { WikipediaPageResult } from "../model/WikipediaPageResult";
 
 import { MessageCategory, UpdateUserMessage, UserMessage } from "../model/UserMessage";
-import { MonthStats, TotalsStats, YearStats } from "../model/YearStats";
+
 import { Shelf } from "../model/Shelf";
 import { CreateReviewDto, Review, UpdateReviewDto, Visibility } from "../model/Review";
 import { Role } from "../model/Role";
@@ -64,8 +64,6 @@ class DataService {
   private API_MERGE = '/merge';
 
   private API_USER_MESSAGES = '/user-messages';
-
-  private API_STATS = '/stats';
 
   private API_SHELVES = '/shelves';
 
@@ -1128,54 +1126,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error update userMessage " + error)
-    }
-  }
-
-  yearStats = async () => {
-    try {
-      const response = await this.apiClient.get<Array<YearStats>>(`${this.API_STATS}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error stats " + error)
-    }
-  }
-
-  monthStatsForYear = async (year: number) => {
-    try {
-      const response = await this.apiClient.get<Array<MonthStats>>(`${this.API_STATS}/${year}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error stats months " + error)
-    }
-  }
-
-  yearsWithStats = async () => {
-    try {
-      const response = await this.apiClient.get<Array<number>>(`${this.API_STATS}/years`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error stats years " + error)
-    }
-  }
-
-  totalsStats = async () => {
-    try {
-      const response = await this.apiClient.get<TotalsStats>(`${this.API_STATS}/total`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error stats total " + error)
     }
   }
 

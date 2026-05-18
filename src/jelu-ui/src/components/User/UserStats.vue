@@ -7,7 +7,7 @@ import { Bar } from 'vue-chartjs';
 import { useI18n } from 'vue-i18n';
 import useTypography from '../../composables/typography';
 import { MonthStats, TotalsStats } from '../../model/YearStats';
-import dataService from "../../services/DataService";
+import { statsService } from "../../services/statsService";
 import { ObjectUtils } from '../../utils/ObjectUtils';
 
 const { t } = useI18n({
@@ -25,7 +25,7 @@ if (currency == null) {
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineController, PointElement, LineElement)
 
 const getYears = () => {
-  dataService.yearsWithStats()
+  statsService.yearsWithStats()
   .then(res => {
     years.value = res
     currentYear.value = res[res.length - 1]
@@ -39,7 +39,7 @@ const storedLanguage = useLocalStorage("jelu_language", "en")
 
 const getAllStats = () => {
   loading.value = true
-  dataService.yearStats()
+  statsService.yearStats()
   .then(res => {
     let labels = res.map(r => r.year)
 
@@ -88,7 +88,7 @@ const monthStats: Ref<Array<MonthStats>> = ref([])
 const getYearStats = () => {
   if (currentYear.value != null) {
     loading.value = true
-    dataService.monthStatsForYear(currentYear.value)
+    statsService.monthStatsForYear(currentYear.value)
     .then(res => {
       monthStats.value = res
       let labels = res.map(r => r.month).map(m => {
@@ -138,7 +138,7 @@ const getYearStats = () => {
 }
 
 const totalStats = () => {
-  dataService.totalsStats()
+  statsService.totalsStats()
   .then( data => totals.value = data)
   
 }

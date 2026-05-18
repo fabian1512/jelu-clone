@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import usePagination from '../../composables/pagination';
 import { ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingEvent';
 import dataService from "../../services/DataService";
+import { statsService } from "../../services/statsService";
 import BookCard from '../Global/BookCard.vue';
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import useTypography from '../../composables/typography';
@@ -26,7 +27,7 @@ const nonCurrentlyReadingEvents: Array<ReadingEventType> = [ReadingEventType.DRO
 const yearEvents: Ref<Array<ReadingEventWithUserBook>> = ref([])
 
 const getYears = () => {
-  dataService.yearsWithStats()
+  statsService.yearsWithStats()
   .then(res => {
     years.value = res
     currentYear.value = res[res.length - 1]
