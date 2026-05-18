@@ -9,7 +9,7 @@ import usePagination from '../../composables/pagination';
 import useSort from "../../composables/sort";
 import { Book } from '../../model/Book';
 import { LibraryFilter } from "../../model/LibraryFilter";
-import dataService from "../../services/DataService";
+import { seriesService } from "../../services/seriesService";
 import { ObjectUtils } from '../../utils/ObjectUtils';
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
@@ -55,7 +55,7 @@ watch(() => route.params.seriesId, (newVal, oldVal) => {
 
 const getSeries = async () => {
   try {
-    series.value = await dataService.getSeriesById(route.params.seriesId as string)
+    series.value = await seriesService.getSeriesById(route.params.seriesId as string)
     useTitle('Jelu | ' + series.value.name)
   } catch (error) {
   }
@@ -63,7 +63,7 @@ const getSeries = async () => {
 
 const getBooks = () => {
     getBooksIsLoading.value = true
-    dataService.getSeriesBooksById(route.params.seriesId as string,
+    seriesService.getSeriesBooksById(route.params.seriesId as string,
       pageAsNumber.value - 1, perPage.value, sortQuery.value,
       libraryFilter.value)
       .then(res => {

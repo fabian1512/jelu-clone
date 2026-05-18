@@ -17,6 +17,7 @@ import { User } from '../../model/User'
 import dataService from "../../services/DataService"
 import { bookQuoteService } from "../../services/bookQuoteService"
 import { reviewService } from "../../services/reviewService"
+import { seriesService } from "../../services/seriesService"
 import { key } from '../../store'
 import { ObjectUtils } from '../../utils/ObjectUtils'
 import AutoImportFormModalVue from '../Admin/AutoImportFormModal.vue'
@@ -610,7 +611,7 @@ const deleteBookQuote = async (bookQuoteId: string) => {
 const seriesmap: Map<string, Series> = new Map()
 
 const fetchSeries = async (seriesId: string) => {
-  dataService.getSeriesById(seriesId)
+  seriesService.getSeriesById(seriesId)
     .then(data => {
         seriesmap.set(seriesId, data)
     })
@@ -623,7 +624,7 @@ const getSeriesInfo = async (seriesId: string) => {
         const s = seriesmap.get(seriesId)
         return await formatSeries(s as Series)
     }
-    dataService.getSeriesById(seriesId)
+    seriesService.getSeriesById(seriesId)
     .then(data => {
         seriesmap.set(seriesId, data)
         return formatSeries(data)

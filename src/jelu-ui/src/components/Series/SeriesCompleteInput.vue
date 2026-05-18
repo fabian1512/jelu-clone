@@ -2,7 +2,7 @@
 import { computed, Ref, ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Series, SeriesOrder } from "../../model/Series";
-import dataService from "../../services/DataService";
+import { seriesService } from "../../services/seriesService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 
 const { t } = useI18n({
@@ -18,7 +18,7 @@ let filteredSeries: Ref<Array<Series>> = ref([]);
 
 function getFilteredSeries(text: string) {
   currentInput.value = text
-  dataService.findSeriesByCriteria(text).then((data) => filteredSeries.value = data.content)
+  seriesService.findSeriesByCriteria(text).then((data) => filteredSeries.value = data.content)
 }
 
 function onSelect(series: Series) {

@@ -21,7 +21,7 @@ import { MessageCategory, UpdateUserMessage, UserMessage } from "../model/UserMe
 import { Role } from "../model/Role";
 import { StringUtils } from "../utils/StringUtils";
 import { MetadataRequest } from "../model/MetadataRequest";
-import { Series, SeriesUpdate } from "../model/Series";
+
 import { DirectoryListing } from "../model/DirectoryListing";
 
 
@@ -47,7 +47,7 @@ class DataService {
 
   private API_TAG = '/tags';
 
-  private API_SERIES = '/series';
+  
 
   private API_LOGOUT = '/logout';
 
@@ -456,23 +456,6 @@ class DataService {
     }
   }
 
-  findSeriesByCriteria = async (query?: string | null) => {
-    try {
-      const response = await this.apiClient.get<Page<Series>>(`${this.API_SERIES}`, {
-        params: {
-          name: query
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get series by criteria " + error)
-    }
-  }
-
-
   findPublisherByCriteria = async (query?: string | null) => {
     try {
       const response = await this.apiClient.get<Page<string>>(`${this.API_BOOK}/publishers`, {
@@ -498,18 +481,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error get tag by id " + error)
-    }
-  }
-
-  getSeriesById = async (seriesId: string) => {
-    try {
-      const response = await this.apiClient.get<Series>(`${this.API_SERIES}/${seriesId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get series by id " + error)
     }
   }
 
@@ -602,43 +573,7 @@ class DataService {
     }
   }
 
-  getOrphanSeries = async (page?: number, size?: number, sort?: string) => {
-    try {
-      const response = await this.apiClient.get<Page<Series>>(`${this.API_SERIES}/orphans`, {
-        params: {
-          page: page,
-          size: size,
-          sort: sort,
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get series orphans " + error)
-    }
-  }
 
-  getSeriesBooksById = async (seriesId: string,
-    page?: number, size?: number, sort?: string, libraryFilter?: LibraryFilter) => {
-    try {
-      const response = await this.apiClient.get<Page<Book>>(`${this.API_SERIES}/${seriesId}${this.API_BOOK}`, {
-        params: {
-          page: page,
-          size: size,
-          sort: sort,
-          libraryFilter: libraryFilter
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get series books by id " + error)
-    }
-  }
 
   getAuthorBooksById = async (authorId: string,
     page?: number, size?: number, sort?: string, libraryFilter?: LibraryFilter,
@@ -833,18 +768,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error delete author " + error)
-    }
-  }
-
-  deleteSeries = async (seriesId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_SERIES}/${seriesId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete series " + error)
     }
   }
 
@@ -1138,18 +1061,6 @@ class DataService {
         throw new Error("error bulk updating " + error.response.status + " " + error)
       }
       throw new Error("error bulk updating " + error)
-    }
-  }
-
-  updateSeries = async (seriesId: string, updateDto: SeriesUpdate) => {
-    try {
-      const response = await this.apiClient.put<Series>(`${this.API_SERIES}/${seriesId}`, updateDto);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error update series " + error)
     }
   }
 

@@ -9,7 +9,7 @@ import { Book } from "../../model/Book"
 import { LibraryFilter } from "../../model/LibraryFilter"
 import { Page } from "../../model/Page"
 import { Series } from "../../model/Series"
-import dataService from "../../services/DataService"
+import { seriesService } from "../../services/seriesService"
 import { ObjectUtils } from "../../utils/ObjectUtils"
 import useTypography from "../../composables/typography"
 
@@ -44,13 +44,13 @@ const getBooksIsLoading: Ref<boolean> = ref(false)
 
 function getFilteredSeries(text: string) {
   isFetching.value = true
-  dataService.findSeriesByCriteria(text).then((data) => filteredSeries.value = data.content)
+  seriesService.findSeriesByCriteria(text).then((data) => filteredSeries.value = data.content)
   isFetching.value = false
 }
 
 function getOrphanSeries() {
   isOrphanFetching.value = true
-  dataService.getOrphanSeries(pageAsNumber.value - 1, perPage.value, sortQuery.value)
+  seriesService.getOrphanSeries(pageAsNumber.value - 1, perPage.value, sortQuery.value)
   .then(
     (res) => {
       total.value = res.totalElements
@@ -73,7 +73,7 @@ function getOrphanSeries() {
 
 const deleteSeries = async (target: Series) => {
   if (target.id) {
-    dataService.deleteSeries(target.id)
+    seriesService.deleteSeries(target.id)
     .then(res =>
       {
         series.value = {"name" : ""}
@@ -109,14 +109,14 @@ const promptDeleteSeries = async (series: Series, numberOfBooks: number|undefine
 
 const getSeries = async (selected: Series) => {
   try {
-    series.value = await dataService.getSeriesById(selected.id as string)
+    series.value = await seriesService.getSeriesById(selected.id as string)
   } catch (error) {
   }
 }
 
 const getBooks = (series: Series) => {
     getBooksIsLoading.value = true
-    dataService.getSeriesBooksById(series.id as string,
+    seriesService.getSeriesBooksById(series.id as string,
       0, 2, "title:desc", LibraryFilter.ANY)
       .then(res => {
           seriesBooks.value = res
