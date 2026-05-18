@@ -24,7 +24,7 @@ import { MetadataRequest } from "../model/MetadataRequest";
 import { Series, SeriesUpdate } from "../model/Series";
 import { DirectoryListing } from "../model/DirectoryListing";
 
-import { CustomList, CustomListRemoveDto } from "../model/custom-list";
+
 import { createApiClient } from "./apiClientFactory";
 
 class DataService {
@@ -65,7 +65,7 @@ class DataService {
 
   private API_USER_MESSAGES = '/user-messages';
 
-  private API_CUSTOM_LISTS = '/custom-lists';
+  
 
   constructor() {
     this.apiClient = createApiClient(() => this.getToken());
@@ -1257,92 +1257,6 @@ class DataService {
   }
 
 
-
-  saveCustomList = async (list: CustomList) => {
-    try {
-      const resp = await this.apiClient.post<CustomList>(`${this.API_CUSTOM_LISTS}`, list)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error creating custom list " + error.response.status + " " + error)
-      }
-      throw new Error("error creating custom list " + error)
-    }
-  }
-
-  findCustomLists = async (name?: string,
-    page?: number, size?: number, sort: string | null = null) => {
-    try {
-      const response = await this.apiClient.get<Page<CustomList>>(`${this.API_CUSTOM_LISTS}`, {
-        params: {
-          name: name,
-          page: page,
-          size: size,
-          sort: sort
-        },
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error custom lists " + error)
-    }
-  }
-
-  findCustomListById = async (listId: string) => {
-    try {
-      const response = await this.apiClient.get<CustomList>(`${this.API_CUSTOM_LISTS}/${listId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error custom list " + error)
-    }
-  }
-
-  deleteCustomList = async (listId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_CUSTOM_LISTS}/${listId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete list " + error)
-    }
-  }
-
-  booksForList = async (listId: string, page?: number, size?: number, sort: string | null = null) => {
-    try {
-      const response = await this.apiClient.get<Page<Book>>(`${this.API_CUSTOM_LISTS}/${listId}/books`, {
-        params: {
-          page: page,
-          size: size,
-          sort: sort
-        },
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error custom list books " + error)
-    }
-  }
-
-  removeBooksFromList = async (customListRemoveDto: CustomListRemoveDto) => {
-    try {
-      const resp = await this.apiClient.post(`${this.API_CUSTOM_LISTS}/remove`, customListRemoveDto)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error remove from list " + error.response.status + " " + error)
-      }
-      throw new Error("error remove from list " + error)
-    }
-  }
 
 }
 
