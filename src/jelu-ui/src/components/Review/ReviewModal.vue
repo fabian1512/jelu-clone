@@ -3,7 +3,7 @@ import { Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Book } from "../../model/Book";
 import { Review, Visibility } from "../../model/Review";
-import dataService from "../../services/DataService";
+import { reviewService } from "../../services/reviewService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import useTypography from "../../composables/typography";
 
@@ -47,7 +47,7 @@ const classFor = (n: number) => {
 const submit = () => {
   if (props.book.id != null) {
     progress.value = true
-    dataService.saveReview({
+    reviewService.saveReview({
       bookId: props.book.id,
       rating: rating.value,
       text: reviewText.value,
@@ -67,7 +67,7 @@ const submit = () => {
 const editReview = () => {
   if (props.book.id != null && props.review?.id != null) {
     progress.value = true
-    dataService.updateReview(props.review.id, {
+    reviewService.updateReview(props.review.id, {
       rating: rating.value,
       text: reviewText.value,
       visibility: visibility.value,

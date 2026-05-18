@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Book } from "../../model/Book";
 import { Review } from "../../model/Review";
 import dataService from "../../services/DataService";
+import { reviewService } from "../../services/reviewService";
 import ReviewCard from "../Global/ReviewCard.vue";
 import { useStore } from 'vuex'
 import { key } from '../../store'
@@ -65,7 +66,7 @@ const getBook = async () => {
 };
 
 const getReviews = async () => {
-  dataService.findReviews(undefined, 
+  reviewService.findReviews(undefined, 
     route.params.bookId as string, null, null, null, 0, 50, null)
     .then(res => {
         if (!res.empty) {
