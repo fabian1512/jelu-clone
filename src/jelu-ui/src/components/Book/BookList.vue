@@ -10,7 +10,7 @@ import useSort from "../../composables/sort";
 import { UserBook } from "../../model/Book";
 import { ReadingEventType } from "../../model/ReadingEvent";
 import { userService } from "../../services/userService";
-import dataService from "../../services/DataService";
+import { userBookService } from "../../services/userBookService";
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
 import useTypography from '../../composables/typography';
@@ -144,7 +144,7 @@ const getBooks = () => {
   booksAbortController = new AbortController()
   const requestId = ++booksRequestCounter.value
   getBookIsLoading.value = true
-  dataService.findUserBookByCriteria(eventTypes.value, null, userId.value,
+  userBookService.findUserBookByCriteria(eventTypes.value, null, userId.value,
   toReadAsBool.value, ownedAsBool.value, borrowedAsBool.value,
   pageAsNumber.value - 1, perPage.value, sortQuery.value, booksAbortController.signal)
   .then(res => {

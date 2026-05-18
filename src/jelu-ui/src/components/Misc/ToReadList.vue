@@ -9,7 +9,7 @@ import useBulkEdition from '../../composables/bulkEdition';
 import { UserBook } from '../../model/Book';
 import { ReadingEventType } from '../../model/ReadingEvent';
 import { userService } from "../../services/userService";
-import dataService from "../../services/DataService";
+import { userBookService } from "../../services/userBookService";
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
 import useTypography from '../../composables/typography';
@@ -62,7 +62,7 @@ const getToReadIsLoading: Ref<boolean> = ref(false)
 const getToRead = async () => {
   getToReadIsLoading.value = true
   try {
-    const res = await dataService.findUserBookByCriteria(
+    const res = await userBookService.findUserBookByCriteria(
       eventTypes.value, null, userId.value,
     true, ownedAsBool.value, null,
     pageAsNumber.value - 1, perPage.value, sortQuery.value)

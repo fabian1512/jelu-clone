@@ -8,6 +8,7 @@ import useEvents from "../../composables/events"
 import { UserBook } from '../../model/Book'
 import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingEvent'
 import { Review } from "../../model/Review"
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService"
 import { reviewService } from "../../services/reviewService"
 import { key } from '../../store'
@@ -51,7 +52,7 @@ const userReviews: Ref<Array<Review>> = ref([]);
 const getCurrentlyReading = async () => {
   currentlyReadingIsLoading.value = true
   try {
-    const res = await dataService.findUserBookByCriteria([ReadingEventType.CURRENTLY_READING], null, null, null)
+    const res = await userBookService.findUserBookByCriteria([ReadingEventType.CURRENTLY_READING], null, null, null)
     if (res.numberOfElements <= 6) {
       books.value = res.content
     }

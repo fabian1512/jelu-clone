@@ -15,7 +15,7 @@ import { Review } from '../../model/Review'
 import { Series } from '../../model/Series'
 import { User } from '../../model/User'
 import { bookService } from "../../services/bookService";
-import dataService from "../../services/DataService"
+import { userBookService } from "../../services/userBookService";
 import { bookQuoteService } from "../../services/bookQuoteService"
 import { reviewService } from "../../services/reviewService"
 import { seriesService } from "../../services/seriesService"
@@ -103,9 +103,9 @@ const getBook = async () => {
   try {
     getBookIsLoading.value = true
     try {
-      book.value = await dataService.getUserBookById(props.bookId)
+      book.value = await userBookService.getUserBookById(props.bookId)
     } catch {
-      book.value = await dataService.getBookAsUserBook(props.bookId)
+      book.value = await userBookService.getBookAsUserBook(props.bookId)
     }
     getBookIsLoading.value = false
     useTitle('Jelu | ' + book.value.book.title)
@@ -418,7 +418,7 @@ const deleteBook = async () => {
   let promise
   if (deleteForUserOnly) {
     if (book.value?.id) {
-      promise = dataService.deleteUserBook(book.value?.id)
+      promise = userBookService.deleteUserBook(book.value?.id)
     }
   }
   else {

@@ -9,6 +9,7 @@ import { Metadata } from "../../model/Metadata";
 import { PluginInfo } from "../../model/PluginInfo";
 import { ServerSettings } from "../../model/ServerSettings";
 import { bookService } from "../../services/bookService";
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService";
 import { key } from '../../store';
 import { StringUtils } from "../../utils/StringUtils";
@@ -302,7 +303,7 @@ const importData = () => {
 const addToLibraryAndNavigate = async (bookId: string) => {
   try {
     // Get book as UserBook (creates entry if not exists)
-    const userBook = await dataService.getBookAsUserBook(bookId)
+    const userBook = await userBookService.getBookAsUserBook(bookId)
     
     // Check if already in user's library (has UserBook entry)
     if (userBook != null && userBook.id != null) {

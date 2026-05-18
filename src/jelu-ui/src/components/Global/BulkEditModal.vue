@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Ref, ref, watch } from "vue";
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService";
 import { useI18n } from 'vue-i18n'
 import { Tag } from "../../model/Tag";
@@ -69,7 +70,7 @@ const removeTags: Ref<Array<Tag>> = ref([])
 
 const submit = () => {
   if (owned.value != null || toRead.value != null || removeTags.value.length > 0 || addTags.value.length > 0) {
-    dataService.bulkEditUserBooks({
+    userBookService.bulkEditUserBooks({
       ids: props.ids,
       owned: owned.value != null ? owned.value : undefined,
       toRead: toRead.value != null ? toRead.value : undefined,

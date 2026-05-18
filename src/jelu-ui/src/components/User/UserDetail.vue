@@ -10,6 +10,7 @@ import { ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingE
 import { Review } from '../../model/Review';
 import { User } from '../../model/User';
 import { userService } from "../../services/userService";
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService";
 import { reviewService } from "../../services/reviewService";
 import BookCard from '../Global/BookCard.vue';
@@ -50,7 +51,7 @@ const getUser = async () => {
 const getCurrentlyReading = async () => {
   currentlyReadingIsLoading.value = true
   try {
-    const res = await dataService.findUserBookByCriteria([ReadingEventType.CURRENTLY_READING], null, route.params.userId as string, null)
+    const res = await userBookService.findUserBookByCriteria([ReadingEventType.CURRENTLY_READING], null, route.params.userId as string, null)
     currentlyReading.value = res.content
     currentlyReadingIsLoading.value = false
   } catch (error) {
@@ -74,7 +75,7 @@ const getReadEvents = async () => {
 const getToRead = async () => {
   getToReadIsLoading.value = true
   try {
-    const res = await dataService.findUserBookByCriteria(
+    const res = await userBookService.findUserBookByCriteria(
       null, null, route.params.userId as string,
     true, null, null,
     0, 20, undefined)

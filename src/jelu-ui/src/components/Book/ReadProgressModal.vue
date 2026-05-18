@@ -2,7 +2,7 @@
 import { Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import { UserBookUpdate } from "../../model/Book";
-import dataService from "../../services/DataService";
+import { userBookService } from "../../services/userBookService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import useTypography from "../../composables/typography";
 
@@ -28,7 +28,7 @@ const emit = defineEmits<{
 const update = () => {
   progress.value = true
   // if user changed a finished event to a currently reading -> remove end date
-  dataService.updateUserBook(userBookUpdate.value)
+  userBookService.updateUserBook(userBookUpdate.value)
     .then(res => {
       progress.value = false
       emit('close')

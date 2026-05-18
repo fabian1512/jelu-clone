@@ -17,6 +17,7 @@ import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
+import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService"
 import { publisherService } from "../../services/publisherService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
@@ -87,7 +88,7 @@ const deleteBook = async () => {
   let promise
   if (deleteForUserOnly) {
     if (userbook.value.id) {
-      promise = dataService.deleteUserBook(userbook.value.id)
+      promise = userBookService.deleteUserBook(userbook.value.id)
     }
   }
   else {
@@ -231,7 +232,7 @@ const importBook = () => {
   progress.value = true
   // no id on userbook -> we have a book and save the userbook
   if (StringUtils.isBlank(userbook.value.id)) {
-    promise = dataService.saveUserBookImage(
+    promise = userBookService.saveUserBookImage(
       userbook.value,
       file.value,
       (event: { loaded: number; total: number }) => {
@@ -242,7 +243,7 @@ const importBook = () => {
   }
   // just update the existing userbook
   else {
-    promise = dataService.updateUserBookImage(
+    promise = userBookService.updateUserBookImage(
       userbook.value,
       file.value,
       (event: { loaded: number; total: number }) => {
@@ -395,7 +396,7 @@ const applyCoverUpload = () => {
   } else if (uploadType.value === 'computer' && file.value != null) {
     // Upload file immediately
     progress.value = true
-    dataService.saveUserBookImage(
+    userBookService.saveUserBookImage(
       userbook.value,
       file.value,
       (event: { loaded: number; total: number }) => {
