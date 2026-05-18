@@ -2,7 +2,7 @@
 import { onMounted, Ref, ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { PluginInfo } from "../../model/PluginInfo";
-import dataService from "../../services/DataService";
+import { metadataProviderService } from "../../services/metadataProviderService";
 import useTypography from "../../composables/typography";
 
 const { t } = useI18n({
@@ -27,7 +27,7 @@ const loaded: Ref<boolean> = ref(false)
 onMounted(async () => {
   progress.value = true
   try {
-    const providers = await dataService.fetchMetadataProviders()
+    const providers = await metadataProviderService.fetchMetadataProviders()
     items.value = providers
       .filter((p: any) => p.name !== 'calibre' && p.name !== 'jelu-debug')
       .map((p: any) => ({ name: p.name, enabled: p.isEnabled }))

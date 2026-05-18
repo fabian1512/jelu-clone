@@ -2,7 +2,7 @@
 import { useTitle } from '@vueuse/core'
 import { onMounted, Ref, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import dataService from "../../services/DataService"
+import { metadataProviderService } from "../../services/metadataProviderService"
 
 const { t } = useI18n({
   inheritLocale: true,
@@ -27,7 +27,7 @@ const error = ref("")
 const loadProviders = async () => {
   progress.value = true
   try {
-    providers.value = await dataService.fetchMetadataProviders()
+    providers.value = await metadataProviderService.fetchMetadataProviders()
   } catch (e) {
     error.value = String(e)
   }
@@ -43,7 +43,7 @@ const save = async () => {
   saved.value = false
   error.value = ""
   try {
-    await dataService.saveMetadataProviders(providers.value)
+    await metadataProviderService.saveMetadataProviders(providers.value)
     saved.value = true
     setTimeout(() => { saved.value = false }, 3000)
   } catch (e) {
