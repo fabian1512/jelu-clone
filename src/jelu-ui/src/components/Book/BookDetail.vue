@@ -15,6 +15,7 @@ import { Review } from '../../model/Review'
 import { Series } from '../../model/Series'
 import { User } from '../../model/User'
 import dataService from "../../services/DataService"
+import { bookQuoteService } from "../../services/bookQuoteService"
 import { key } from '../../store'
 import { ObjectUtils } from '../../utils/ObjectUtils'
 import AutoImportFormModalVue from '../Admin/AutoImportFormModal.vue'
@@ -134,7 +135,7 @@ const getUserReviewsForBook = async() => {
 
 const getBookQuotesForBook = async() => {
   await until(user.value).not.toBeNull()
-  dataService.findBookQuotes(user.value.id, book.value?.book.id, null, 0, 20)
+  bookQuoteService.findBookQuotes(user.value.id, book.value?.book.id, null, 0, 20)
   .then(res => {
     bookQuotes.value = res.content
   })
@@ -597,7 +598,7 @@ const deleteBookQuote = async (bookQuoteId: string) => {
     if (abort) {
       return
     }
-    dataService.deleteBookQuote(bookQuoteId)
+    bookQuoteService.deleteBookQuote(bookQuoteId)
     .then(res => {
       getBookQuotesForBook()
     })
