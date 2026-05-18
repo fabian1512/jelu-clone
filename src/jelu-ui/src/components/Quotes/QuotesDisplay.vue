@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, Ref, ref } from 'vue'
 import { Quote } from '../../model/Quote'
-import dataService from "../../services/DataService"
+import { quoteService } from "../../services/quoteService"
 import { Splide, SplideSlide } from '@splidejs/vue-splide';
 import { useI18n } from 'vue-i18n'
 import useTypography from '../../composables/typography';
@@ -14,12 +14,12 @@ const quotes: Ref<Array<Quote>> = ref([]);
 
 const getQuotes = async () => {
   try {
-    let res = await dataService.quotes()
+    let res = await quoteService.quotes()
     if (res.length > 0) {
       quotes.value = res
     }
     else {
-      quotes.value = await dataService.randomQuotes()
+      quotes.value = await quoteService.randomQuotes()
     }
   } catch (error) {
   }

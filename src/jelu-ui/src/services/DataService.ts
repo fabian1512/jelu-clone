@@ -6,7 +6,6 @@ import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUse
 import { Tag } from "../model/Tag";
 import { Metadata } from "../model/Metadata";
 import { Page } from "../model/Page";
-import { Quote } from "../model/Quote";
 
 import { ImportConfigurationDto } from "../model/ImportConfiguration";
 import qs from "qs";
@@ -54,8 +53,6 @@ class DataService {
   private API_LOGOUT = '/logout';
 
   private API_METADATA = '/metadata';
-
-  private API_QUOTES = '/quotes';
 
   private API_READING_EVENTS = '/reading-events';
 
@@ -869,34 +866,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error delete tag " + error)
-    }
-  }
-
-  quotes = async (query?: string) => {
-    try {
-      const response = await this.apiClient.get<Array<Quote>>(`${this.API_QUOTES}`, {
-        params: {
-          query: query,
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error quotes " + error)
-    }
-  }
-
-  randomQuotes = async () => {
-    try {
-      const response = await this.apiClient.get<Array<Quote>>(`${this.API_QUOTES}/random`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error random quotes " + error)
     }
   }
 

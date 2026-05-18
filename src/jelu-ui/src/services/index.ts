@@ -4,5 +4,6 @@ export { wikipediaService } from "./wikipediaService";
 export { tagService } from "./tagService";
 export { serverSettingsService } from "./serverSettingsService";
 export { apiTokenService } from "./apiTokenService";
+export { quoteService } from "./quoteService";
 
 export { default as DataService } from "./DataService";
