@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import { LibraryFilter } from "../model/LibraryFilter";
 import { WikipediaSearchResult } from "../model/WikipediaSearchResult";
 import { WikipediaPageResult } from "../model/WikipediaPageResult";
+
 import { MessageCategory, UpdateUserMessage, UserMessage } from "../model/UserMessage";
 import { MonthStats, TotalsStats, YearStats } from "../model/YearStats";
 import { Shelf } from "../model/Shelf";
@@ -64,10 +65,6 @@ class DataService {
   private API_IMPORTS = '/imports';
 
   private API_EXPORTS = '/exports';
-
-  private API_WIKIPEDIA = '/wikipedia';
-
-  private API_SEARCH = '/search';
 
   private API_PAGE = '/page';
 
@@ -1079,38 +1076,20 @@ class DataService {
   }
 
   wikipediaSearch = async (query: string, language: string) => {
-    try {
-      const response = await this.apiClient.get<WikipediaSearchResult>(`${this.API_WIKIPEDIA}${this.API_SEARCH}`, {
-        params: {
-          query: query,
-          language: language
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error wikipedia search " + error)
-    }
-  }
+    const wikiClient = createApiClient();
+    const response = await wikiClient.get<WikipediaSearchResult>("/wikipedia/search", {
+      params: { query, language }
+    });
+    return response.data;
+  };
 
   wikipediaPage = async (pageTitle: string, language: string) => {
-    try {
-      const response = await this.apiClient.get<WikipediaPageResult>(`${this.API_WIKIPEDIA}${this.API_PAGE}`, {
-        params: {
-          pageTitle: pageTitle,
-          language: language
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error wikipedia page " + error)
-    }
-  }
+    const wikiClient = createApiClient();
+    const response = await wikiClient.get<WikipediaPageResult>("/wikipedia/page", {
+      params: { pageTitle, language }
+    });
+    return response.data;
+  };
 
   updateAuthor = async (author: Author, file: File | null, onUploadProgress: any) => {
     try {
