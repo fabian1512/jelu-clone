@@ -14,7 +14,7 @@ import { LibraryFilter } from "../model/LibraryFilter";
 import { WikipediaSearchResult } from "../model/WikipediaSearchResult";
 import { WikipediaPageResult } from "../model/WikipediaPageResult";
 
-import { MessageCategory, UpdateUserMessage, UserMessage } from "../model/UserMessage";
+
 
 
 
@@ -62,8 +62,6 @@ class DataService {
   private API_PAGE = '/page';
 
   private API_MERGE = '/merge';
-
-  private API_USER_MESSAGES = '/user-messages';
 
   
 
@@ -984,52 +982,6 @@ class DataService {
   /*
   * Dates are deserialized as strings, convert to Date instead
   */
-  transformUserMessage = (data: string) => {
-    const ev = JSON.parse(data)
-    if (ev.modificationDate != null) {
-      ev.modificationDate = dayjs(ev.modificationDate).toDate()
-    }
-    return ev
-  }
-
-  messages = async (messageCategories?: Array<MessageCategory> | null, read?: boolean,
-    page?: number, size?: number, sort?: string) => {
-    try {
-      const response = await this.apiClient.get<Page<UserMessage>>(`${this.API_USER_MESSAGES}`, {
-        params: {
-          messageCategories: messageCategories,
-          read: read,
-          page: page,
-          size: size,
-          sort: sort
-        },
-        paramsSerializer: {
-          serialize : (params) => {
-            return qs.stringify(params, { arrayFormat: 'comma' })
-        }},
-        transformResponse: this.transformUserMessage
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error userMessages " + error)
-    }
-  }
-
-  updateUserMessage = async (messageId: string, updateDto: UpdateUserMessage) => {
-    try {
-      const response = await this.apiClient.put<UserMessage>(`${this.API_USER_MESSAGES}/${messageId}`, updateDto);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error update userMessage " + error)
-    }
-  }
-
   bulkEditUserBooks = async (bulkUpdateDto: UserBookBulkUpdate) => {
     try {
       const resp = await this.apiClient.put<number>(this.API_USERBOOK, {
