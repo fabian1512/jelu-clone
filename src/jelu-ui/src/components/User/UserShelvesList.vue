@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import usePagination from "../../composables/pagination";
 import { Shelf } from "../../model/Shelf";
 import dataService from "../../services/DataService";
+import { shelfService } from "../../services/shelfService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { Tag } from "../../model/Tag";
 import { useOruga } from "@oruga-ui/oruga-next";
@@ -43,7 +44,7 @@ const emit = defineEmits<{
 
 const getShelves = () => {
   getPageIsLoading.value = true
-  dataService.shelves(undefined, undefined,
+  shelfService.shelves(undefined, undefined,
   pageAsNumber.value - 1, perPage.value, sortQuery.value)
   .then(res => {
           total.value = res.totalElements
@@ -65,7 +66,7 @@ const getShelves = () => {
 }
 
 function deleteShelf(shelf: Shelf) {
-  dataService.deleteShelf(shelf.id)
+  shelfService.deleteShelf(shelf.id)
   .then(res => {
     emit('shelves-changed')
     getShelves()
@@ -81,7 +82,7 @@ function createShelfFromTag(tag: Tag) {
   // we receive from oruga weird events while nothing is selected
   // so try to get rid of those null data we receive
   if (tag != null && tag.id != null) {
-    dataService.saveShelf({name: tag.name, targetId: tag.id ?? ""})
+    shelfService.saveShelf({name: tag.name, targetId: tag.id ?? ""})
       .then(res => {
         // store.dispatch('getUserShelves')
         filteredTags.value = []

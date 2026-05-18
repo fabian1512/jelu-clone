@@ -16,7 +16,7 @@ import { WikipediaPageResult } from "../model/WikipediaPageResult";
 
 import { MessageCategory, UpdateUserMessage, UserMessage } from "../model/UserMessage";
 
-import { Shelf } from "../model/Shelf";
+
 import { CreateReviewDto, Review, UpdateReviewDto, Visibility } from "../model/Review";
 import { Role } from "../model/Role";
 import { StringUtils } from "../utils/StringUtils";
@@ -64,8 +64,6 @@ class DataService {
   private API_MERGE = '/merge';
 
   private API_USER_MESSAGES = '/user-messages';
-
-  private API_SHELVES = '/shelves';
 
   private API_REVIEWS = '/reviews';
 
@@ -1126,50 +1124,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error update userMessage " + error)
-    }
-  }
-
-  shelves = async (name?: string, targetId?: string, page?: number, size?: number, sort?: string) => {
-    try {
-      const response = await this.apiClient.get<Page<Shelf>>(`${this.API_SHELVES}`, {
-        params: {
-          name: name,
-          targetId: targetId,
-          page: page,
-          size: size,
-          sort: sort,
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error shelves " + error)
-    }
-  }
-
-  deleteShelf = async (shelfId?: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_SHELVES}/${shelfId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete shelves " + error)
-    }
-  }
-
-  saveShelf = async (shelf: Shelf) => {
-    try {
-      const resp = await this.apiClient.post<Shelf>(`${this.API_SHELVES}`, shelf)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error creating shelf " + error.response.status + " " + error)
-      }
-      throw new Error("error creating event " + error)
     }
   }
 
