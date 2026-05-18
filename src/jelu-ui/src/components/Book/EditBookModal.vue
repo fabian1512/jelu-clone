@@ -15,7 +15,8 @@ import { Path } from "../../model/DirectoryListing";
 import { ReadingEventType, CreateReadingEvent } from "../../model/ReadingEvent";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
-import dataService from "../../services/DataService";
+import dataService from "../../services/DataService"
+import { publisherService } from "../../services/publisherService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { StringUtils } from "../../utils/StringUtils";
 import ImagePickerModal from '../Misc/ImagePickerModal.vue';
@@ -295,7 +296,7 @@ function getFilteredPublishers(text: string) {
   // User is actually typing: keep the visible buffer and real model in sync
   publisherInput.value = text
   userbook.value.book.publisher = text
-  dataService.findPublisherByCriteria(text).then(data => {
+  publisherService.findPublisherByCriteria(text).then(data => {
     filteredPublishers.value = data.content
     if (text !== '' && !filteredPublishers.value.includes(text)) {
       filteredPublishers.value.push(text)
