@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { BookQuote } from "../../model/BookQuote";
-import dataService from "../../services/DataService";
+import { userService } from "../../services/userService";
 
 const { t, d } = useI18n({
       inheritLocale: true,
@@ -18,7 +18,7 @@ const props = defineProps<{
 const username = ref("")
 
 const getUsername = async () => {
-  username.value = await dataService.usernameById(props.bookQuote.user)
+  username.value = await userService.usernameById(props.bookQuote.user)
 }
 
 getUsername()

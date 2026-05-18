@@ -6,7 +6,7 @@ import Avatar from 'vue-avatar-sdh'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import { LoginHistoryInfo, Provider } from "../../model/User"
-import dataService from "../../services/DataService"
+import { userService } from "../../services/userService";
 import { key } from '../../store'
 import UserModalVue from '../User/UserModal.vue'
 import useTypography from "../../composables/typography"
@@ -50,7 +50,7 @@ function modalClosed() {
 }
 
 const fetchHistoryInfo = async () => {
-  dataService.userLoginHistory()
+  userService.userLoginHistory()
     .then( res => loginHistoryInfo.value = res)
     
 }

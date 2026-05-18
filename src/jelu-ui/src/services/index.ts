@@ -17,5 +17,6 @@ export { publisherService } from "./publisherService";
 export { messageService } from "./messageService";
 export { authorService } from "./authorService";
 export { bookService } from "./bookService";
+export { userService } from "./userService";
 
 export { default as DataService } from "./DataService";

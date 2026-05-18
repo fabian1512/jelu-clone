@@ -1,7 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { UserBook, Book, UserBookBulkUpdate, UserBookUpdate } from "../model/Book";
-import { Author } from "../model/Author";
-import { CreateUser, LoginHistoryInfo, UpdateUser, User, UserAuthentication } from "../model/User";
 import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUserBook } from "../model/ReadingEvent";
 import { Tag } from "../model/Tag";
 import { Metadata } from "../model/Metadata";
@@ -38,15 +36,11 @@ class DataService {
 
   private API_USERBOOK = '/userbooks';
 
-  private API_USER = '/users';
-
   private API_HISTORY = '/history';
 
   private API_TAG = '/tags';
 
   
-
-  private API_LOGOUT = '/logout';
 
   private API_METADATA = '/metadata';
 
@@ -124,158 +118,6 @@ class DataService {
       }
     }
     return tr
-  }
-
-  getUser = async () => {
-    try {
-      const response = await this.apiClient.get<UserAuthentication>(`${this.API_USER}/me`)
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error user " + error)
-    }
-  }
-
-  getUsers = async () => {
-    try {
-      const response = await this.apiClient.get<Array<User>>(this.API_USER)
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error users " + error)
-    }
-  }
-
-  getUserById = async (userId: string) => {
-    try {
-      const response = await this.apiClient.get<User>(`${this.API_USER}/${userId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get user by id " + error)
-    }
-  }
-
-  authenticateUser = async (login: string, password: string) => {
-    try {
-      const response = await this.apiClient.get<UserAuthentication>(`${this.API_USER}/me`, {
-        auth: {
-          username: login,
-          password: password,
-        },
-      })
-      if (response.data.token != null && response.data.token.length > 0) {
-        this.token = response.data.token
-        localStorage.setItem(this.TOKEN_KEY, this.token)
-      }
-      return response.data.user
-
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("login error " + error.response.status + " " + error)
-      }
-      throw new Error("login error, backend seems down or unreachable")
-    }
-  }
-
-  fetchToken = async (login?: string, password?: string) => {
-    try {
-      let response;
-      if (login != null && password != null
-        && login.trim().length > 0 && password.trim().length > 0) {
-        response = await this.apiClient.get('/token', {
-          auth: {
-            username: login,
-            password: password,
-          },
-        })
-      }
-      else {
-        response = await this.apiClient.get('/token')
-      }
-
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error auth token " + error)
-    }
-  }
-
-  deleteUser = async (userId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_USER}/${userId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete user " + error)
-    }
-  }
-
-  setupStatus = async () => {
-    try {
-      const response = await this.apiClient.get('/setup/status')
-      return response.data.isInitialSetup
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error setup " + error)
-    }
-  }
-
-  createUser = async (user: CreateUser) => {
-    try {
-      const resp = await this.apiClient.post<User>(`${this.API_USER}`, user)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("Error ! " + error.response.data.message)
-      }
-      throw new Error("error create user " + error)
-    }
-  }
-
-  updateUser = async (userId: string, user: UpdateUser) => {
-    try {
-      const resp = await this.apiClient.put<User>(`${this.API_USER}/${userId}`, user)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("Error ! " + error.response.data.message)
-      }
-      throw new Error("error update user " + error)
-    }
-  }
-
-  createInitialUser = async (login: string, password: string) => {
-    try {
-      const resp = await this.apiClient.post<User>(`${this.API_USER}`, {
-        'login': login,
-        'password': password,
-        'isAdmin': true
-      },
-        {
-          auth: {
-            username: 'setup',
-            password: 'initial',
-          },
-        })
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error create user " + error.response.status + " " + error)
-      }
-      throw new Error("error create user " + error)
-    }
   }
 
   saveUserBookImage = async (userBook: UserBook, file: File | null, onUploadProgress: any) => {
@@ -447,20 +289,6 @@ class DataService {
     }
   }
 
-  logout = async () => {
-    try {
-      await this.apiClient.post(`${this.API_LOGOUT}`, {}, {
-        withCredentials: true,
-      })
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-    } finally {
-      localStorage.removeItem(this.TOKEN_KEY)
-      this.token = ''
-    }
-  }
-
   fetchMetadata = async (isbn?: string, title?: string, authors?: string) => {
     try {
       const response = await this.apiClient.get<Metadata>(`${this.API_METADATA}`, {
@@ -537,18 +365,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error delete tag " + error)
-    }
-  }
-
-  userLoginHistory = async () => {
-    try {
-      const response = await this.apiClient.get<Array<LoginHistoryInfo>>(`${this.API_USER}${this.API_HISTORY}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error history info " + error)
     }
   }
 
@@ -734,18 +550,6 @@ class DataService {
         throw new Error("error bulk updating " + error.response.status + " " + error)
       }
       throw new Error("error bulk updating " + error)
-    }
-  }
-
-  usernameById = async (userId: string) => {
-    try {
-      const response = await this.apiClient.get(`/username/${userId}`);
-      return response.data.username;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error username by id " + error)
     }
   }
 

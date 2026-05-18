@@ -9,6 +9,7 @@ import { UserBook } from "../../model/Book";
 import { ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingEvent';
 import { Review } from '../../model/Review';
 import { User } from '../../model/User';
+import { userService } from "../../services/userService";
 import dataService from "../../services/DataService";
 import { reviewService } from "../../services/reviewService";
 import BookCard from '../Global/BookCard.vue';
@@ -41,7 +42,7 @@ watch(() => route.params.userId, (newVal, oldVal) => {
 
 const getUser = async () => {
   try {
-    user.value = await dataService.getUserById(route.params.userId as string)
+    user.value = await userService.getUserById(route.params.userId as string)
     useTitle('Jelu | User')
   } catch (error) {
   }

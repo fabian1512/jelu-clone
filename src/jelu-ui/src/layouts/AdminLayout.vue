@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import Avatar from 'vue-avatar-sdh'
 import { key } from '../store'
-import dataService from '../services/DataService'
+import { userService } from '../services/userService';
 import AppSidebar from '../components/Global/AppSidebar.vue'
 
 const store = useStore(key)
@@ -25,7 +25,7 @@ onMounted(() => {
 })
 
 const logout = () => {
-  dataService.logout().then(() => {
+  userService.logout().then(() => {
     store.dispatch('logout')
   })
 }

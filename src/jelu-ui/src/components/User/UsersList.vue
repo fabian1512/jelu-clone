@@ -5,7 +5,7 @@ import Avatar from 'vue-avatar-sdh'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import { User } from '../../model/User'
-import dataService from "../../services/DataService"
+import { userService } from "../../services/userService";
 import { key } from '../../store'
 import { ObjectUtils } from '../../utils/ObjectUtils'
 import useTypography from '../../composables/typography'
@@ -25,7 +25,7 @@ const users: Ref<Array<User>> = ref([]);
 
 const getUsers = async () => {
   try {
-    users.value = await dataService.getUsers()
+    users.value = await userService.getUsers()
   } catch (error) {
   }
 };
@@ -52,7 +52,7 @@ const deleteUser = async (user: User) => {
       return
     }
     if (user.id != null) {
-        dataService.deleteUser(user.id)
+        userService.deleteUser(user.id)
         .then(_ => {
             getUsers()
     })

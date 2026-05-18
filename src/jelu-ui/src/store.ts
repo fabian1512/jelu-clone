@@ -4,7 +4,7 @@ import { createLogger, createStore, Store } from 'vuex';
 import { ServerSettings } from './model/ServerSettings';
 import { User, UserAuthentication } from './model/User';
 import router from './router';
-import dataService from './services/DataService';
+import { userService } from './services/userService';
 import { serverSettingsService } from './services/index';
 
 export interface State {
@@ -53,14 +53,14 @@ const store = createStore<State>({
   },
   actions: {
       async setupStatus({dispatch, commit, state}) {
-        commit('initialSetup', await dataService.setupStatus())
+        commit('initialSetup', await userService.setupStatus())
         if (state.isInitialSetup) {
           dispatch('getServerSettings')
         }
       },
       async getUser({commit}) {
         try {
-          const auth: UserAuthentication = await dataService.getUser()
+          const auth: UserAuthentication = await userService.getUser()
           commit('login', true)
           commit('user', auth.user)
         } catch (error) {
@@ -70,7 +70,7 @@ const store = createStore<State>({
       },
       async authenticate({dispatch, commit, state}, payload) {
         try {
-          const user: User = await dataService.authenticateUser(payload.user, payload.password)
+          const user: User = await userService.authenticateUser(payload.user, payload.password)
           commit('login', true)
           commit('user', user)
           dispatch('getServerSettings')
@@ -85,7 +85,7 @@ const store = createStore<State>({
         }
       },
       async createInitialUser({dispatch, commit, state}, payload) {
-        const user: User = await dataService.createInitialUser(payload.user, payload.password)
+        const user: User = await userService.createInitialUser(payload.user, payload.password)
         await dispatch('authenticate', {"user" : payload.user, "password" : payload.password})
         await dispatch('setupStatus')
       },

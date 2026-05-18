@@ -3,6 +3,7 @@ import { computed, ref, Ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Book } from "../../model/Book";
 import { Review } from "../../model/Review";
+import { userService } from "../../services/userService";
 import { bookService } from "../../services/bookService";
 import dataService from "../../services/DataService";
 import { StringUtils } from "../../utils/StringUtils";
@@ -36,7 +37,7 @@ const cardImageUrl = computed(() => {
 })
 
 const getUsername = async () => {
-  username.value = await dataService.usernameById(props.review.user)
+  username.value = await userService.usernameById(props.review.user)
 }
 if (props.showUserName === true) {
   getUsername()
