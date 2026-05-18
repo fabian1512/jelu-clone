@@ -10,7 +10,7 @@ import useSort from "../../composables/sort";
 import { Author } from "../../model/Author";
 import { Book } from '../../model/Book';
 import { LibraryFilter } from "../../model/LibraryFilter";
-import dataService from "../../services/DataService";
+import { authorService } from "../../services/authorService";
 import { ObjectUtils } from '../../utils/ObjectUtils';
 import BookCard from '../Global/BookCard.vue';
 import EditAuthorModalVue from "./EditAuthorModal.vue";
@@ -62,7 +62,7 @@ watch(() => route.params.authorId, (newVal, oldVal) => {
 
 const getAuthor = async () => {
   try {
-    author.value = await dataService.getAuthorById(route.params.authorId as string)
+    author.value = await authorService.getAuthorById(route.params.authorId as string)
     useTitle('Jelu | ' + author.value.name)
   } catch (error) {
   }
@@ -70,7 +70,7 @@ const getAuthor = async () => {
 
 const getBooks = () => {
   getBooksIsLoading.value = true
-  dataService.getAuthorBooksById(route.params.authorId as string,
+  authorService.getAuthorBooksById(route.params.authorId as string,
     pageAsNumber.value - 1, perPage.value, sortQuery.value,
     libraryFilter.value, roleFilter.value)
     .then(res => {

@@ -13,6 +13,7 @@ import { Path } from "../../model/DirectoryListing";
 import { Metadata } from "../../model/Metadata";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
+import { authorService } from "../../services/authorService";
 import dataService from "../../services/DataService"
 import { publisherService } from "../../services/publisherService";
 import { key } from '../../store';
@@ -293,7 +294,7 @@ const clearImageField = () => {
 };
 
 function getFilteredData(text: string, target: Array<Wrapper>) {
-  dataService.findAuthorByCriteria(Role.ANY, text).then((data) => {
+  authorService.findAuthorByCriteria(Role.ANY, text).then((data) => {
     target.splice(0, target.length)
     data.content.forEach(a => target.push(ObjectUtils.wrapForOptions(a)))
   })

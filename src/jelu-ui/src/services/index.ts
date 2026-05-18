@@ -15,5 +15,6 @@ export { customListService } from "./customListService";
 export { seriesService } from "./seriesService";
 export { publisherService } from "./publisherService";
 export { messageService } from "./messageService";
+export { authorService } from "./authorService";
 
 export { default as DataService } from "./DataService";

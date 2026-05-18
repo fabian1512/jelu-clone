@@ -2,6 +2,7 @@
 import { computed, Ref, ref } from "vue";
 import { Author } from "../../model/Author";
 import { WikipediaSearchResult, WikipediaSearchResultElement } from "../../model/WikipediaSearchResult";
+import { authorService } from "../../services/authorService";
 import dataService from "../../services/DataService";
 import { StringUtils } from "../../utils/StringUtils";
 import { useI18n } from 'vue-i18n'
@@ -64,7 +65,7 @@ const update = () => {
   if (imageUrl.value != null) {
     currentAuthor.value.image = imageUrl.value
   }
-  dataService.updateAuthor(currentAuthor.value, file.value, (event: { loaded: number; total: number }) => {
+  authorService.updateAuthor(currentAuthor.value, file.value, (event: { loaded: number; total: number }) => {
           const percent = Math.round((100 * event.loaded) / event.total);
           uploadPercentage.value = percent;
         })

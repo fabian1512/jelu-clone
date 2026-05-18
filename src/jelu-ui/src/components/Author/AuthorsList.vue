@@ -8,7 +8,7 @@ import useSort from "../../composables/sort";
 import { Author } from '../../model/Author';
 import { Role } from '../../model/Role';
 import { LibraryFilter } from '../../model/LibraryFilter';
-import dataService from "../../services/DataService";
+import { authorService } from "../../services/authorService";
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
 import useTypography from '../../composables/typography';
 
@@ -65,7 +65,7 @@ watch([page, role, libraryFilter, sortQuery, search_query], (newVal, oldVal) => 
 
 const getAuthors = () => {
   getBookIsLoading.value = true
-  dataService.findAuthorByCriteria(role.value, search_query.value, pageAsNumber.value -1, perPage.value, sortQuery.value, libraryFilterAsEnum.value)
+  authorService.findAuthorByCriteria(role.value, search_query.value, pageAsNumber.value -1, perPage.value, sortQuery.value, libraryFilterAsEnum.value)
   .then(res => {
           total.value = res.totalElements
           authors.value = res.content
