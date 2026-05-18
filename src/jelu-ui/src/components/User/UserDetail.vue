@@ -10,6 +10,7 @@ import { ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingE
 import { Review } from '../../model/Review';
 import { User } from '../../model/User';
 import dataService from "../../services/DataService";
+import { reviewService } from "../../services/reviewService";
 import BookCard from '../Global/BookCard.vue';
 import ReviewBookCard from '../Global/ReviewBookCard.vue';
 import useTypography from '../../composables/typography';
@@ -85,7 +86,7 @@ const getToRead = async () => {
 
 const getUserReviews = async () => {
   try {
-    const res = await dataService.findReviews(
+    const res = await reviewService.findReviews(
       route.params.userId as string, undefined, null,
     null, null,
     0, 20, null)

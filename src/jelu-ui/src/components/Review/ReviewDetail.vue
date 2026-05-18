@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router';
 import { Book } from "../../model/Book";
 import { Review } from "../../model/Review";
 import dataService from "../../services/DataService";
+import { reviewService } from "../../services/reviewService";
 import BookDataCard from "../Book/BookDataCard.vue";
 import ReviewCard from '../Global/ReviewCard.vue';
 
@@ -21,7 +22,7 @@ watch(() => route.params.reviewId, (newVal, oldVal) => {
 
 const getReview = async () => {
   try {
-    review.value = await dataService.findReviewById(route.params.reviewId as string)
+    review.value = await reviewService.findReviewById(route.params.reviewId as string)
     book.value = await dataService.findBookById(review.value.book)
     useTitle('Jelu | Review')
   } catch (error) {

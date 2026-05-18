@@ -17,7 +17,7 @@ import { WikipediaPageResult } from "../model/WikipediaPageResult";
 import { MessageCategory, UpdateUserMessage, UserMessage } from "../model/UserMessage";
 
 
-import { CreateReviewDto, Review, UpdateReviewDto, Visibility } from "../model/Review";
+
 import { Role } from "../model/Role";
 import { StringUtils } from "../utils/StringUtils";
 import { MetadataRequest } from "../model/MetadataRequest";
@@ -64,8 +64,6 @@ class DataService {
   private API_MERGE = '/merge';
 
   private API_USER_MESSAGES = '/user-messages';
-
-  private API_REVIEWS = '/reviews';
 
   private API_CUSTOM_LISTS = '/custom-lists';
 
@@ -1140,117 +1138,6 @@ class DataService {
         throw new Error("error bulk updating " + error.response.status + " " + error)
       }
       throw new Error("error bulk updating " + error)
-    }
-  }
-
-  saveReview = async (review: CreateReviewDto) => {
-    try {
-      const resp = await this.apiClient.post<Review>(`${this.API_REVIEWS}`, review)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error creating review " + error.response.status + " " + error)
-      }
-      throw new Error("error creating review " + error)
-    }
-  }
-
-  /*
-  * Dates are deserialized as strings, convert to Date instead
-  */
-  transformReviews = (data: string) => {
-    const page = JSON.parse(data)
-    if (page.content) {
-      for (const ev of page.content) {
-        if (ev.modificationDate != null) {
-          ev.modificationDate = dayjs(ev.modificationDate).toDate()
-        }
-        if (ev.creationDate != null) {
-          ev.creationDate = dayjs(ev.creationDate).toDate()
-        }
-        if (ev.reviewDate != null) {
-          ev.reviewDate = dayjs(ev.reviewDate).toDate()
-        }
-      }
-    }
-    return page
-  }
-
-  transformReview = (data: string) => {
-    const ev = JSON.parse(data)
-    if (ev.modificationDate != null) {
-      ev.modificationDate = dayjs(ev.modificationDate).toDate()
-    }
-    if (ev.creationDate != null) {
-      ev.creationDate = dayjs(ev.creationDate).toDate()
-    }
-    if (ev.reviewDate != null) {
-      ev.reviewDate = dayjs(ev.reviewDate).toDate()
-    }
-    return ev
-  }
-
-  findReviews = async (userId?: string, bookId?: string, visibility: Visibility | null = null,
-    after: string | null = null, before: string | null = null,
-    page?: number, size?: number, sort: string | null = null) => {
-    try {
-      const response = await this.apiClient.get<Page<Review>>(`${this.API_REVIEWS}`, {
-        params: {
-          userId: userId,
-          bookId: bookId,
-          visibility: visibility,
-          after: after,
-          before: before,
-          page: page,
-          size: size,
-          sort: sort
-        },
-        transformResponse: this.transformReviews
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error reviews " + error)
-    }
-  }
-
-  findReviewById = async (reviewId: string) => {
-    try {
-      const response = await this.apiClient.get<Review>(`${this.API_REVIEWS}/${reviewId}`, {
-        transformResponse: this.transformReview
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error review " + error)
-    }
-  }
-
-  deleteReview = async (reviewId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_REVIEWS}/${reviewId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete review " + error)
-    }
-  }
-
-  updateReview = async (reviewId: string, updateDto: UpdateReviewDto) => {
-    try {
-      const response = await this.apiClient.put<Review>(`${this.API_REVIEWS}/${reviewId}`, updateDto);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error update review " + error)
     }
   }
 

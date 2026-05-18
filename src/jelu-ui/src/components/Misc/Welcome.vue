@@ -9,6 +9,7 @@ import { UserBook } from '../../model/Book'
 import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingEvent'
 import { Review } from "../../model/Review"
 import dataService from "../../services/DataService"
+import { reviewService } from "../../services/reviewService"
 import { key } from '../../store'
 import BookCard from '../Global/BookCard.vue'
 import QuotesDisplay from '../Quotes/QuotesDisplay.vue'
@@ -81,7 +82,7 @@ const getMyEvents = async () => {
 
 const getUserReviews = async () => {
   try {
-    const res = await dataService.findReviews(
+    const res = await reviewService.findReviews(
       undefined, undefined, null,
     null, null,
     0, 20, null)

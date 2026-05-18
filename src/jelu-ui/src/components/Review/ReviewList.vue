@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import usePagination from '../../composables/pagination';
 import useSort from "../../composables/sort";
 import { Review } from '../../model/Review';
-import dataService from "../../services/DataService";
+import { reviewService } from "../../services/reviewService";
 import ReviewBookCard from '../Global/ReviewBookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
 import useTypography from '../../composables/typography';
@@ -35,7 +35,7 @@ watch([page, sortQuery], (newVal, oldVal) => {
 
 const getReviews = () => {
   getBookIsLoading.value = true
-  dataService.findReviews(undefined, undefined, null,
+  reviewService.findReviews(undefined, undefined, null,
   null, null,
   pageAsNumber.value - 1, perPage.value, sortQuery.value)
   .then(res => {

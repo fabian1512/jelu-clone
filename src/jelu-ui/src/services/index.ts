@@ -10,5 +10,6 @@ export { metadataProviderService } from "./metadataProviderService";
 export { statsService } from "./statsService";
 export { shelfService } from "./shelfService";
 export { bookQuoteService } from "./bookQuoteService";
+export { reviewService } from "./reviewService";
 
 export { default as DataService } from "./DataService";
