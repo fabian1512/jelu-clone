@@ -5,6 +5,7 @@ import { ServerSettings } from './model/ServerSettings';
 import { User, UserAuthentication } from './model/User';
 import router from './router';
 import dataService from './services/DataService';
+import { serverSettingsService } from './services/index';
 
 export interface State {
   isLogged: boolean,
@@ -94,8 +95,8 @@ const store = createStore<State>({
         router.push({name: 'login'})
       },
       async getServerSettings({commit}) {
-        dataService.serverSettings()
-          .then(res => {
+        serverSettingsService.getServerSettings()
+          .then((res: ServerSettings) => {
             commit('serverSettings', res)
           })
           .catch(err => {
