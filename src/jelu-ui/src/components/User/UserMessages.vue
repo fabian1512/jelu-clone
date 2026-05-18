@@ -4,7 +4,7 @@ import { onMounted, Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import usePagination from '../../composables/pagination';
 import { MessageCategory, UserMessage } from "../../model/UserMessage";
-import dataService from "../../services/DataService";
+import { messageService } from "../../services/messageService";
 import useTypography from '../../composables/typography';
 
 const { t } = useI18n({
@@ -27,7 +27,7 @@ const getMessagesIsLoading: Ref<boolean> = ref(false)
 
 const getMessages = () => {
   getMessagesIsLoading.value = true
-  dataService.messages(categories.value, read.value, pageAsNumber.value - 1, perPage.value, undefined)
+  messageService.messages(categories.value, read.value, pageAsNumber.value - 1, perPage.value, undefined)
   .then(res => {
     total.value = res.totalElements
     messages.value = res.content
@@ -48,7 +48,7 @@ const getMessages = () => {
 
 const updateMessage = (message: UserMessage, read: boolean) => {
   if (message.id !== undefined) {
-    dataService.updateUserMessage(message.id, {read: read, message: "Message 5 updated"})
+    messageService.updateUserMessage(message.id, {read: read, message: "Message 5 updated"})
     .then(res => {
       getMessages()
     })
