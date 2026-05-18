@@ -7,7 +7,7 @@ import { Tag } from "../model/Tag";
 import { Metadata } from "../model/Metadata";
 import { Page } from "../model/Page";
 import { Quote } from "../model/Quote";
-import { ServerSettings } from "../model/ServerSettings";
+
 import { ImportConfigurationDto } from "../model/ImportConfiguration";
 import qs from "qs";
 import dayjs from "dayjs";
@@ -59,8 +59,6 @@ class DataService {
   private API_QUOTES = '/quotes';
 
   private API_READING_EVENTS = '/reading-events';
-
-  private API_SERVER_SETTINGS = '/server-settings';
 
   private API_IMPORTS = '/imports';
 
@@ -998,18 +996,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error events " + error)
-    }
-  }
-
-  serverSettings = async () => {
-    try {
-      const response = await this.apiClient.get<ServerSettings>(`${this.API_SERVER_SETTINGS}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error server settings " + error)
     }
   }
 
