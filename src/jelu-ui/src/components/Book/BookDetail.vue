@@ -14,6 +14,7 @@ import { CreateReadingEvent, ReadingEvent, ReadingEventType } from '../../model/
 import { Review } from '../../model/Review'
 import { Series } from '../../model/Series'
 import { User } from '../../model/User'
+import { bookService } from "../../services/bookService";
 import dataService from "../../services/DataService"
 import { bookQuoteService } from "../../services/bookQuoteService"
 import { reviewService } from "../../services/reviewService"
@@ -422,7 +423,7 @@ const deleteBook = async () => {
   }
   else {
     if (book.value?.book?.id) {
-      promise = dataService.deleteBook(book.value?.book?.id)
+      promise = bookService.deleteBook(book.value?.book?.id)
     }
   }
   promise?.then(res => {

@@ -14,6 +14,7 @@ import { Metadata } from "../../model/Metadata";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
+import { bookService } from "../../services/bookService";
 import dataService from "../../services/DataService"
 import { publisherService } from "../../services/publisherService";
 import { key } from '../../store';
@@ -133,7 +134,7 @@ function toggleRemoveImage() {
 
 const importBook = async () => {
   if (StringUtils.isNotBlank(form.title)) {
-    const alreadyExisting = await dataService.checkIsbnExists(form.isbn10, form.isbn13)
+    const alreadyExisting = await bookService.checkIsbnExists(form.isbn10, form.isbn13)
     let saveBook = true
     if (alreadyExisting != null) {
       saveBook = false

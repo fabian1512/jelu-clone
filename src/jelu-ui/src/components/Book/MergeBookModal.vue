@@ -8,6 +8,7 @@ import { Metadata } from "../../model/Metadata";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
+import { bookService } from "../../services/bookService";
 import dataService from "../../services/DataService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
@@ -64,7 +65,7 @@ const importData = async () => {
     // only be editing an already existing book
     // with an isbn already set. And we don't want to warn in that case
     if (isbnHasChanged()) {
-      let alreadyExisting = await dataService.checkIsbnExists(book.value.isbn10, book.value.isbn13)
+      let alreadyExisting = await bookService.checkIsbnExists(book.value.isbn10, book.value.isbn13)
       if (alreadyExisting != null) {
         saveBook = false
         await ObjectUtils.swalYesNoMixin.fire({
@@ -94,7 +95,7 @@ const importData = async () => {
         }
       })
     }
-    dataService.updateBook(book.value.id, {...book.value})
+    bookService.updateBook(book.value.id, {...book.value})
     .then(res => {
           progress.value = false
           emit('close', { ...book.value, ...props.metadata })

@@ -3,6 +3,7 @@ import { computed, ref, Ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Book } from "../../model/Book";
 import { Review } from "../../model/Review";
+import { bookService } from "../../services/bookService";
 import dataService from "../../services/DataService";
 import { StringUtils } from "../../utils/StringUtils";
 
@@ -21,7 +22,7 @@ const book: Ref<Book|null> = ref(null)
 
 const getBook = async () => {
   try {
-    const res = await dataService.findBookById(props.review.book)
+    const res = await bookService.findBookById(props.review.book)
     book.value = res
   } catch (error) {
   }
