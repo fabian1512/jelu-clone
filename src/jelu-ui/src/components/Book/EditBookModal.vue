@@ -15,6 +15,7 @@ import { Path } from "../../model/DirectoryListing";
 import { ReadingEventType, CreateReadingEvent } from "../../model/ReadingEvent";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
+import { authorService } from "../../services/authorService";
 import dataService from "../../services/DataService"
 import { publisherService } from "../../services/publisherService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
@@ -264,7 +265,7 @@ const importBook = () => {
 }
 
 function getFilteredData(text: string, target: Array<Wrapper>) {
-  dataService.findAuthorByCriteria(Role.ANY, text).then((data) => {
+  authorService.findAuthorByCriteria(Role.ANY, text).then((data) => {
     target.splice(0, target.length)
     data.content.forEach(a => target.push(ObjectUtils.wrapForOptions(a)))
   })

@@ -43,8 +43,6 @@ class DataService {
 
   private API_HISTORY = '/history';
 
-  private API_AUTHOR = '/authors';
-
   private API_TAG = '/tags';
 
   
@@ -417,27 +415,6 @@ class DataService {
     }
   }
 
-  findAuthorByCriteria = async (role: Role, query?: string | null, page: number = 0, size: number = 0, sort: string | null = null, libraryFilter?: LibraryFilter) => {
-    try {
-      const response = await this.apiClient.get<Page<Author>>(`${this.API_AUTHOR}`, {
-        params: {
-          name: query,
-          role: role,
-          libraryFilter: libraryFilter,
-          page: page,
-          size: size,
-          sort: sort
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get authors by criteria " + error)
-    }
-  }
-
   findTagsByCriteria = async (query?: string | null) => {
     try {
       const response = await this.apiClient.get<Page<Tag>>(`${this.API_TAG}`, {
@@ -464,34 +441,6 @@ class DataService {
       }
       throw new Error("error get tag by id " + error)
     }
-  }
-
-  getAuthorById = async (authorId: string) => {
-    try {
-      const response = await this.apiClient.get<Author>(`${this.API_AUTHOR}/${authorId}`, {
-        transformResponse: this.transformAuthor
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get author by id " + error)
-    }
-  }
-
-  /*
-  * Dates are deserialized as strings, convert to Date instead
-  */
-  transformAuthor = (data: string) => {
-    const tr = JSON.parse(data)
-    if (tr.dateOfBirth != null) {
-      tr.dateOfBirth = dayjs(tr.dateOfBirth).toDate()
-    }
-    if (tr.dateOfDeath != null) {
-      tr.dateOfDeath = dayjs(tr.dateOfDeath).toDate()
-    }
-    return tr
   }
 
   getTagBooksById = async (tagId: string,
@@ -534,48 +483,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error get tag orphans " + error)
-    }
-  }
-
-  getOrphanAuthors = async (page?: number, size?: number, sort?: string) => {
-    try {
-      const response = await this.apiClient.get<Page<Author>>(`${this.API_AUTHOR}/orphans`, {
-        params: {
-          page: page,
-          size: size,
-          sort: sort,
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get author orphans " + error)
-    }
-  }
-
-
-
-  getAuthorBooksById = async (authorId: string,
-    page?: number, size?: number, sort?: string, libraryFilter?: LibraryFilter,
-    roleFilter?: Role) => {
-    try {
-      const response = await this.apiClient.get<Page<Book>>(`${this.API_AUTHOR}/${authorId}${this.API_BOOK}`, {
-        params: {
-          page: page,
-          size: size,
-          sort: sort,
-          libraryFilter: libraryFilter,
-          roleFilter: roleFilter
-        }
-      });
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error get author books by id " + error)
     }
   }
 
@@ -738,18 +645,6 @@ class DataService {
       if (axios.isAxiosError(error) && error.response) {
       }
       throw new Error("error delete event " + error)
-    }
-  }
-
-  deleteAuthor = async (authorId: string) => {
-    try {
-      const response = await this.apiClient.delete(`${this.API_AUTHOR}/${authorId}`);
-      return response.data;
-    }
-    catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-      }
-      throw new Error("error delete author " + error)
     }
   }
 
@@ -940,44 +835,6 @@ class DataService {
     });
     return response.data;
   };
-
-  updateAuthor = async (author: Author, file: File | null, onUploadProgress: any) => {
-    try {
-      const formData = new FormData()
-      if (file != null) {
-        formData.append('file', file);
-      }
-      formData.append('author', new Blob([JSON.stringify(author)], {
-        type: "application/json"
-      }));
-      const resp = await this.apiClient.put<Author>(`${this.API_AUTHOR}/${author.id}`, formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          },
-          onUploadProgress: onUploadProgress
-        })
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error updating book " + error.response.status + " " + error)
-      }
-      throw new Error("error updating book " + error)
-    }
-  }
-
-  mergeAuthors = async (authorId: string, otherId: string, authorDto: Author) => {
-    try {
-      const resp = await this.apiClient.put<Author>(`${this.API_AUTHOR}/${authorId}${this.API_MERGE}/${otherId}`, authorDto)
-      return resp.data
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error("error merging authors " + error.response.status + " " + error)
-      }
-      throw new Error("error merging authors " + error)
-    }
-  }
 
   /*
   * Dates are deserialized as strings, convert to Date instead

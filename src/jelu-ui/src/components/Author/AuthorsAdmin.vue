@@ -3,13 +3,8 @@ import { useOruga } from "@oruga-ui/oruga-next"
 import { useTitle } from '@vueuse/core'
 import { computed, ref, Ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import usePagination from "../../composables/pagination"
-import useSort from "../../composables/sort"
-import { Author } from "../../model/Author"
-import { Book } from "../../model/Book"
-import { LibraryFilter } from "../../model/LibraryFilter"
-import { Page } from "../../model/Page"
-import dataService from "../../services/DataService"
+import { useRouteQuery } from '@vueuse/router';
+import { authorService } from "../../services/authorService";
 import { ObjectUtils } from "../../utils/ObjectUtils"
 import { Role } from "../../model/Role"
 import useTypography from "../../composables/typography"
@@ -45,13 +40,13 @@ const getBooksIsLoading: Ref<boolean> = ref(false)
 
 function getFilteredAuthors(text: string) {
   isFetching.value = true
-  dataService.findAuthorByCriteria(Role.ANY, text).then((data) => filteredAuthors.value = data.content)
+  authorService.findAuthorByCriteria(Role.ANY, text).then((data) => filteredAuthors.value = data.content)
   isFetching.value = false
 }
 
 function getOrphanAuthors() {
   isOrphanFetching.value = true
-  dataService.getOrphanAuthors(pageAsNumber.value - 1, perPage.value, sortQuery.value)
+  authorService.getOrphanAuthors(pageAsNumber.value - 1, perPage.value, sortQuery.value)
   .then(
     (res) => {
       total.value = res.totalElements
@@ -74,7 +69,7 @@ function getOrphanAuthors() {
 
 const deleteAuthor = async (target: Author) => {
   if (target.id) {
-    dataService.deleteAuthor(target.id)
+    authorService.deleteAuthor(target.id)
     .then(res =>
       {
         author.value = {"name" : ""}
@@ -110,14 +105,14 @@ const promptDeleteAuthor = async (author: Author, numberOfBooks: number|undefine
 
 const getAuthor = async (selected: Author) => {
   try {
-    author.value = await dataService.getAuthorById(selected.id as string)
+    author.value = await authorService.getAuthorById(selected.id as string)
   } catch (error) {
   }
 }
 
 const getBooks = (author: Author) => {
     getBooksIsLoading.value = true
-    dataService.getAuthorBooksById(author.id as string,
+    authorService.getAuthorBooksById(author.id as string,
       0, 2, "title:desc", LibraryFilter.ANY)
       .then(res => {
           authorBooks.value = res

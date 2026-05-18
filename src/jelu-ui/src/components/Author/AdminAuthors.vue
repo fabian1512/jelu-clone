@@ -4,7 +4,7 @@ import { useTitle } from '@vueuse/core'
 import { computed, Ref, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Author } from "../../model/Author"
-import dataService from "../../services/DataService"
+import { authorService } from "../../services/authorService";
 import { StringUtils } from "../../utils/StringUtils"
 import dayjs from "dayjs";
 import useDates from '../../composables/dates'
@@ -36,7 +36,7 @@ const filteredAuthors: Ref<Array<Author>> = ref([]);
 
 function getFilteredAuthors(text: string) {
   isFetching.value = true
-  dataService.findAuthorByCriteria(Role.ANY, text).then((data) => filteredAuthors.value = data.content)
+  authorService.findAuthorByCriteria(Role.ANY, text).then((data) => filteredAuthors.value = data.content)
   isFetching.value = false
 }
 
@@ -75,7 +75,7 @@ function dispatchAuthor(author: Author) {
 function save() {
   if (leftAuthor.value.id != null && rightAuthor.value.id != null) {
     isMerging.value = true
-    dataService.mergeAuthors(leftAuthor.value.id, rightAuthor.value.id, leftAuthor.value)
+    authorService.mergeAuthors(leftAuthor.value.id, rightAuthor.value.id, leftAuthor.value)
       .then(res => {
         isMerging.value = false
         router.push({ name: 'author-detail', params: { authorId: leftAuthor.value.id } })

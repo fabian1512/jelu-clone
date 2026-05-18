@@ -7,6 +7,7 @@ import { Book } from "../../model/Book";
 import { Metadata } from "../../model/Metadata";
 import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
+import { authorService } from "../../services/authorService";
 import dataService from "../../services/DataService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
@@ -151,7 +152,7 @@ function createTag(item: Tag | string) {
 }
 
 function getFilteredAuthors(text: string) {
-  dataService.findAuthorByCriteria(Role.ANY, text).then((data) => {
+  authorService.findAuthorByCriteria(Role.ANY, text).then((data) => {
     filteredAuthors.value.splice(filteredAuthors.value.length)
     data.content.forEach(a => filteredAuthors.value.push(ObjectUtils.wrapForOptions(a)))
   })
@@ -280,14 +281,14 @@ function copyTagsFromMetadata() {
 }
 
 function getFilteredTranslators(text: string) {
-  dataService.findAuthorByCriteria(Role.TRANSLATOR, text).then((data) => {
+  authorService.findAuthorByCriteria(Role.TRANSLATOR, text).then((data) => {
     filteredTranslators.value.splice(filteredTranslators.value.length)
     data.content.forEach(a => filteredTranslators.value.push(ObjectUtils.wrapForOptions(a)))
   })
 }
 
 function getFilteredNarrators(text: string) {
-  dataService.findAuthorByCriteria(Role.NARRATOR, text).then((data) => {
+  authorService.findAuthorByCriteria(Role.NARRATOR, text).then((data) => {
     filteredNarrators.value.splice(filteredNarrators.value.length)
     data.content.forEach(a => filteredNarrators.value.push(ObjectUtils.wrapForOptions(a)))
   })
