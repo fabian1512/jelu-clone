@@ -1,7 +1,6 @@
-import axios, { AxiosError, AxiosHeaders, AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 import { UserBook, Book, UserBookBulkUpdate, UserBookUpdate } from "../model/Book";
 import { Author } from "../model/Author";
-import router from '../router'
 import { CreateUser, LoginHistoryInfo, UpdateUser, User, UserAuthentication } from "../model/User";
 import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUserBook } from "../model/ReadingEvent";
 import { Tag } from "../model/Tag";
@@ -25,10 +24,10 @@ import { MetadataRequest } from "../model/MetadataRequest";
 import { Series, SeriesUpdate } from "../model/Series";
 import { DirectoryListing } from "../model/DirectoryListing";
 import { BookQuote, CreateBookQuoteDto, UpdateBookQuoteDto } from "../model/BookQuote";
-import urls from "../urls";
 import { OAuth2ClientDto } from "../model/oauth-client-dto";
 import { CustomList, CustomListRemoveDto } from "../model/custom-list";
 import { AdminApiToken, ApiToken, ApiTokenCreated, CreateApiToken, TokenScope, UpdateApiToken } from "../model/ApiToken";
+import { createApiClient } from "./apiClientFactory";
 
 class DataService {
 
@@ -87,39 +86,7 @@ class DataService {
   private API_CUSTOM_LISTS = '/custom-lists';
 
   constructor() {
-    this.apiClient = axios.create({
-      baseURL: urls.API_URL,
-      headers: {
-        "Content-type": "application/json",
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      withCredentials: true,
-    });
-
-    this.apiClient.interceptors.request.use((config) => {
-      const tok = this.getToken()
-      if (tok != null) {
-        if (!config.headers) {
-          config.headers = new AxiosHeaders()
-        }
-        config.headers["X-Auth-Token"] = tok;
-      }
-      // Do something before request is sent
-      return config;
-    }, function (error) {
-      // Do something with request error
-      return Promise.reject(error);
-    });
-    this.apiClient.interceptors.response.use(
-      originalResponse => {
-        return originalResponse;
-      },
-      error => {
-        if (error != null && error.response != null && error.response.status === 401) {
-          router.push({ name: 'login' })
-        }
-        return Promise.reject(error)
-      });
+    this.apiClient = createApiClient(() => this.getToken());
   }
 
   getToken = (): string | null => {
