@@ -2,7 +2,7 @@
 import { Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Series } from "../../model/Series";
-import dataService from "../../services/DataService";
+import { seriesService } from "../../services/seriesService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import useTypography from "../../composables/typography";
 
@@ -38,7 +38,7 @@ watch(rating, (newval, oldval) => {
 const editSeries = () => {
   if (props.series.id != null) {
     progress.value = true
-    dataService.updateSeries(props.series.id, {
+    seriesService.updateSeries(props.series.id, {
       description: description.value,
       name: seriesName.value,
       rating: rating.value
