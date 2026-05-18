@@ -6,7 +6,7 @@ import usePagination from '../../composables/pagination';
 import useSort from "../../composables/sort";
 import { Book } from "../../model/Book";
 import { CustomList } from '../../model/custom-list';
-import dataService from "../../services/DataService";
+import { customListService } from "../../services/customListService";
 import { ObjectUtils } from '../../utils/ObjectUtils';
 import BookCard from '../Global/BookCard.vue';
 import useBulkEdition from '../../composables/bulkEdition';
@@ -44,7 +44,7 @@ watch([page, sortQuery], (newVal, oldVal) => {
 
 const getBooks = (listId: string) => {
   getBookIsLoading.value = true
-  dataService.booksForList(listId,
+  customListService.booksForList(listId,
   pageAsNumber.value - 1, perPage.value, sortQuery.value)
   .then(res => {
           total.value = res.totalElements
@@ -73,7 +73,7 @@ const throttledGetBooks = useThrottleFn(() => {
 
 const getList = async () => {
   try {
-    list.value = await dataService.findCustomListById(route.params.listId as string)
+    list.value = await customListService.findCustomListById(route.params.listId as string)
     useTitle('Jelu | ' + list.value.name)
     getBooks(list.value.id as string)
   } catch (error) {
@@ -90,7 +90,7 @@ const remove = async () => {
       }
     }
   })
-  dataService.removeBooksFromList({tags: tagsId, books: checkedCards.value})
+  customListService.removeBooksFromList({tags: tagsId, books: checkedCards.value})
   .then(res => {
     getList()
   })

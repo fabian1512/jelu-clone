@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { CustomList } from '../../model/custom-list'
 import { Tag } from "../../model/Tag"
 import dataService from "../../services/DataService"
+import { customListService } from "../../services/customListService"
 import ClosableBadge from '../Global/ClosableBadge.vue'
 import useTypography from '../../composables/typography'
 
@@ -46,12 +47,12 @@ function getFilteredTags(text: string) {
 
 function getCustomLists() {
   isFetching.value = true
-  dataService.findCustomLists(undefined, 0, 30, null).then(data => customLists.value = data.content)
+  customListService.findCustomLists(undefined, 0, 30, null).then(data => customLists.value = data.content)
   isFetching.value = false
 }
 
 function deleteList(list: CustomList) {
-  dataService.deleteCustomList(list.id as string)
+  customListService.deleteCustomList(list.id as string)
   .then(res => {
     getCustomLists()
     })
@@ -59,7 +60,7 @@ function deleteList(list: CustomList) {
 }
 
 function createList() {
-  dataService.saveCustomList(customList.value)
+  customListService.saveCustomList(customList.value)
     .then(res => {
       resetList()
       getCustomLists()
