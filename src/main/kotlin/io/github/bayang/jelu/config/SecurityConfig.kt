@@ -48,13 +48,7 @@ class SecurityConfig(
             .cors { }
             .csrf { csrf ->
                 csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                csrf.ignoringRequestMatchers(
-                    "/api/v1/token",
-                    "/api/v1/setup/status",
-                    "/api/v1/server-settings",
-                    "/api/v1/oauth2/providers",
-                    "/api/v1/username/**",
-                )
+                csrf.ignoringRequestMatchers("/api/v1/token")
             }.logout {
                 it
                     .logoutUrl("/api/v1/logout")
