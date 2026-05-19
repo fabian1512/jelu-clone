@@ -3,7 +3,7 @@ import { Ref, ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { DirectoryListing, Path } from "../../model/DirectoryListing";
 import { Metadata } from "../../model/Metadata";
-import dataService from "../../services/DataService";
+import { importExportService } from "../../services/importExportService";
 import MetadataDetail from '../Metadata/MetadataDetail.vue';
 import FilePickerElement from '../Global/FilePickerElement.vue';
 import useTypography from "../../composables/typography";
@@ -18,7 +18,7 @@ const uploadPercentage = ref(0);
 
 const handleFileUpload = (event: any) => {
   file.value = event.target.files[0];
-  dataService.getMetadataFromUploadedFile(file.value,
+  importExportService.getMetadataFromUploadedFile(file.value,
   (event: { loaded: number; total: number }) => {
           let percent = Math.round((100 * event.loaded) / event.total);
           uploadPercentage.value = percent;
@@ -35,7 +35,7 @@ const directoryListing:Ref<DirectoryListing|null> = ref(null)
 
 const directories = (root: string|undefined) => {
   if (root != null) {
-    dataService.getDirectoryListing(root)
+    importExportService.getDirectoryListing(root)
     .then(res => {
       directoryListing.value = res
     })
@@ -65,7 +65,7 @@ const selectPath = (elem: Path) => {
   if (elem.type == 'directory') {
     directories(elem.path)
   } else {
-    dataService.getMetadataFromFile(elem.path)
+    importExportService.getMetadataFromFile(elem.path)
       .then(res => {
         metadata.value = res
         displayMetadata.value = true

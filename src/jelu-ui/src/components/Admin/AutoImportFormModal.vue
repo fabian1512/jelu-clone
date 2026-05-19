@@ -10,7 +10,7 @@ import { PluginInfo } from "../../model/PluginInfo";
 import { ServerSettings } from "../../model/ServerSettings";
 import { bookService } from "../../services/bookService";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService";
+import { metadataService } from "../../services/metadataService";
 import { key } from '../../store';
 import { StringUtils } from "../../utils/StringUtils";
 import MetadataDetail from '../Metadata/MetadataDetail.vue';
@@ -85,7 +85,7 @@ const fetchMetadata = async () => {
       ? plugins.value
       : serverSettings.value?.metadataPlugins || []
 
-    const results = await dataService.searchMetadataWithPlugins({
+    const results = await metadataService.searchMetadataWithPlugins({
       isbn: form.isbn,
       title: form.title,
       authors: form.authors,
@@ -160,7 +160,7 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
     if (goodreadsActive && metadataToSend.goodreadsId) {
       try {
         progress.value = true
-        const fullMetadata = await dataService.fetchMetadataWithPlugins({
+        const fullMetadata = await metadataService.fetchMetadataWithPlugins({
           goodreadsId: metadataToSend.goodreadsId,
           plugins: [{ name: 'goodreads', order: 0 }]
         })
@@ -196,7 +196,7 @@ const handleSearchResultSelect = async (result: Book | Metadata) => {
             ?.map(p => ({ name: p.name, order: p.order })) || []
           if (activePlugins.length > 0) {
             progress.value = true
-            const fallbackMetadata = await dataService.fetchMetadataWithPlugins({
+            const fallbackMetadata = await metadataService.fetchMetadataWithPlugins({
               title: metadataToSend.title,
               authors: metadataToSend.authors?.join(', '),
               plugins: activePlugins
@@ -422,7 +422,7 @@ function toggleScanModal() {
               const plugins = serverSettings.value?.metadataPlugins || []
               console.log('Using plugins:', plugins)
               // ISBN search: use fetchMetadataWithPlugins (single result) for ISBN lookup
-              const metadata = await dataService.fetchMetadataWithPlugins({
+              const metadata = await metadataService.fetchMetadataWithPlugins({
                 isbn: barcode,
                 title: '',
                 authors: '',

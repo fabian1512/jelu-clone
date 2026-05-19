@@ -12,7 +12,6 @@ import { User } from '../../model/User';
 import { readingEventService } from "../../services/readingEventService";
 import { userService } from "../../services/userService";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService";
 import { reviewService } from "../../services/reviewService";
 import BookCard from '../Global/BookCard.vue';
 import ReviewBookCard from '../Global/ReviewBookCard.vue';

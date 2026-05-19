@@ -63,7 +63,7 @@ const getTag = async () => {
 
 const getBooks = () => {
     getBooksIsLoading.value = true
-    dataService.getTagBooksById(route.params.tagId as string,
+    tagService.getTagBooksById(route.params.tagId as string,
       pageAsNumber.value - 1, perPage.value, sortQuery.value,
       libraryFilter.value, eventTypes.value)
       .then(res => {

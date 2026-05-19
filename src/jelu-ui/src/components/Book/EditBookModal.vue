@@ -18,7 +18,7 @@ import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService"
+import { tagService } from "../../services/tagService";
 import { publisherService } from "../../services/publisherService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { StringUtils } from "../../utils/StringUtils";
@@ -274,7 +274,7 @@ function getFilteredData(text: string, target: Array<Wrapper>) {
 }
 
 function getFilteredTags(text: string) {
-  dataService.findTagsByCriteria(text).then((data) => {
+  tagService.findTagsByCriteria(text).then((data) => {
     filteredTags.value.splice(0, filteredTags.value.length)
     data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t)))
   })
