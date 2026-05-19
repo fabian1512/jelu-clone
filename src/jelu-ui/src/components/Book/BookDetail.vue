@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useOruga } from "@oruga-ui/oruga-next"
 import { until, useClipboard, useLocalStorage, usePermission, useTitle } from '@vueuse/core'
-import dayjs from 'dayjs'
 import { computed, ComputedRef, Ref, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -10,7 +9,7 @@ import useDates from '../../composables/dates'
 import { Book, UserBook } from '../../model/Book'
 import { BookQuote } from "../../model/BookQuote"
 import { Metadata } from "../../model/Metadata"
-import { CreateReadingEvent, ReadingEvent, ReadingEventType } from '../../model/ReadingEvent'
+import { ReadingEvent } from '../../model/ReadingEvent'
 import { Review } from '../../model/Review'
 import { Series } from '../../model/Series'
 import { User } from '../../model/User'
@@ -25,6 +24,7 @@ import AutoImportFormModalVue from '../Admin/AutoImportFormModal.vue'
 import BookQuoteCard from '../Global/BookQuoteCard.vue'
 import BookQuoteModalVue from './BookQuoteModal.vue'
 import BookExternalLinks from './BookExternalLinks.vue'
+import BookTimeline from './BookTimeline.vue'
 import MergeBookModal from './MergeBookModal.vue'
 import ReadingEventModalVue from '../Misc/ReadingEventModal.vue'
 import ReadProgressModal from './ReadProgressModal.vue'
@@ -148,69 +148,6 @@ const getBookQuotesForBook = async() => {
 }
 
 watch(() => props.bookId, (newValue, oldValue) => {
-})
-
-const sortedEvents = computed(() => {
-  if (book.value && book.value.readingEvents) {
-    return [...book.value.readingEvents].sort((a, b) => {
-      const dateA = a.startDate ? dayjs(a.startDate) : dayjs(0)
-      const dateB = b.startDate ? dayjs(b.startDate) : dayjs(0)
-      return dateA.isAfter(dateB) ? -1 : 1
-    })
-  }
-  else {
-    return []
-  }
-}
-)
-
-interface TimelineEntry {
-  event: ReadingEvent
-  date: Date
-  label: string
-  originalEvent: ReadingEvent
-}
-
-const timelineEntries = computed((): TimelineEntry[] => {
-  const entries: TimelineEntry[] = []
-  sortedEvents.value.forEach(event => {
-    const hasStart = event.startDate != null
-    const hasEnd = event.endDate != null
-
-    if (hasStart && hasEnd) {
-      entries.push({
-        event: { ...event, eventType: ReadingEventType.CURRENTLY_READING } as ReadingEvent,
-        date: event.startDate as Date,
-        label: 'started',
-        originalEvent: event
-      })
-      entries.push({
-        event: event,
-        date: event.endDate as Date,
-        label: 'finished',
-        originalEvent: event
-      })
-    } else if (hasStart) {
-      entries.push({
-        event: event,
-        date: event.startDate as Date,
-        label: event.eventType,
-        originalEvent: event
-      })
-    } else if (hasEnd) {
-      entries.push({
-        event: event,
-        date: event.endDate as Date,
-        label: event.eventType,
-        originalEvent: event
-      })
-    }
-  })
-  return entries.sort((a, b) => {
-  const dateA = a.date ? dayjs(a.date) : dayjs(0)
-  const dateB = b.date ? dayjs(b.date) : dayjs(0)
-  return dateA.isAfter(dateB) ? -1 : 1
-})
 })
 
 function modalClosed() {
@@ -425,84 +362,6 @@ const deleteBook = async () => {
     .catch(err => {
       ObjectUtils.toast(oruga, "danger", t('labels.error_deleting', {msg : err.message}), 4000);
     })
-}
-
-const eventClass = (event: ReadingEvent) => {
-  if (event.eventType === ReadingEventType.FINISHED) {
-    return "bg-info";
-  } else if (event.eventType === ReadingEventType.DROPPED) {
-    return "bg-error";
-  } else if (
-    event.eventType === ReadingEventType.CURRENTLY_READING
-  ) {
-    return "bg-success";
-  } else if (event.eventType === ReadingEventType.MARKED_OWNED) {
-    return "bg-accent";
-  } else if (event.eventType === ReadingEventType.MARKED_TO_READ) {
-    return "bg-warning";
-  } else if (event.eventType === ReadingEventType.MARKED_BORROWED) {
-    return "bg-secondary";
-  }
-  else return "";
-};
-
-const badgeClass = (event: ReadingEvent) => {
-  if (event.eventType === ReadingEventType.FINISHED) {
-    return "badge-info";
-  } else if (event.eventType === ReadingEventType.DROPPED) {
-    return "badge-error";
-  } else if (event.eventType === ReadingEventType.CURRENTLY_READING) {
-    return "badge-success";
-  } else if (event.eventType === ReadingEventType.MARKED_OWNED) {
-    return "badge-accent";
-  } else if (event.eventType === ReadingEventType.MARKED_TO_READ) {
-    return "badge-warning";
-  } else if (event.eventType === ReadingEventType.MARKED_BORROWED) {
-    return "badge-secondary";
-  }
-  else return "badge-ghost";
-};
-
-const iconClass = (event: ReadingEvent) => {
-  if (event.eventType === ReadingEventType.FINISHED) {
-    return "mdi-checkbox-marked-circle";
-  } else if (event.eventType === ReadingEventType.DROPPED) {
-    return "mdi-close-octagon";
-  } else if (
-    event.eventType === ReadingEventType.CURRENTLY_READING
-  ) {
-    return "mdi-book-open-page-variant";
-  } else if (event.eventType === ReadingEventType.MARKED_OWNED) {
-    return "mdi-bookshelf";
-  } else if (event.eventType === ReadingEventType.MARKED_BORROWED) {
-    return "mdi-handshake";
-  }
-  else return "";
-};
-
-const eventLabel = (type: ReadingEventType) => {
-    if (type === ReadingEventType.FINISHED) {
-      return t('reading_events.finished');
-    } else if (type === ReadingEventType.DROPPED) {
-      return t('reading_events.dropped');
-    } else if (type === ReadingEventType.CURRENTLY_READING) {
-      return t('reading_events.reading');
-    } else if (type === ReadingEventType.MARKED_OWNED) {
-      return t('book.owned');
-    } else if (type === ReadingEventType.MARKED_TO_READ) {
-      return t('book.in_read_list');
-    } else if (type === ReadingEventType.MARKED_BORROWED) {
-      return t('book.borrowed');
-    } else return "";
-};
-
-function defaultCreateEvent(): CreateReadingEvent {
-  return {
-    eventType: ReadingEventType.CURRENTLY_READING,
-    eventDate: new Date(),
-    startDate: new Date(),
-    bookId: book.value?.book.id
-  }
 }
 
 const publisherQuery = computed(() => {
@@ -910,185 +769,7 @@ getBook()
         />
       </div>
     </div>
-    <!-- https://tailwindcomponents.com/component/vertical-timeline -->
-    <div
-      v-if="timelineEntries.length > 0"
-      class="mt-4"
-    >
-      <p
-        v-if="timelineEntries.length > 0"
-        class="text-lg mt-6 mb-3 capitalize text-center"
-        :class="typographyClasses"
-      >
-        {{ t('reading_events.reading_events') }}:
-      </p>
-      <div class="relative max-w-2xl mx-auto px-4">
-        <!-- Add new event button at top of timeline -->
-        <div class="relative mb-6 flex items-center z-10">
-          <!-- Mobile: Button left (same position as other events) -->
-          <div class="flex-shrink-0 md:hidden">
-            <div
-              class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer bg-info"
-              @click="toggleReadingEventModal(defaultCreateEvent() as ReadingEvent, false)"
-            >
-              <i class="mdi mdi-pencil text-white" />
-            </div>
-          </div>
-          <!-- Desktop: Button in center -->
-          <div class="hidden md:flex md:flex-1 md:justify-center">
-            <div
-              class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer bg-info"
-              @click="toggleReadingEventModal(defaultCreateEvent() as ReadingEvent, false)"
-            >
-              <i class="mdi mdi-pencil text-white" />
-            </div>
-          </div>
-        </div>
-        <!-- Timeline Linie -->
-        <div class="absolute left-4 md:left-1/2 top-10 bottom-0 w-0.5 bg-base-300 -translate-x-1/2"></div>
-
-        <div
-          v-for="(entry, index) in timelineEntries"
-          :key="`${entry.originalEvent.id}-${entry.label}`"
-          class="relative mb-6 flex items-center"
-        >
-          <!-- Mobile: Icon links, Card rechts (wie Mealie) -->
-          <!-- Desktop: alternierend - Datum links/Card rechts ODER Card links/Datum rechts -->
-          <template v-if="index % 2 === 0">
-            <!-- Mobile: Icon links -->
-            <div class="flex-shrink-0 md:hidden">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                :class="entry.label === 'started' ? 'bg-info' : eventClass(entry.event)"
-                @dblclick="toggleReadingEventModal(entry.originalEvent, true)"
-              >
-                <i class="mdi text-white" :class="entry.label === 'started' ? 'mdi-play-circle' : iconClass(entry.event)" />
-              </div>
-            </div>
-
-            <!-- Mobile: Card mit Datum -->
-            <div class="flex-1 pl-2 md:hidden">
-              <div class="card bg-base-100 shadow-md w-full">
-                <div class="card-body p-2 flex flex-row justify-between items-center gap-2">
-                  <div class="flex flex-col gap-1">
-                    <span class="badge badge-sm badge-ghost w-fit">
-                      {{ d(entry.date, 'short') }}
-                    </span>
-                    <span class="font-semibold capitalize truncate">{{ entry.label === 'started' ? t('reading_events.currently_reading') : eventLabel(entry.event.eventType) }}</span>
-                  </div>
-                  <button
-                    class="btn btn-xs btn-circle btn-ghost flex-shrink-0"
-                    @click="toggleReadingEventModal(entry.originalEvent, true)"
-                  >
-                    <i class="mdi mdi-pencil mdi-18px" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Desktop: Datum links -->
-            <div class="hidden md:flex md:flex-1 md:justify-end md:pr-2">
-              <span class="badge badge-sm badge-ghost">
-                {{ d(entry.date, 'short') }}
-              </span>
-            </div>
-
-            <!-- Desktop: Icon in der Mitte -->
-            <div class="hidden md:flex md:flex-shrink-0">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                :class="entry.label === 'started' ? 'bg-info' : eventClass(entry.event)"
-                @dblclick="toggleReadingEventModal(entry.originalEvent, true)"
-              >
-                <i class="mdi text-white" :class="entry.label === 'started' ? 'mdi-play-circle' : iconClass(entry.event)" />
-              </div>
-            </div>
-
-            <!-- Desktop: Card rechts -->
-            <div class="hidden md:flex md:flex-1 md:justify-start md:pl-2">
-              <div class="card bg-base-100 shadow-md w-full">
-                <div class="card-body p-2 flex flex-col md:flex-row justify-center items-center gap-2">
-                  <span class="font-semibold capitalize truncate">{{ entry.label === 'started' ? t('reading_events.currently_reading') : eventLabel(entry.event.eventType) }}</span>
-                  <button
-                    class="btn btn-xs btn-circle btn-ghost flex-shrink-0 ml-auto"
-                    @click="toggleReadingEventModal(entry.originalEvent, true)"
-                  >
-                    <i class="mdi mdi-pencil mdi-18px" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- Alternierendes Layout: Ungerade Index = Card links, Datum rechts -->
-          <template v-else>
-            <!-- Mobile: Icon links -->
-            <div class="flex-shrink-0 md:hidden">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                :class="entry.label === 'started' ? 'bg-info' : eventClass(entry.event)"
-                @dblclick="toggleReadingEventModal(entry.originalEvent, true)"
-              >
-                <i class="mdi text-white" :class="entry.label === 'started' ? 'mdi-play-circle' : iconClass(entry.event)" />
-              </div>
-            </div>
-
-            <!-- Mobile: Card mit Datum -->
-            <div class="flex-1 pl-2 md:hidden">
-              <div class="card bg-base-100 shadow-md w-full">
-                <div class="card-body p-2 flex flex-row justify-between items-center gap-2">
-                  <div class="flex flex-col gap-1">
-                    <span class="badge badge-sm badge-ghost w-fit">
-                      {{ d(entry.date, 'short') }}
-                    </span>
-                    <span class="font-semibold capitalize truncate">{{ entry.label === 'started' ? t('reading_events.currently_reading') : eventLabel(entry.event.eventType) }}</span>
-                  </div>
-                  <button
-                    class="btn btn-xs btn-circle btn-ghost flex-shrink-0"
-                    @click="toggleReadingEventModal(entry.originalEvent, true)"
-                  >
-                    <i class="mdi mdi-pencil mdi-18px" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Desktop: Card links -->
-            <div class="hidden md:flex md:flex-1 md:justify-end md:pr-2">
-              <div class="card bg-base-100 shadow-md w-full">
-                <div class="card-body p-2 flex flex-col md:flex-row justify-center items-center gap-2">
-                  <span class="font-semibold capitalize truncate">{{ entry.label === 'started' ? t('reading_events.currently_reading') : eventLabel(entry.event.eventType) }}</span>
-                  <button
-                    class="btn btn-xs btn-circle btn-ghost flex-shrink-0 ml-auto"
-                    @click="toggleReadingEventModal(entry.originalEvent, true)"
-                  >
-                    <i class="mdi mdi-pencil mdi-18px" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Desktop: Icon in der Mitte -->
-            <div class="hidden md:flex md:flex-shrink-0">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                :class="entry.label === 'started' ? 'bg-info' : eventClass(entry.event)"
-                @dblclick="toggleReadingEventModal(entry.originalEvent, true)"
-              >
-                <i class="mdi text-white" :class="entry.label === 'started' ? 'mdi-play-circle' : iconClass(entry.event)" />
-              </div>
-            </div>
-
-            <!-- Desktop: Datum rechts -->
-            <div class="hidden md:flex md:flex-1 md:justify-start md:pl-2">
-              <span class="badge badge-sm badge-ghost">
-                {{ d(entry.date, 'short') }}
-              </span>
-            </div>
-          </template>
-        </div>
-      </div>
-    </div>
+    <BookTimeline :book="book" />
     </div>
   </div>
   <o-loading
