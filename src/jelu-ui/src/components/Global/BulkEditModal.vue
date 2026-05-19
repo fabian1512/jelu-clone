@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Ref, ref, watch } from "vue";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService";
+import { tagService } from "../../services/tagService";
 import { useI18n } from 'vue-i18n'
 import { Tag } from "../../model/Tag";
 import { ObjectUtils } from "../../utils/ObjectUtils";

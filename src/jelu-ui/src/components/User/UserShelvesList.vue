@@ -3,7 +3,7 @@ import { computed, Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import usePagination from "../../composables/pagination";
 import { Shelf } from "../../model/Shelf";
-import dataService from "../../services/DataService";
+import { tagService } from "../../services/tagService";
 import { shelfService } from "../../services/shelfService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { Tag } from "../../model/Tag";
@@ -31,7 +31,7 @@ const isFetching = ref(false)
 
 function getFilteredTags(text: string) {
   isFetching.value = true
-  dataService.findTagsByCriteria(text).then((data) => filteredTags.value = data.content)
+  tagService.findTagsByCriteria(text).then((data) => filteredTags.value = data.content)
   isFetching.value = false
 }
 

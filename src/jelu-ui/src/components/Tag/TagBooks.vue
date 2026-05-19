@@ -10,7 +10,7 @@ import useBulkEdition from '../../composables/bulkEdition';
 import { Book } from '../../model/Book';
 import { LibraryFilter } from "../../model/LibraryFilter";
 import { Tag } from '../../model/Tag';
-import dataService from "../../services/DataService";
+import { tagService } from "../../services/tagService";
 import { ObjectUtils } from '../../utils/ObjectUtils';
 import BookCard from '../Global/BookCard.vue';
 import SortFilterBarVue from '../Global/SortFilterBar.vue';
@@ -55,7 +55,7 @@ watch(() => route.params.tagId, (newVal, oldVal) => {
 
 const getTag = async () => {
   try {
-    tag.value = await dataService.getTagById(route.params.tagId as string)
+    tag.value = await tagService.getTagById(route.params.tagId as string)
     useTitle('Jelu | #' + tag.value.name)
   } catch (error) {
   }
