@@ -26,6 +26,7 @@ import AutoImportFormModalVue from '../Admin/AutoImportFormModal.vue';
 import ImagePickerModal from '../Misc/ImagePickerModal.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
 import ClosableBadge from '../Global/ClosableBadge.vue';
+import BookIdentifiersFieldset from './BookIdentifiersFieldset.vue';
 import FormField from '../Global/FormField.vue';
 import { Role } from "../../model/Role";
 import useTypography from "../../composables/typography";
@@ -778,66 +779,16 @@ onMounted(() => {
             {{ isbn13ValidationMessage }}
           </div>
         </fieldset>
-        <fieldset class="fieldset sm:grid sm:grid-cols-3">
-          <legend class="fieldset-legend capitalize providers-ids">
-            {{ t('book.identifiers') }}
-          </legend>
-          <input
-            v-model="form.googleId"
-            name="googleId"
-            :placeholder="t('book.google_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.goodreadsId"
-            type="text"
-            name="goodreadsId"
-            :placeholder="t('book.goodreads_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.amazonId"
-            type="text"
-            name="amazonId"
-            :placeholder="t('book.amazon_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.librarythingId"
-            type="text"
-            name="librarythingId"
-            :placeholder="t('book.librarything_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.isfdbId"
-            type="text"
-            name="isfdbId"
-            :placeholder="t('book.isfdb_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.openlibraryId"
-            type="text"
-            name="openlibraryId"
-            :placeholder="t('book.openlibrary_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.noosfereId"
-            type="text"
-            name="noosfereId"
-            :placeholder="t('book.noosfere_id')"
-            class="input focus:input-accent w-full"
-          >
-          <input
-            v-model="form.inventaireId"
-            type="text"
-            name="inventaireId"
-            :placeholder="t('book.inventaire_id')"
-            class="input focus:input-accent w-full"
-          >
-        </fieldset>
+        <BookIdentifiersFieldset
+          v-model:google-id="form.googleId"
+          v-model:goodreads-id="form.goodreadsId"
+          v-model:amazon-id="form.amazonId"
+          v-model:librarything-id="form.librarythingId"
+          v-model:isfdb-id="form.isfdbId"
+          v-model:openlibrary-id="form.openlibraryId"
+          v-model:noosfere-id="form.noosfereId"
+          v-model:inventaire-id="form.inventaireId"
+        />
         <fieldset class="fieldset">
           <legend class="fieldset-legend capitalize">
             {{ t('book.publisher') }}
