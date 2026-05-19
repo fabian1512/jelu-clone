@@ -11,6 +11,7 @@ import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
 import { tagService } from "../../services/tagService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
+import MergeField from './MergeField.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
 import { Role } from "../../model/Role";
 import useTypography from "../../composables/typography";
@@ -574,191 +575,37 @@ const { typographyClasses } = useTypography()
             >
           </div>
         </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text first-letter:capitalize">{{ t('book.isbn10') }}</span>
-          </label>
-          <input
-            v-model="book.isbn10"
-            type="text"
-            class="input input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.isbn10 = props.metadata.isbn10"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.isbn10"
-              disabled
-              class="jelu-cursor-text input input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text first-letter:capitalize">{{ t('book.isbn13') }}</span>
-          </label>
-          <input
-            v-model="book.isbn13"
-            type="text"
-            class="input input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.isbn13 = props.metadata.isbn13"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.isbn13"
-              disabled
-              class="jelu-cursor-text input input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text first-letter:capitalize">{{ t('book.publisher') }}</span>
-          </label>
-          <input
-            v-model="book.publisher"
-            type="text"
-            class="input input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.publisher = props.metadata.publisher"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.publisher"
-              disabled
-              class="jelu-cursor-text input input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text first-letter:capitalize">{{ t('book.page_count') }}</span>
-          </label>
-          <input
-            v-model="book.pageCount"
-            type="number"
-            class="input input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.pageCount = props.metadata.pageCount"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.pageCount"
-              disabled
-              class="jelu-cursor-text input input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text first-letter:capitalize">{{ t('book.published_date') }}</span>
-          </label>
-          <input
-            v-model="book.publishedDate"
-            type="text"
-            class="input input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.publishedDate = props.metadata.publishedDate"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.publishedDate"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.isbn10')"
+          :model-value="book.isbn10"
+          :metadata-value="props.metadata.isbn10"
+          @update:model-value="book.isbn10 = $event"
+        />
+        <MergeField
+          :label="t('book.isbn13')"
+          :model-value="book.isbn13"
+          :metadata-value="props.metadata.isbn13"
+          @update:model-value="book.isbn13 = $event"
+        />
+        <MergeField
+          :label="t('book.publisher')"
+          :model-value="book.publisher"
+          :metadata-value="props.metadata.publisher"
+          @update:model-value="book.publisher = $event"
+        />
+        <MergeField
+          :label="t('book.page_count')"
+          :model-value="book.pageCount"
+          :metadata-value="props.metadata.pageCount"
+          field-type="number"
+          @update:model-value="book.pageCount = $event"
+        />
+        <MergeField
+          :label="t('book.published_date')"
+          :model-value="book.publishedDate"
+          :metadata-value="props.metadata.publishedDate"
+          @update:model-value="book.publishedDate = $event"
+        />
         <div class="form-control w-full">
           <label class="label">
             <span class="label-text first-letter:capitalize">{{ t('book.series') }}</span>
@@ -774,344 +621,65 @@ const { typographyClasses } = useTypography()
             </div>
           </div>
         </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text first-letter:capitalize">{{ t('book.language') }}</span>
-          </label>
-          <input
-            v-model="book.language"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.language = props.metadata.language"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.language"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.google_id') }}</span>
-          </label>
-          <input
-            v-model="book.googleId"
-            type="text"
-            class="jelu-cursor-text input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.googleId = props.metadata.googleId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.googleId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.goodreads_id') }}</span>
-          </label>
-          <input
-            v-model="book.goodreadsId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.goodreadsId = props.metadata.goodreadsId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.goodreadsId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.amazon_id') }}</span>
-          </label>
-          <input
-            v-model="book.amazonId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.amazonId = props.metadata.amazonId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.amazonId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.language')"
+          :model-value="book.language"
+          :metadata-value="props.metadata.language"
+          @update:model-value="book.language = $event"
+        />
+        <MergeField
+          :label="t('book.google_id')"
+          :model-value="book.googleId"
+          :metadata-value="props.metadata.googleId"
+          @update:model-value="book.googleId = $event"
+        />
+        <MergeField
+          :label="t('book.goodreads_id')"
+          :model-value="book.goodreadsId"
+          :metadata-value="props.metadata.goodreadsId"
+          @update:model-value="book.goodreadsId = $event"
+        />
+        <MergeField
+          :label="t('book.amazon_id')"
+          :model-value="book.amazonId"
+          :metadata-value="props.metadata.amazonId"
+          @update:model-value="book.amazonId = $event"
+        />
 
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.librarything_id') }}</span>
-          </label>
-          <input
-            v-model="book.librarythingId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.librarythingId = props.metadata.librarythingId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.librarythingId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.librarything_id')"
+          :model-value="book.librarythingId"
+          :metadata-value="props.metadata.librarythingId"
+          @update:model-value="book.librarythingId = $event"
+        />
 
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.isfdb_id') }}</span>
-          </label>
-          <input
-            v-model="book.isfdbId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.isfdbId = props.metadata.isfdbId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.isfdbId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.isfdb_id')"
+          :model-value="book.isfdbId"
+          :metadata-value="props.metadata.isfdbId"
+          @update:model-value="book.isfdbId = $event"
+        />
 
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.openlibrary_id') }}</span>
-          </label>
-          <input
-            v-model="book.openlibraryId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.openlibraryId = props.metadata.openlibraryId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.openlibraryId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.openlibrary_id')"
+          :model-value="book.openlibraryId"
+          :metadata-value="props.metadata.openlibraryId"
+          @update:model-value="book.openlibraryId = $event"
+        />
 
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.noosfere_id') }}</span>
-          </label>
-          <input
-            v-model="book.noosfereId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.noosfereId = props.metadata.noosfereId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.noosfereId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.noosfere_id')"
+          :model-value="book.noosfereId"
+          :metadata-value="props.metadata.noosfereId"
+          @update:model-value="book.noosfereId = $event"
+        />
 
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">{{ t('book.inventaire_id') }}</span>
-          </label>
-          <input
-            v-model="book.inventaireId"
-            type="text"
-            class="input  input-primary w-full"
-          >
-        </div>
-        <div class="form-control w-full">
-          <div class="join w-full">
-            <button
-              class="btn btn-square btn-ghost btn-outline btn-secondary join-item z-0"
-              @click="book.inventaireId = props.metadata.inventaireId"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-            <input
-              type="text"
-              :value="props.metadata.inventaireId"
-              disabled
-              class="jelu-cursor-text input  input-secondary w-full join-item"
-            >
-          </div>
-        </div>
+        <MergeField
+          :label="t('book.inventaire_id')"
+          :model-value="book.inventaireId"
+          :metadata-value="props.metadata.inventaireId"
+          @update:model-value="book.inventaireId = $event"
+        />
         <div class="form-control w-full">
           <label class="label">
             <span class="label-text first-letter:capitalize">{{ t('book.summary') }}</span>
