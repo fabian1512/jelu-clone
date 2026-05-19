@@ -20,8 +20,6 @@ function createApiClient(tokenProvider: () => string | null = getToken): AxiosIn
             "X-Requested-With": "XMLHttpRequest",
         },
         withCredentials: true,
-        xsrfCookieName: "XSRF-TOKEN",
-        xsrfHeaderName: "X-XSRF-TOKEN",
     });
 
     client.interceptors.request.use(
