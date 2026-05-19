@@ -13,6 +13,7 @@ import { useI18n } from 'vue-i18n'
 import FormField from '../Global/FormField.vue';
 import { Role } from "../../model/Role"
 import useTypography from "../../composables/typography"
+import AuthorDetailForm from './AuthorDetailForm.vue';
 
 useTitle('Jelu | Authors admin')
 
@@ -188,99 +189,7 @@ const { typographyClasses } = useTypography()
       </fieldset>
     </div>
     <div class="justify-self-center col-span-2 sm:col-span-1 w-11/12 sm:w-8/12">
-      <FormField
-        v-model="leftAuthor.name"
-        :legend="t('author.name')"
-        placeholder=""
-      />
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend capitalize">
-          {{ t('author.date_of_birth') }}
-        </legend>
-        <o-datepicker
-          ref="datepicker"
-          v-model="leftAuthor.dateOfBirth"
-          :show-week-number="false"
-          :locale="undefined"
-          :placeholder="t('labels.click_to_select')"
-          :expanded="true"
-          icon="calendar"
-          icon-right="close"
-          icon-right-clickable="true"
-          :mobile-native="false"
-          mobile-modal="false"
-          trap-focus
-          @icon-right-click="leftAuthor.dateOfBirth = undefined"
-        />
-      </fieldset>
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend capitalize">
-          {{ t('author.date_of_death') }}
-        </legend>
-        <o-datepicker
-          ref="datepicker"
-          v-model="leftAuthor.dateOfDeath"
-          :show-week-number="false"
-          :locale="undefined"
-          :placeholder="t('labels.click_to_select')"
-          :expanded="true"
-          icon="calendar"
-          icon-right="close"
-          icon-right-clickable="true"
-          mobile-native="false"
-          mobile-modal="false"
-          trap-focus
-          @icon-right-click="leftAuthor.dateOfDeath = undefined"
-        />
-      </fieldset>
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend capitalize">
-          {{ t('author.biography') }}
-        </legend>
-        <textarea
-          v-model="leftAuthor.biography"
-          class="textarea focus:textarea-accent w-full"
-          maxlength="5000"
-        />
-      </fieldset>
-      <form-field
-        v-model="leftAuthor.officialPage"
-        :legend="t('author.official_page')"
-      />
-      <form-field
-        v-model="leftAuthor.wikipediaPage"
-        :legend="t('author.wikipedia_page')"
-      />
-      <FormField
-        v-model="leftAuthor.goodreadsPage"
-        :legend="t('author.goodreads_page')"
-        placeholder=""
-      />
-      <FormField
-        v-model="leftAuthor.twitterPage"
-        :legend="t('author.x_page')"
-        placeholder=""
-      />
-      <FormField
-        v-model="leftAuthor.facebookPage"
-        :legend="t('author.facebook_page')"
-        placeholder=""
-      />
-      <FormField
-        v-model="leftAuthor.instagramPage"
-        :legend="t('author.instagram_page')"
-        placeholder=""
-      />
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend capitalize">
-          {{ t('author.personal_notes') }}
-        </legend>
-        <textarea
-          v-model="leftAuthor.notes"
-          class="textarea w-full focus:textarea-accent"
-          maxlength="5000"
-        />
-      </fieldset>
+      <AuthorDetailForm :author="leftAuthor" />
       <div
         v-if="leftHasImage"
         class="w-full"
