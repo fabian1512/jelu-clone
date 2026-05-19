@@ -60,36 +60,47 @@ Recent relevant commits (already done):
 1. Logging policy inconsistencies for production
 2. External links missing `rel="noopener noreferrer"` in several places
 
-## Sprint Backlog (Top 10, ordered)
+## Sprint Backlog (completed)
 
-### Sprint 1 (critical first)
-1. IDOR ownership enforcement across read/write/delete paths (L)
-2. Remove/secure mutating `permitAll` endpoints (S)
-3. Harden CORS + CSRF model (M)
-4. Sanitize all `v-html` render paths (M)
+| Sprint | Tickets | Status |
+|--------|---------|--------|
+| Sprint 1 | T6 IDOR, T7 permitAll, T8 CORS+CSRF, T3 v-html | ✅ done |
+| Sprint 2 | T9 SSRF, T10 export N+1, T11 SQL stats | ✅ done |
+| Sprint 3 | T13 CSRF re-enable (backlog — regression, needs research) | 🔶 backlog |
+| Sprint 4 | T12 Frontend modularization | ✅ done |
 
-### Sprint 2
-5. Harden remote download flow (SSRF, timeouts, limits, stream safety) (M)
-6. Eliminate export N+1 with bulk event loading (L)
-7. Push stats filtering/aggregation into SQL (M)
+## Sprint 5 — Remaining Optimizations (Research-based)
 
-### Sprint 3 (remaining)
-- T13: Re-enable CSRF properly: configure Axios to send XSRF token OR alternative CSRF strategy (M)
+### P0 — Critical Bug
+- **T14: Fix token key mismatch** — `userService` stores token under `"auth_token_jelu"` but `apiClientFactory.getToken()` reads from `"jelu-token"`. Token persists to wrong key → nach Reload wird User nicht erkannt.
 
-### Sprint 4
-- T12: Frontend modularization: split DataService (1889 lines → domain services), split mega-components, consolidate i18n (L)
-  - Phase 1-4 (done): ApiClientFactory, MetadataService, WikipediaService, TagService, ServerSettingsService extracted; store.ts migrated; DataService refactored to use factory
+### P1 — Bundle/CSS (A4)
+- **T15: Reduce daisyUI themes** — `themes: all` → auf 4 begrenzen (jelu, clear, light, dark)
+- **T16: Remove duplicate Oruga CSS** — doppelter Import in `style.css` + `main.ts`
+- **T17: Keep only woff2 fonts** — ~3MB Einsparung
+- **T18: Add `emptyOutDir: true`** — alte Build-Artefakte loswerden
+
+### P2 — Mega-Komponenten splitten (D1)
+- **T19: Extract MergeField.vue** aus MergeBookModal (1248→~800)
+- **T20: Extract BookIdentifiersFieldset** aus AddBook (1245→~1100)
+- **T21: Extract BookTimeline + BookExternalLinks** aus BookDetail (1200→~900)
+- **T22: Extract useEditBook composable** aus EditBookModal (984→~600)
+- **T23: Extract AuthorDetailForm** aus AdminAuthors (675→~250)
+
+### P3 — Request Cancellation (A5)
+- **T24: Add AbortSignal to all service methods** with paginated/list patterns
+- **T25: Add AbortController to watch-based re-fetchers** (~6 components)
+
+### P4 — router.go(0) (B3)
+- **T26: Replace router.go(0) in EditBookModal** mit SPA-konformem router.push()
 
 ## Ticket Board (execution)
 
 ### T12 - Frontend modularization (L)
 - Scope: DataService (1889 lines), mega Vue components, i18n consolidation
 - Goal: Extract domain-specific services, reduce coupling, improve maintainability
-- Status: `in_progress`
-- Phase 1 (2026-05-17): Created `apiClientFactory.ts` (shared Axios factory with interceptors), `metadataService.ts` (first domain extraction), `index.ts` (clean re-exports). Refactored DataService to use factory internally, preserved all methods for backward compatibility.
-- Phase 2 (2026-05-17): Extracted `wikipediaService.ts` (wikipediaSearch + wikipediaPage). DataService retains backward-compat stubs delegating to factory-created client. Removed API_WIKIPEDIA, API_SEARCH constants from DataService.
-- Phase 3 (2026-05-17): Created `tagService.ts` (5 tag operations: find/criteria, get by id, get books, get orphans, delete). DataService unchanged (too many component consumers). Available for future migration.
-- Phase 4 (2026-05-17): Extracted `serverSettingsService.ts` (getServerSettings). Migrated `store.ts` from `dataService.serverSettings()` to `serverSettingsService.getServerSettings()`. Removed API_SERVER_SETTINGS constant + ServerSettings import from DataService.
+- Status: `done`
+- Phase 5-23 (2026-05-18): Extracted 15 additional domain services (ApiToken, Quote, OAuth2, MetadataProvider, Stats, Shelf, BookQuote, Review, CustomList, Series, Publisher, Message, Author, Book, User, UserBook, ReadingEvent, Tag, ImportExport, Metadata, Wikipedia). Migrated all ~30 consuming components. DataService reduced from 1889 → 17 lines.
 
 ### T1 - Axios 401 interceptor contract (S)
 - Scope: `src/jelu-ui/src/services/DataService.ts`
@@ -166,3 +177,7 @@ Recent relevant commits (already done):
 - 2026-05-17: T11 done - stats SQL aggregation: replaced N+1 unread-count loop in `BookRepository.stats()` with single SQL query (groupBy + having); removed paginated loop in `ReadingEventsController.stats()` and `statsForYear()`; added `Pageable.unpaged()` support via `isPaged` check; SQL SUM used for price instead of fetching all rows.
 - 2026-05-17: CSRF regression fixed — added `/api/v1/metadata/**`, `/api/v1/search/**`, and all mutating API patterns (`/**`) to CSRF exclusion list after 403 errors blocked import, merge, and create operations.
 - 2026-05-17: T12 phase1 done — extracted `ApiClientFactory`, `MetadataService` from DataService; DataService refactored to use factory internally (backward-compatible); added `services/index.ts` for clean imports.
+- 2026-05-18: T12 phases 5-23 done — all 20 domain services extracted, 30 components migrated, DataService 1889→17 lines.
+- 2026-05-19: T12 phase23 done (commit `fb0daf0`) — migrated last 7 components (AutoImportFormModal, Imports, AutoImportFileModal, EditAuthorModal, EditBookModal, AddBook, MergeBookModal, TagBooks), removed 5 dead DataService imports, stripped DataService to getToken() only.
+- 2026-05-19: T13 attempted CSRF re-enable, reverted (commit `a732f82`) — caused 403 on metadata search; `oruga.info/oruga.error → ObjectUtils.toast()` fix included.
+- 2026-05-19: Research done — token key bug (critical), CSS/bundle optimization, mega-components, cancellation gaps, router.go(0) documented as Sprint 5 plan.

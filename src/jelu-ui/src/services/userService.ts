@@ -1,11 +1,10 @@
 import axios from "axios";
 import { CreateUser, LoginHistoryInfo, UpdateUser, User, UserAuthentication } from "../model/User";
-import { createApiClient } from "./apiClientFactory";
+import { createApiClient, TOKEN_KEY } from "./apiClientFactory";
 
 class UserService {
     private client = createApiClient();
     private token: string | null = null;
-    private TOKEN_KEY = "auth_token_jelu";
 
     getUser = async (): Promise<UserAuthentication> => {
         try {
@@ -50,7 +49,7 @@ class UserService {
             });
             if (response.data.token != null && response.data.token.length > 0) {
                 this.token = response.data.token;
-                localStorage.setItem(this.TOKEN_KEY, this.token);
+                localStorage.setItem(TOKEN_KEY, this.token);
             }
             return response.data.user;
         } catch (error) {
@@ -155,7 +154,7 @@ class UserService {
                 // intentionally empty catch
             }
         } finally {
-            localStorage.removeItem(this.TOKEN_KEY);
+            localStorage.removeItem(TOKEN_KEY);
         }
     };
 
