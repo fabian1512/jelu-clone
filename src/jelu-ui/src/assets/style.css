@@ -4,8 +4,6 @@
   themes: all;
 }
 
-@import '@oruga-ui/theme-oruga/dist/oruga.css';
-
 @plugin "daisyui/theme" {
   name: "jelu";
   default: false;
