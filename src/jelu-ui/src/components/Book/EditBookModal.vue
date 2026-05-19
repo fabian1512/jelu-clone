@@ -257,7 +257,6 @@ const importBook = () => {
       progress.value = false
       ObjectUtils.toast(oruga, "success", t('labels.book_title_updated', { title : res.book.title}), 4000);
       emit('close', 'save')
-      setTimeout(() => router.go(0), 50)
     })
     .catch(err => {
       progress.value = false
