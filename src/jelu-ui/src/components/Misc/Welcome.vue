@@ -8,6 +8,7 @@ import useEvents from "../../composables/events"
 import { UserBook } from '../../model/Book'
 import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingEvent'
 import { Review } from "../../model/Review"
+import { readingEventService } from "../../services/readingEventService";
 import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService"
 import { reviewService } from "../../services/reviewService"
@@ -71,7 +72,7 @@ const nonCurrentlyReadingEvents: Array<ReadingEventType> = [ReadingEventType.DRO
 const getMyEvents = async () => {
   recentEventsIsLoading.value = true
   try {
-    const res = await dataService.myReadingEvents(nonCurrentlyReadingEvents, undefined, undefined, undefined, undefined, undefined, 0, 14, 'endDate,desc')
+    const res = await readingEventService.myReadingEvents(nonCurrentlyReadingEvents, undefined, undefined, undefined, undefined, undefined, 0, 14, 'endDate,desc')
     const notCurrentlyReading = res.content.filter(e => e.eventType !== ReadingEventType.CURRENTLY_READING)
     notCurrentlyReading.forEach(e => { e.userBook.lastReadingEvent = e.eventType })
     events.value = notCurrentlyReading

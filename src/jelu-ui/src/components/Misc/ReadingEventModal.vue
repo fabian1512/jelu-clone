@@ -2,6 +2,7 @@
 import { Ref, ref, watch, computed } from "vue";
 import { CreateReadingEvent, ReadingEvent, ReadingEventType } from "../../model/ReadingEvent";
 import { UserBookUpdate } from "../../model/Book";
+import { readingEventService } from "../../services/readingEventService";
 import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
@@ -106,7 +107,7 @@ const emit = defineEmits<{
 
 const create = () => {
   progress.value = true
-  dataService.createReadingEvent(currentCreateEvent.value)
+  readingEventService.createReadingEvent(currentCreateEvent.value)
     .then(res => {
       // Also save progress if userBookId is provided
       if (props.userBookId && (percentRead.value !== null || currentPageNumber !== null)) {
@@ -131,7 +132,7 @@ const update = () => {
   if (currentEvent.value.eventType === ReadingEventType.CURRENTLY_READING) {
     currentEvent.value.endDate = undefined
   }
-  dataService.updateReadingEvent(currentEvent.value)
+  readingEventService.updateReadingEvent(currentEvent.value)
     .then(res => {
       // Also save progress if userBookId is provided
       if (props.userBookId && (percentRead.value !== null || currentPageNumber !== null)) {
@@ -153,7 +154,7 @@ const update = () => {
 const deleteEvent = () => {
   if (currentEvent.value.id != null) {
     progress.value = true
-    dataService.deleteReadingEvent(currentEvent.value.id)
+    readingEventService.deleteReadingEvent(currentEvent.value.id)
     .then(res => {
       progress.value = false
       emit('close')

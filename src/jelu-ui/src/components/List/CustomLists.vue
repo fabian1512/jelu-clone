@@ -4,7 +4,7 @@ import { ref, Ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CustomList } from '../../model/custom-list'
 import { Tag } from "../../model/Tag"
-import dataService from "../../services/DataService"
+import { tagService } from "../../services/tagService";
 import { customListService } from "../../services/customListService"
 import ClosableBadge from '../Global/ClosableBadge.vue'
 import useTypography from '../../composables/typography'
@@ -38,7 +38,7 @@ let editMode = ref(false)
 
 function getFilteredTags(text: string) {
   isFetching.value = true
-  dataService.findTagsByCriteria(text).then((data) => {
+  tagService.findTagsByCriteria(text).then((data) => {
     filteredTags.value.splice(0, filteredTags.value.length)
     data.content.forEach(t => filteredTags.value.push(t.name))
   })

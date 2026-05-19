@@ -9,7 +9,7 @@ import { Book } from "../../model/Book"
 import { LibraryFilter } from "../../model/LibraryFilter"
 import { Page } from "../../model/Page"
 import { Tag } from "../../model/Tag"
-import dataService from "../../services/DataService"
+import { tagService } from "../../services/tagService";
 import { ObjectUtils } from "../../utils/ObjectUtils"
 import useTypography from "../../composables/typography"
 
@@ -44,13 +44,13 @@ const getBooksIsLoading: Ref<boolean> = ref(false)
 
 function getFilteredTags(text: string) {
   isFetching.value = true
-  dataService.findTagsByCriteria(text).then((data) => filteredTags.value = data.content)
+  tagService.findTagsByCriteria(text).then((data) => filteredTags.value = data.content)
   isFetching.value = false
 }
 
 function getOrphanTags() {
   isOrphanFetching.value = true
-  dataService.getOrphanTags(pageAsNumber.value - 1, perPage.value, sortQuery.value)
+  tagService.getOrphanTags(pageAsNumber.value - 1, perPage.value, sortQuery.value)
   .then(
     (res) => {
       total.value = res.totalElements
@@ -73,7 +73,7 @@ function getOrphanTags() {
 
 const deleteTag = async (target: Tag) => {
   if (target.id) {
-    dataService.deleteTag(target.id)
+    tagService.deleteTag(target.id)
     .then(res =>
       {
         tag.value = {"name" : ""}
@@ -109,14 +109,14 @@ const promptDeleteTag = async (tag: Tag, numberOfBooks: number|undefined) => {
 
 const getTag = async (selected: Tag) => {
   try {
-    tag.value = await dataService.getTagById(selected.id as string)
+    tag.value = await tagService.getTagById(selected.id as string)
   } catch (error) {
   }
 }
 
 const getBooks = (tag: Tag) => {
     getBooksIsLoading.value = true
-    dataService.getTagBooksById(tag.id as string,
+    tagService.getTagBooksById(tag.id as string,
       0, 2, "title:desc", LibraryFilter.ANY)
       .then(res => {
           tagBooks.value = res

@@ -9,6 +9,7 @@ import { UserBook } from "../../model/Book";
 import { ReadingEventType, ReadingEventWithUserBook } from '../../model/ReadingEvent';
 import { Review } from '../../model/Review';
 import { User } from '../../model/User';
+import { readingEventService } from "../../services/readingEventService";
 import { userService } from "../../services/userService";
 import { userBookService } from "../../services/userBookService";
 import dataService from "../../services/DataService";
@@ -64,7 +65,7 @@ const nonCurrentlyReadingEvents: Array<ReadingEventType> = [ReadingEventType.DRO
 const getReadEvents = async () => {
   recentEventsIsLoading.value = true
   try {
-    const res = await dataService.findReadingEvents(nonCurrentlyReadingEvents, route.params.userId as string, undefined, undefined, undefined, undefined, undefined, 0, undefined, "end_date:desc")
+    const res = await readingEventService.findReadingEvents(nonCurrentlyReadingEvents, route.params.userId as string, undefined, undefined, undefined, undefined, undefined, 0, undefined, "end_date:desc")
     events.value = res.content
     recentEventsIsLoading.value = false
   } catch (error) {
