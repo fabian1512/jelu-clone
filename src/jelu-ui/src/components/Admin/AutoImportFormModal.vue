@@ -12,6 +12,7 @@ import { bookService } from "../../services/bookService";
 import { userBookService } from "../../services/userBookService";
 import { metadataService } from "../../services/metadataService";
 import { key } from '../../store';
+import { ObjectUtils } from "../../utils/ObjectUtils";
 import { StringUtils } from "../../utils/StringUtils";
 import MetadataDetail from '../Metadata/MetadataDetail.vue';
 import MetadataPluginsModal from '../Metadata/MetadataPluginsModal.vue';
@@ -99,7 +100,7 @@ const fetchMetadata = async () => {
     showSearch.value = true
   } catch (error) {
     console.error('Search failed', error)
-    oruga.info('Suche fehlgeschlagen')
+    ObjectUtils.toast(oruga, "info", 'Suche fehlgeschlagen')
   } finally {
     progress.value = false
   }
@@ -307,7 +308,7 @@ const addToLibraryAndNavigate = async (bookId: string) => {
     
     // Check if already in user's library (has UserBook entry)
     if (userBook != null && userBook.id != null) {
-      oruga.info('Buch ist bereits in Ihrer Bibliothek')
+      ObjectUtils.toast(oruga, "info", 'Buch ist bereits in Ihrer Bibliothek')
       emit('close')
       router.push({ name: 'book-detail', params: { bookId: userBook.id } })
       return
@@ -338,9 +339,9 @@ const addToLibraryAndNavigate = async (bookId: string) => {
   } catch (error: any) {
     console.error('Failed to add book to library', error)
     if (error.response?.status === 404) {
-      oruga.error('Buch nicht in Datenbank gefunden (nur im Suchindex?)')
+      ObjectUtils.toast(oruga, "danger", 'Buch nicht in Datenbank gefunden (nur im Suchindex?)')
     } else {
-      oruga.error('Fehler beim Hinzufügen zur Bibliothek')
+      ObjectUtils.toast(oruga, "danger", 'Fehler beim Hinzufügen zur Bibliothek')
     }
   }
 }
@@ -446,11 +447,11 @@ if (metadata && metadata.title) {
                 return
               } else {
                 console.log('No metadata found for barcode:', barcode)
-                oruga.info('Keine Metadaten für diesen Barcode gefunden')
+                ObjectUtils.toast(oruga, "info", 'Keine Metadaten für diesen Barcode gefunden')
               }
             } catch (e) {
               console.error('External search failed', e)
-              oruga.error('Suche fehlgeschlagen: ' + e.message)
+              ObjectUtils.toast(oruga, "danger", 'Suche fehlgeschlagen: ' + e.message)
             } finally {
               progress.value = false
             }
