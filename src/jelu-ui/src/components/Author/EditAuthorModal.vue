@@ -3,7 +3,7 @@ import { computed, Ref, ref } from "vue";
 import { Author } from "../../model/Author";
 import { WikipediaSearchResult, WikipediaSearchResultElement } from "../../model/WikipediaSearchResult";
 import { authorService } from "../../services/authorService";
-import dataService from "../../services/DataService";
+import { wikipediaService } from "../../services/wikipediaService";
 import { StringUtils } from "../../utils/StringUtils";
 import { useI18n } from 'vue-i18n'
 import { useLocalStorage } from '@vueuse/core'
@@ -80,7 +80,7 @@ const update = () => {
 
 const search = () => {
   progress.value = true
-  dataService.wikipediaSearch(currentAuthor.value.name, searchlanguage.value)
+  wikipediaService.wikipediaSearch(currentAuthor.value.name, searchlanguage.value)
   .then(res => {
     progress.value = false
     searchResult.value = res
@@ -92,7 +92,7 @@ const search = () => {
 
 const fillFormWithEntry = (entry: WikipediaSearchResultElement) => {
   progress.value = true
-  dataService.wikipediaPage(entry.title, searchlanguage.value)
+  wikipediaService.wikipediaPage(entry.title, searchlanguage.value)
   .then(res => {
     currentAuthor.value.biography = res.extractHtml
     currentAuthor.value.wikipediaPage = res.contentUrls.desktop.page

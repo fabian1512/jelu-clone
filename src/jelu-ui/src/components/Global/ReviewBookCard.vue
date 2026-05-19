@@ -5,7 +5,6 @@ import { Book } from "../../model/Book";
 import { Review } from "../../model/Review";
 import { userService } from "../../services/userService";
 import { bookService } from "../../services/bookService";
-import dataService from "../../services/DataService";
 import { StringUtils } from "../../utils/StringUtils";
 
 const { t, d } = useI18n({

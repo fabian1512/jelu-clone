@@ -19,9 +19,6 @@ export { authorService } from "./authorService";
 export { bookService } from "./bookService";
 export { userService } from "./userService";
 export { userBookService } from "./userBookService";
-export { tagService } from "./tagService";
 export { importExportService } from "./importExportService";
-export { metadataService } from "./metadataService";
-export { wikipediaService } from "./wikipediaService";
 
 export { default as DataService } from "./DataService";

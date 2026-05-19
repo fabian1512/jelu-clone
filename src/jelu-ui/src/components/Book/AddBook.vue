@@ -16,7 +16,7 @@ import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService"
+import { tagService } from "../../services/tagService";
 import { publisherService } from "../../services/publisherService";
 import { key } from '../../store';
 import { ObjectUtils } from "../../utils/ObjectUtils";
@@ -304,7 +304,7 @@ function getFilteredData(text: string, target: Array<Wrapper>) {
 
 function getFilteredTags(text: string) {
   filteredTags.value.splice(0, filteredTags.value.length)
-  dataService.findTagsByCriteria(text).then((data) => data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t))))
+  tagService.findTagsByCriteria(text).then((data) => data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t))))
 }
 
 function getFilteredPublishers(text: string) {

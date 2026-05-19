@@ -34,7 +34,7 @@ const isFetching = ref(false)
 function getFilteredTags(text: string) {
   isFetching.value = true
   filteredTags.value.splice(0, filteredTags.value.length)
-  dataService.findTagsByCriteria(text).then((data) => data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t))))
+  tagService.findTagsByCriteria(text).then((data) => data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t))))
   isFetching.value = false
 }
 

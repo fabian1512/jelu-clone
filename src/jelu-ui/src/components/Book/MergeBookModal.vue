@@ -9,7 +9,7 @@ import { SeriesOrder } from "../../model/Series";
 import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
-import dataService from "../../services/DataService";
+import { tagService } from "../../services/tagService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
 import { Role } from "../../model/Role";
@@ -160,7 +160,7 @@ function getFilteredAuthors(text: string) {
 }
 
 function getFilteredTags(text: string) {
-  dataService.findTagsByCriteria(text).then((data) => data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t))))
+  tagService.findTagsByCriteria(text).then((data) => data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t))))
 }
 
 function authorAdded(item: string|Author) {

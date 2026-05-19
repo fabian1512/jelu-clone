@@ -3,7 +3,7 @@ import { computed, ref, watch } from "vue";
 import { useStore } from 'vuex'
 import { key } from '../../store'
 import { ImportSource } from "../../model/ImportConfiguration";
-import dataService from "../../services/DataService";
+import { importExportService } from "../../services/importExportService";
 import { useTitle } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { ObjectUtils } from '../../utils/ObjectUtils'
@@ -47,7 +47,7 @@ const importFile = async () => {
     if (importSource.value == ImportSource.ISBN_LIST) {
       importConfig.shouldFetchMetadata = true
     }
-  dataService.importCsv(
+  importExportService.importCsv(
     importConfig,
         file.value,
         (event: { loaded: number; total: number }) => {
@@ -63,7 +63,7 @@ const importFile = async () => {
 
 const exportFile =async () => {
   try {
-    await dataService.exportCsv()
+    await importExportService.exportCsv()
     exportMessage.value = t('csv_import.export_ok')
   } catch (error) {
     exportErrorMessage.value = t('csv_import.export_ko')

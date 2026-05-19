@@ -10,7 +10,6 @@ import { CreateReadingEvent, ReadingEvent, ReadingEventType, ReadingEventWithUse
 import { Review } from "../../model/Review"
 import { readingEventService } from "../../services/readingEventService";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService"
 import { reviewService } from "../../services/reviewService"
 import { key } from '../../store'
 import BookCard from '../Global/BookCard.vue'

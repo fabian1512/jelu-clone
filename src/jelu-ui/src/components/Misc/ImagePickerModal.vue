@@ -2,7 +2,7 @@
 import { Ref, ref } from "vue";
 import { useI18n } from 'vue-i18n';
 import { DirectoryListing, Path } from "../../model/DirectoryListing";
-import dataService from "../../services/DataService";
+import { importExportService } from "../../services/importExportService";
 import FilePickerElement from '../Global/FilePickerElement.vue';
 import useTypography from "../../composables/typography";
 
@@ -15,7 +15,7 @@ const directoryListing:Ref<DirectoryListing|null> = ref(null)
 
 const directories = (root: string|undefined) => {
   if (root != null) {
-    dataService.getDirectoryListing(root, 'pictures')
+    importExportService.getDirectoryListing(root, 'pictures')
     .then(res => {
       directoryListing.value = res
     })

@@ -4,7 +4,6 @@ import { CreateReadingEvent, ReadingEvent, ReadingEventType } from "../../model/
 import { UserBookUpdate } from "../../model/Book";
 import { readingEventService } from "../../services/readingEventService";
 import { userBookService } from "../../services/userBookService";
-import dataService from "../../services/DataService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import { useI18n } from 'vue-i18n'
 import useTypography from "../../composables/typography";
