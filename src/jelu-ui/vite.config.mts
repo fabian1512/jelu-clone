@@ -52,11 +52,6 @@ export default defineConfig({
     }
   },
   build: {
-    // emptyOutDir: true,
-    // rollupOptions: {
-    //   external: [
-    //     /files/
-    //   ]
-    // }
+    emptyOutDir: true,
   }
 })
