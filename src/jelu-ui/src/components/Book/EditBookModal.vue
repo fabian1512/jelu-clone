@@ -1,357 +1,65 @@
 <script setup lang="ts">
 
 import { useOruga } from "@oruga-ui/oruga-next";
-import { useRouter } from 'vue-router';
-import dayjs from "dayjs";
-import { computed, Ref, ref, watch } from "vue";
-import { useI18n } from 'vue-i18n';
-import { useStore } from 'vuex';
+import { Ref, ref } from "vue";
 
 import { Author } from "../../model/Author";
-import { Wrapper } from "../../model/autocomplete-wrapper";
 import { UserBook } from "../../model/Book";
 import { Metadata } from "../../model/Metadata";
 import { Path } from "../../model/DirectoryListing";
-import { ReadingEventType, CreateReadingEvent } from "../../model/ReadingEvent";
-import { SeriesOrder } from "../../model/Series";
-import { Tag } from "../../model/Tag";
-import { authorService } from "../../services/authorService";
-import { bookService } from "../../services/bookService";
-import { userBookService } from "../../services/userBookService";
-import { tagService } from "../../services/tagService";
-import { publisherService } from "../../services/publisherService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
-import { StringUtils } from "../../utils/StringUtils";
+
 import ImagePickerModal from '../Misc/ImagePickerModal.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
 import ClosableBadge from '../Global/ClosableBadge.vue';
 import FormField from '../Global/FormField.vue';
-import { Role } from "../../model/Role";
 import AutoImportFormModal from '../Admin/AutoImportFormModal.vue';
 import MergeBookModal from './MergeBookModal.vue';
-import { key } from '../../store';
 
-const { t } = useI18n({
-      inheritLocale: true,
-      useScope: 'global'
-    })
+import { useEditBook } from "../../composables/useEditBook";
 
 const props = defineProps<{ book: UserBook | Metadata | null }>()
-const oruga = useOruga()
-const router = useRouter()
-const store = useStore(key)
-const isAdmin = computed(() => {
-  return store !== undefined && store.getters.isAdmin
-})
 const emit = defineEmits<{
   (e: 'close', reason?: 'save' | 'cancel'): void
 }>();
 
-const deleteBook = async () => {
-  let deleteForUserOnly = true
-  let abort = false
-  if (isAdmin.value === true) {
-    await ObjectUtils.swalMixin.fire({
-      html: `<p>${t('labels.delete_for_all_or_only_you')}</p>`,
-      showDenyButton: true,
-      showCancelButton: true,
-      confirmButtonText: t('labels.only_me'),
-      denyButtonText: t('labels.all_users'),
-      cancelButtonText: t('labels.dont_delete'),
-    }).then((result) => {
-      if (result.isDenied) {
-        deleteForUserOnly = false
-      } else if (result.isDismissed) {
-        abort = true
-        return;
-      }
-    })
-  }
-  else {
-    await ObjectUtils.swalYesNoMixin.fire({
-      html: `<p>${t('labels.delete_this_book')}</p>`,
-      showCancelButton: true,
-      showConfirmButton: true,
-      showDenyButton: false,
-      confirmButtonText: t('labels.delete'),
-      cancelButtonText: t('labels.dont_delete'),
-    }).then((result) => {
-      if (result.isDismissed) {
-        abort = true
-        return;
-      }
-    })
-  }
-  if (abort) {
-    return
-  }
-  let promise
-  if (deleteForUserOnly) {
-    if (userbook.value.id) {
-      promise = userBookService.deleteUserBook(userbook.value.id)
-    }
-  }
-  else {
-    if (userbook.value.book.id) {
-      promise = bookService.deleteBook(userbook.value.book.id)
-    }
-  }
-  promise?.then(res => {
-    ObjectUtils.toast(oruga, "success", t('labels.book_was_deleted'), 4000);
-    emit('close', 'cancel')
-    router.push('/books')
-  })
-    .catch(err => {
-      ObjectUtils.toast(oruga, "danger", t('labels.error_deleting', {msg : err.message}), 4000);
-    })
-}
+const {
+  t,
+  userbook,
+  progress,
+  deleteBook,
+  importBook,
+  filteredAuthors,
+  filteredTags,
+  filteredTranslators,
+  filteredNarrators,
+  filteredPublishers,
+  publisherInput,
+  getFilteredData,
+  getFilteredTags,
+  getFilteredPublishers,
+  selectPublisher,
+  beforeAdd,
+  beforeAddTag,
+  publishedDateString,
+  sliderPercent,
+  hasImage,
+  deleteImage,
+  toggleRemoveImage,
+  smallCoverUrl,
+  uploadType,
+  imageUrl,
+  imagePath,
+  uploadPercentage,
+  handleFileUpload,
+  canApplyUpload,
+  applyCoverUpload,
+  errorMessage,
+} = useEditBook(props, emit)
 
-const filteredAuthors: Ref<Array<Wrapper>> = ref([]);
-const filteredTags: Ref<Array<Wrapper>> = ref([]);
-const filteredTranslators: Ref<Array<Wrapper>> = ref([]);
-const filteredNarrators: Ref<Array<Wrapper>> = ref([]);
-const filteredPublishers: Ref<Array<string>> = ref([])
-const userbook: Ref<UserBook> = ref(copyInput(props.book))
-const originalLastReadingEvent: Ref<ReadingEventType | null | undefined> = ref(props.book && 'id' in props.book ? (props.book as UserBook).lastReadingEvent : null)
-const hasImage: Ref<boolean> = ref(userbook.value.book.image != null)
-const deleteImage: Ref<boolean> = ref(false)
-
-const progress: Ref<boolean> = ref(false)
-
-// Native date input uses YYYY-MM-DD string. Sync with userbook.book.publishedDate.
-const publishedDateString = computed({
-  get: () => userbook.value.book.publishedDate || '',
-  set: (val: string) => {
-    userbook.value.book.publishedDate = val || null
-  }
-})
-
-function copyInput(book: UserBook | Metadata | null): any {
-  if (book == null) {
-    return {}
-  }
-  // Check if it's Metadata (no 'id' property) instead of UserBook
-  if (!('id' in book)) {
-    // It's Metadata - convert to UserBook format
-    const meta = book as Metadata
-    return {
-      book: {
-        title: meta.title || '',
-        originalTitle: undefined,
-        isbn10: meta.isbn10,
-        isbn13: meta.isbn13,
-        summary: meta.summary || '',
-        publisher: meta.publisher || undefined,
-        image: meta.image || null,
-        pageCount: meta.pageCount || null,
-        publishedDate: meta.publishedDate || null,
-        authors: meta.authors?.map((a: string) => ({ name: a })) || [],
-        translators: meta.translators?.map((t: string) => ({ name: t })) || [],
-        narrators: [],
-        tags: meta.tags?.map((t: string) => ({ name: t })) || [],
-        series: meta.series ? [{ name: meta.series, numberInSeries: meta.numberInSeries }] : [],
-        language: meta.language || '',
-        googleId: meta.googleId,
-        amazonId: meta.amazonId,
-        goodreadsId: meta.goodreadsId,
-        librarythingId: meta.librarythingId,
-        isfdbId: meta.isfdbId,
-        openlibraryId: meta.openlibraryId,
-        noosfereId: meta.noosfereId,
-        inventaireId: meta.inventaireId,
-      },
-      lastReadingEvent: ReadingEventType.FINISHED,
-      lastReadingEventDate: null,
-      creationDate: null,
-      modificationDate: null,
-      owned: false,
-      toRead: false,
-      borrowed: false,
-      price: 0,
-      currentPageNumber: 0,
-      percentRead: 0,
-      personalNotes: null,
-      userBookId: undefined,
-      userbook: undefined,
-    }
-  }
-  // It's UserBook
-  const b = ObjectUtils.deepCopy(book)
-  return b
-}
-
-const handleFileUpload = (event: any) => {
-  file.value = event.target.files[0];
-};
-
-const imageUrl = ref<string | null>(null);
-const imagePath = ref<string | null>(null);
-const uploadType = ref('web');
-
-const smallCoverUrl = computed(() => {
-  if (!userbook.value?.book?.image) return null
-  // HTTP-URLs (external cover from provider) return directly
-  if (userbook.value.book.image.startsWith('http')) {
-    return userbook.value.book.image
-  }
-  return StringUtils.thumbnailUrl(userbook.value.book.image, "thumb") ?? "/files/" + userbook.value.book.image
-})
-
-const clearImageField = () => {
-  imageUrl.value = "";
-};
+const oruga = useOruga()
 
 const showImagePickerModal: Ref<boolean> = ref(false)
-
-const file = ref(null);
-
-const uploadPercentage = ref(0);
-const errorMessage = ref("");
-
-const seriesCopy: Array<SeriesOrder> = userbook.value.book.series ?? []
-
-const importBook = () => {
-  userbook.value.book.series = seriesCopy.filter(s => s.name != null && s.name.trim().length > 0)
-  if (userbook.value.lastReadingEvent === ReadingEventType.NONE) {
-    userbook.value.lastReadingEvent = null
-  }
-  if (StringUtils.isNotBlank(imageUrl.value)) {
-    userbook.value.book.image = imageUrl.value
-  } else if (imagePath.value != null && StringUtils.isNotBlank(imagePath.value)) {
-      userbook.value.book.image = imagePath.value
-  } else if (deleteImage.value) {
-    userbook.value.book.image = null
-  }
-  if (userbook.value.price != null) {
-    if (userbook.value.price <= 0) {
-      userbook.value.price = null
-    }
-  }
-
-  let promise: Promise<UserBook>
-  progress.value = true
-  // no id on userbook -> we have a book and save the userbook
-  if (StringUtils.isBlank(userbook.value.id)) {
-    promise = userBookService.saveUserBookImage(
-      userbook.value,
-      file.value,
-      (event: { loaded: number; total: number }) => {
-        const percent = Math.round((100 * event.loaded) / event.total);
-        uploadPercentage.value = percent;
-      }
-    )
-  }
-  // just update the existing userbook
-  else {
-    promise = userBookService.updateUserBookImage(
-      userbook.value,
-      file.value,
-      (event: { loaded: number; total: number }) => {
-        const percent = Math.round((100 * event.loaded) / event.total);
-        uploadPercentage.value = percent;
-      }
-    )
-  }
-  promise
-    .then(res => {
-      progress.value = false
-      ObjectUtils.toast(oruga, "success", t('labels.book_title_updated', { title : res.book.title}), 4000);
-      emit('close', 'save')
-    })
-    .catch(err => {
-      progress.value = false
-      ObjectUtils.toast(oruga, "danger", t('labels.error_message', {msg : err.message}), 4000);
-    })
-
-}
-
-function getFilteredData(text: string, target: Array<Wrapper>) {
-  authorService.findAuthorByCriteria(Role.ANY, text).then((data) => {
-    target.splice(0, target.length)
-    data.content.forEach(a => target.push(ObjectUtils.wrapForOptions(a)))
-  })
-}
-
-function getFilteredTags(text: string) {
-  tagService.findTagsByCriteria(text).then((data) => {
-    filteredTags.value.splice(0, filteredTags.value.length)
-    data.content.forEach(t => filteredTags.value.push(ObjectUtils.wrapForOptions(t)))
-  })
-}
-
-// Separate input buffer for publisher autocomplete.
-// o-autocomplete's v-model would overwrite the real publisher on mount
-// (Oruga fires an internal modelValue update with empty string before user
-// interaction). We decouple the input field from the data model:
-// - publisherInput holds what the text field shows
-// - userbook.book.publisher holds the committed value (only written on @select or @input after user typed)
-const publisherInput = ref(userbook.value.book.publisher ?? '')
-let publisherMounted = false
-
-function getFilteredPublishers(text: string) {
-  // First @input event fires synchronously on mount — skip it to avoid
-  // overwriting the pre-filled publisher with an empty string.
-  if (!publisherMounted) {
-    publisherMounted = true
-    return
-  }
-  // User is actually typing: keep the visible buffer and real model in sync
-  publisherInput.value = text
-  userbook.value.book.publisher = text
-  publisherService.findPublisherByCriteria(text).then(data => {
-    filteredPublishers.value = data.content
-    if (text !== '' && !filteredPublishers.value.includes(text)) {
-      filteredPublishers.value.push(text)
-    }
-  })
-}
-
-function beforeAdd(item: Author | string, target: Array<Author>) {
-  let shouldAdd = true
-  if (item instanceof Object) {
-    target.forEach(author => {
-      if (author.name === item.name) {
-        shouldAdd = false;
-      }
-    });
-  }
-  else {
-    target.forEach(author => {
-      if (author.name === item) {
-        shouldAdd = false;
-      }
-    });
-  }
-  return shouldAdd
-}
-
-function beforeAddTag(item: Tag | string) {
-  let shouldAdd = true
-  if (item instanceof Object) {
-    userbook.value.book?.tags?.forEach(tag => {
-      if (tag.name === item.name) {
-        shouldAdd = false;
-      }
-    });
-  }
-  else {
-    userbook.value.book?.tags?.forEach(tag => {
-      if (tag.name === item) {
-        shouldAdd = false;
-      }
-    });
-  }
-  return shouldAdd
-}
-
-function selectPublisher(publisher: string) {
-  // we receive from oruga weird events while nothing is selected
-  // so try to get rid of those null data we receive
-  if (publisher != null) {
-    publisherInput.value = publisher
-    userbook.value.book.publisher = publisher
-  }
-}
 
 const toggleImagePickerModal = () => {
   showImagePickerModal.value = !showImagePickerModal.value
@@ -374,55 +82,6 @@ const toggleImagePickerModal = () => {
 function modalClosed() {
 }
 
-function toggleRemoveImage() {
-  deleteImage.value = !deleteImage.value
-}
-
-const canApplyUpload = computed(() => {
-  return (StringUtils.isNotBlank(imageUrl.value) && uploadType.value === 'web') ||
-         (StringUtils.isNotBlank(imagePath.value) && uploadType.value === 'server') ||
-         (file.value != null && uploadType.value === 'computer')
-})
-
-const applyCoverUpload = () => {
-  if (!canApplyUpload.value) return
-  
-  if (uploadType.value === 'web' && StringUtils.isNotBlank(imageUrl.value)) {
-    userbook.value.book.image = imageUrl.value
-    hasImage.value = true
-    deleteImage.value = false
-    imageUrl.value = ''
-  } else if (uploadType.value === 'computer' && file.value != null) {
-    // Upload file immediately
-    progress.value = true
-    userBookService.saveUserBookImage(
-      userbook.value,
-      file.value,
-      (event: { loaded: number; total: number }) => {
-        const percent = Math.round((100 * event.loaded) / event.total);
-        uploadPercentage.value = percent;
-      }
-    ).then((result) => {
-      userbook.value = result
-      hasImage.value = true
-      deleteImage.value = false
-      file.value = null
-      uploadPercentage.value = 0
-      progress.value = false
-    }).catch((error) => {
-      progress.value = false
-      uploadPercentage.value = 0
-      errorMessage.value = error.message || 'Upload failed'
-    })
-    return
-  } else if (uploadType.value === 'server' && StringUtils.isNotBlank(imagePath.value)) {
-    userbook.value.book.image = imagePath.value
-    hasImage.value = true
-    deleteImage.value = false
-    imagePath.value = ''
-  }
-}
-
 const openMetadataModal = () => {
   oruga.modal.open({
     parent: this,
@@ -438,7 +97,6 @@ const openMetadataModal = () => {
     events: {
       metadataReceived: (event: { metadata: Metadata, hasExistingBook: boolean }) => {
         if (event.hasExistingBook) {
-          // Open MergeBookModal with existing book and fetched metadata
           oruga.modal.open({
             parent: this,
             component: MergeBookModal,
@@ -452,7 +110,6 @@ const openMetadataModal = () => {
             },
             onClose: (mergedData: any) => {
               if (mergedData) {
-                // Update userbook with merged data - only update non-empty fields
                 if (mergedData.title) userbook.value.book.title = mergedData.title
                 if (mergedData.authors?.length) userbook.value.book.authors = mergedData.authors.map((a: string) => ({ name: a }))
                 if (mergedData.isbn13) userbook.value.book.isbn13 = mergedData.isbn13
@@ -477,7 +134,6 @@ const openMetadataModal = () => {
             }
           })
         } else {
-          // No existing book - just open EditBookModal with the new metadata
           oruga.modal.open({
             component: EditBookModal,
             trapFocus: true,
@@ -489,7 +145,6 @@ const openMetadataModal = () => {
             },
             onClose: (args: any) => {
               if (args && args[0] === 'save') {
-                // Close the AutoImportFormModal as well
               }
             }
           })
@@ -499,31 +154,6 @@ const openMetadataModal = () => {
     onClose: () => {}
   });
 }
-
-watch(() => [userbook.value.currentPageNumber, userbook.value.percentRead, userbook.value.book.pageCount],(newVal, oldVal) => {
-  if (userbook.value.book.pageCount != null) {
-    ObjectUtils.computePages(newVal, oldVal, userbook.value, userbook.value.book.pageCount)
-  }
-})
-
-
-
-if (userbook.value.book.publisher != null && userbook.value.book.publisher !== '') {
-  filteredPublishers.value.push(userbook.value.book.publisher as string) // prefill editor autocomplete. oruga workaround
-}
-
-// Separate reactive ref for the percent-read slider.
-// v-model.number on a nested property of a deeply reactive ref sometimes
-// fails to update in Vue 3 when the initial value is 0 (falsy).
-const sliderPercent = ref(userbook.value.percentRead || 0)
-
-watch(() => userbook.value.percentRead, (newVal) => {
-  sliderPercent.value = newVal || 0
-})
-
-watch(() => sliderPercent.value, (newVal) => {
-  userbook.value.percentRead = newVal
-})
 </script>
 
 <template>
@@ -865,7 +495,6 @@ details > summary::-webkit-details-marker {
   display: none;
 }
 
-/* Modal width constraint (desktop only) */
 @media (min-width: 640px) {
   .jl-modal {
     max-width: 42.5rem;
@@ -873,20 +502,16 @@ details > summary::-webkit-details-marker {
   }
 }
 
-/* Ensure modal content doesn't get cut off */
 .o-modal__content {
   max-height: 90vh !important;
   padding-bottom: 1.5rem !important;
 }
 
-/* Force bottom padding on modal content */
 #edit-modal-content {
   padding-bottom: 0 !important;
   min-height: 50vh;
 }
 
-/* Borderless taginput/autocomplete: no borders, right-aligned */
-/* CSS variables: remove borders on all Oruga inputs inside borderless fields */
 .borderless-autocomplete {
   --oruga-input-border-width: 0px;
   --oruga-input-box-shadow: none;
@@ -895,7 +520,6 @@ details > summary::-webkit-details-marker {
   --oruga-input-border-style: none;
 }
 
-/* taginput container: badges left, input inline, wrap on multiple badges */
 .borderless-autocomplete .o-taginput__container {
   border: none !important;
   box-shadow: none !important;
@@ -908,12 +532,10 @@ details > summary::-webkit-details-marker {
   overflow: visible !important;
 }
 
-/* Badge: don't shrink */
 .borderless-autocomplete .o-taginput__container > .badge {
   flex-shrink: 0;
 }
 
-/* Actual input element */
 .borderless-autocomplete .o-taginput__input {
   border: none !important;
   box-shadow: none !important;
@@ -925,7 +547,6 @@ details > summary::-webkit-details-marker {
   flex: none !important;
 }
 
-/* Input wrapper divs */
 .borderless-autocomplete .o-taginput__autocomplete,
 .borderless-autocomplete .o-dropdown__trigger,
 .borderless-autocomplete .o-input {
@@ -934,14 +555,12 @@ details > summary::-webkit-details-marker {
   flex: none !important;
 }
 
-/* Push badges+input block to the right */
 .borderless-autocomplete.flex-1 {
   display: flex !important;
   justify-content: flex-end !important;
   position: relative !important;
 }
 
-/* Autocomplete input: right-aligned text */
 .borderless-autocomplete .o-input__input {
   border: none !important;
   box-shadow: none !important;
@@ -950,12 +569,10 @@ details > summary::-webkit-details-marker {
   font-size: 0.875rem !important;
 }
 
-/* Taginput placeholder: left aligned */
 .borderless-autocomplete .o-taginput__input::placeholder {
   text-align: left !important;
 }
 
-/* Dropdown menu: align to right edge of the borderless wrapper */
 .borderless-autocomplete .o-dropdown__menu {
   left: auto !important;
   right: 0 !important;
@@ -964,7 +581,6 @@ details > summary::-webkit-details-marker {
   min-width: 12rem !important;
 }
 
-/* Uniform input height - match the height of simple text inputs */
 .uniform-input,
 .o-input__input,
 .o-taginput__input {
@@ -973,7 +589,6 @@ details > summary::-webkit-details-marker {
   line-height: 1.5rem !important;
 }
 
-/* Ensure taginput and autocomplete containers have same height as inputs */
 .borderless-autocomplete .o-taginput__container,
 .borderless-autocomplete .o-dropdown__trigger {
   min-height: 1.5rem !important;
