@@ -769,7 +769,12 @@ getBook()
         />
       </div>
     </div>
-    <BookTimeline :book="book" />
+    <BookTimeline
+      :events="book?.readingEvents ?? []"
+      :book-id="book?.book?.id"
+      @edit-event="toggleReadingEventModal($event, true)"
+      @create-event="toggleReadingEventModal($event as unknown as ReadingEvent, false)"
+    />
     </div>
   </div>
   <o-loading

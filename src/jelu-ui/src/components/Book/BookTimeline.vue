@@ -13,6 +13,7 @@ const { t, d } = useI18n({
 
 const props = defineProps<{
   events: ReadingEvent[]
+  bookId: string | undefined
 }>()
 
 const emit = defineEmits<{
@@ -83,7 +84,7 @@ function defaultCreateEvent(): CreateReadingEvent {
     eventType: ReadingEventType.CURRENTLY_READING,
     eventDate: new Date(),
     startDate: new Date(),
-    bookId: props.events[0]?.bookId
+    bookId: props.bookId
   }
 }
 
