@@ -24,6 +24,7 @@ import { ObjectUtils } from '../../utils/ObjectUtils'
 import AutoImportFormModalVue from '../Admin/AutoImportFormModal.vue'
 import BookQuoteCard from '../Global/BookQuoteCard.vue'
 import BookQuoteModalVue from './BookQuoteModal.vue'
+import BookExternalLinks from './BookExternalLinks.vue'
 import MergeBookModal from './MergeBookModal.vue'
 import ReadingEventModalVue from '../Misc/ReadingEventModal.vue'
 import ReadProgressModal from './ReadProgressModal.vue'
@@ -211,15 +212,6 @@ const timelineEntries = computed((): TimelineEntry[] => {
   return dateA.isAfter(dateB) ? -1 : 1
 })
 })
-
-const hasExternalLink = computed(() => book.value?.book.amazonId != null
-  || book.value?.book.goodreadsId != null
-  || book.value?.book.googleId != null
-  || book.value?.book.librarythingId != null
-  || book.value?.book.openlibraryId != null
-  || book.value?.book.isfdbId != null
-  || book.value?.book.noosfereId != null
-  || book.value?.book.inventaireId != null)
 
 function modalClosed() {
   setTimeout(() => getBook(), 100)
@@ -659,16 +651,6 @@ const formatSeries = async (series: Series)  => {
 // No cache-busting query params for cover images.
 // When covers change, the filename is expected to change as well.
 
-const getIsbn = (): string|null => {
-  if (book.value?.book.isbn13 && book.value.book.isbn13.length > 0) {
-    return book.value.book.isbn13.replaceAll("-", "")
-  }
-  if (book.value?.book.isbn10 && book.value.book.isbn10.length > 0) {
-    return book.value.book.isbn10.replaceAll("-", "")
-  }
-  return null
-}
-
 const storedLanguage = useLocalStorage("jelu_language", "en")
 
 const { typographyClasses } = useTypography()
@@ -846,39 +828,7 @@ getBook()
             </span>
             <span v-else class="opacity-60">-</span>
           </p>
-          <p>
-            <span class="font-semibold capitalize">Extern:</span>
-            <span v-if="hasExternalLink">
-              <span v-if="book?.book.goodreadsId" class="badge badge-warning ml-1">
-                <a :href="'https://www.goodreads.com/book/show/' + book.book.goodreadsId" target="_blank" rel="noopener noreferrer">goodreads</a>
-              </span>
-              <span v-if="book?.book.googleId" class="badge badge-warning ml-1">
-                <a :href="'https://books.google.com/books?id=' + book.book.googleId" target="_blank" rel="noopener noreferrer">google</a>
-              </span>
-              <span v-if="book?.book.amazonId" class="badge badge-warning ml-1">
-                <a :href="'https://www.amazon.com/dp/' + book.book.amazonId" target="_blank" rel="noopener noreferrer">amazon</a>
-              </span>
-              <span v-if="book?.book.librarythingId" class="badge badge-warning ml-1">
-                <a :href="'https://www.librarything.com/work/' + book.book.librarythingId" target="_blank" rel="noopener noreferrer">librarything</a>
-              </span>
-              <span v-if="book?.book.isfdbId" class="badge badge-warning ml-1">
-                <a :href="'https://www.isfdb.org/cgi-bin/title.cgi?' + book.book.isfdbId" target="_blank" rel="noopener noreferrer">ISFDB</a>
-              </span>
-              <span v-if="book?.book.openlibraryId" class="badge badge-warning ml-1">
-                <a :href="`https://openlibrary.org/works/${book.book.openlibraryId}?mode=all`" target="_blank" rel="noopener noreferrer">Openlibrary</a>
-              </span>
-              <span v-if="book?.book.noosfereId" class="badge badge-warning ml-1">
-                <a :href="'https://www.noosfere.org/livres/EditionsLivre.asp?numitem=' + book.book.noosfereId" target="_blank" rel="noopener noreferrer">Noosfere</a>
-              </span>
-              <span v-if="getIsbn() != null" class="badge badge-warning ml-1">
-                <a :href="'https://inventaire.io/entity/isbn:' + getIsbn()" target="_blank" rel="noopener noreferrer">inventaire</a>
-              </span>
-              <span v-if="book?.book.inventaireId && getIsbn() == null" class="badge badge-warning ml-1">
-                <a :href="'https://inventaire.io/entity/inv:' + book.book.inventaireId" target="_blank" rel="noopener noreferrer">inventaire</a>
-              </span>
-            </span>
-            <span v-else class="opacity-60">-</span>
-          </p>
+          <BookExternalLinks :book="book?.book ?? null" />
           <p class="font-semibold">
             {{ t('book.summary') }}:
           </p>
