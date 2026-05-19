@@ -6,7 +6,11 @@ import { createApiClient } from "./apiClientFactory";
 class MetadataService {
     private client = createApiClient();
 
-    fetchMetadata = async (isbn?: string, title?: string, authors?: string): Promise<Metadata> => {
+    fetchMetadata = async (
+        isbn?: string,
+        title?: string,
+        authors?: string
+    ): Promise<Metadata | null> => {
         try {
             const response = await this.client.get<Metadata>("/metadata", {
                 params: { isbn, title, authors }
@@ -16,25 +20,15 @@ class MetadataService {
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
-            throw new Error("error metadata " + error);
+            throw new Error("error fetch metadata " + error);
         }
     };
 
-    fetchMetadataWithPlugins = async (metadataRequest: MetadataRequest): Promise<Metadata> => {
+    fetchMetadataWithPlugins = async (
+        metadataRequest: MetadataRequest
+    ): Promise<Metadata> => {
         try {
             const response = await this.client.post<Metadata>("/metadata", metadataRequest);
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                // intentionally empty catch
-            }
-            throw new Error("error metadata " + error);
-        }
-    };
-
-    searchMetadataWithPlugins = async (metadataRequest: MetadataRequest): Promise<Metadata[]> => {
-        try {
-            const response = await this.client.post<Metadata[]>("/metadata/search", metadataRequest);
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
@@ -44,39 +38,17 @@ class MetadataService {
         }
     };
 
-    getMetadataFromUploadedFile = async (file: File | null, onUploadProgress?: (progressEvent: any) => void): Promise<Metadata> => {
+    searchMetadataWithPlugins = async (
+        metadataRequest: MetadataRequest
+    ): Promise<Metadata[]> => {
         try {
-            const formData = new FormData();
-            if (file != null) {
-                formData.append("file", file);
-            }
-            const resp = await this.client.post<Metadata>("/metadata/file", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                    Accept: "application/json"
-                },
-                onUploadProgress
-            });
-            return resp.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error("error uploading file " + error.response.status + " " + error);
-            }
-            throw new Error("error uploading file " + error);
-        }
-    };
-
-    getMetadataFromFile = async (filePath: string): Promise<Metadata> => {
-        try {
-            const response = await this.client.get<Metadata>("/metadata/file", {
-                params: { filepath: filePath }
-            });
+            const response = await this.client.post<Metadata[]>("/metadata/search", metadataRequest);
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
-            throw new Error("error metadata from path " + error);
+            throw new Error("error search metadata " + error);
         }
     };
 }

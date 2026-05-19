@@ -1,8 +1,8 @@
 import axios from "axios";
 import qs from "qs";
-import { Page } from "../model/Page";
 import { Tag } from "../model/Tag";
 import { Book } from "../model/Book";
+import { Page } from "../model/Page";
 import { LibraryFilter } from "../model/LibraryFilter";
 import { ReadingEventType } from "../model/ReadingEvent";
 import { createApiClient } from "./apiClientFactory";
@@ -39,7 +39,8 @@ class TagService {
     getTagBooksById = async (
         tagId: string,
         page?: number, size?: number, sort?: string,
-        libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null
+        libraryFilter?: LibraryFilter,
+        lastEventTypes?: Array<ReadingEventType> | null
     ): Promise<Page<Book>> => {
         try {
             const response = await this.client.get<Page<Book>>(`/tags/${tagId}/books`, {
@@ -67,7 +68,7 @@ class TagService {
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
-            throw new Error("error get orphan tags " + error);
+            throw new Error("error get tag orphans " + error);
         }
     };
 
@@ -77,9 +78,9 @@ class TagService {
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
-                throw new Error("error deleting tag " + tagId + " " + error.response.status + " " + error);
+                // intentionally empty catch
             }
-            throw new Error("error deleting tag " + tagId + " " + error);
+            throw new Error("error delete tag " + error);
         }
     };
 }
