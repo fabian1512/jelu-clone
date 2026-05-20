@@ -29,4 +29,10 @@ export class StringUtils {
         const ext = image.substring(dot)
         return `/files/${name}-${variant}${ext}`
     }
+
+    public static resolveImageUrl(image: string | null | undefined): string | null {
+        if (!image) return null
+        if (image.startsWith('http')) return image
+        return '/files/' + image
+    }
 }

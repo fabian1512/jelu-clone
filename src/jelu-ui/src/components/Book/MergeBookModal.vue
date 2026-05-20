@@ -10,7 +10,8 @@ import { Tag } from "../../model/Tag";
 import { authorService } from "../../services/authorService";
 import { bookService } from "../../services/bookService";
 import { tagService } from "../../services/tagService";
-import { ObjectUtils } from "../../utils/ObjectUtils";
+import { ObjectUtils } from "../../utils/ObjectUtils"
+import { StringUtils } from "../../utils/StringUtils";
 import MergeField from './MergeField.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
 import TagInputField from '../Global/TagInputField.vue';
@@ -686,7 +687,7 @@ const { typographyClasses } = useTypography()
             <figure>
               <img
                 v-if="book.image"
-                :src="book.image?.startsWith('http') ? book.image : '/files/' + book.image"
+                :src="StringUtils.resolveImageUrl(book.image)"
                 alt="Book Image"
                 class="max-h-96"
                 loading="lazy"
@@ -724,7 +725,7 @@ const { typographyClasses } = useTypography()
            <div class="">
              <figure>
                <img
-                  :src="props.metadata.image?.startsWith('http') ? props.metadata.image : '/files/' + props.metadata.image"
+                  :src="StringUtils.resolveImageUrl(props.metadata.image)"
                  alt="Book Image"
                  class="max-h-96"
                  loading="lazy"

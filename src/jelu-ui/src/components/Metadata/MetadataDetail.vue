@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import useDates from '../../composables/dates';
 import { Metadata } from "../../model/Metadata";
+import { StringUtils } from "../../utils/StringUtils";
 
 const { t } = useI18n({
       inheritLocale: true,
@@ -23,7 +24,7 @@ defineProps<{
       >
         <figure>
           <img
-            :src="metadata?.image?.startsWith('http') ? metadata?.image : '/files/' + metadata?.image"
+            :src="StringUtils.resolveImageUrl(metadata?.image)"
             alt="cover image"
             loading="lazy"
             decoding="async"

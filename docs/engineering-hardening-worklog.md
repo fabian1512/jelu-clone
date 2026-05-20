@@ -81,15 +81,23 @@ Recent relevant commits (already done):
 - **T18: Add `emptyOutDir: true`** — alte Build-Artefakte loswerden
 
 ### P2 — Mega-Komponenten splitten (D1)
-- **T19: Extract MergeField.vue** aus MergeBookModal (1248→~800)
+- **T19: Extract MergeField.vue** aus MergeBookModal (773→~550) — überschneidet sich mit P3b MergeBookModal-Duplikaten
 - **T20: Extract BookIdentifiersFieldset** aus AddBook (1245→~1100)
 - **T21: Extract BookTimeline + BookExternalLinks** aus BookDetail (1200→~900)
 - **T22: Extract useEditBook composable** aus EditBookModal (984→~600)
 - **T23: Extract AuthorDetailForm** aus AdminAuthors (675→~250)
 
-### P3 — Request Cancellation (A5)
+### P3a — Request Cancellation (A5)
 - **T24: Add AbortSignal to all service methods** with paginated/list patterns
 - **T25: Add AbortController to watch-based re-fetchers** (~6 components)
+
+### P3b — Duplicate Code Elimination (Refactoring)
+- **T27: useEditBook.applyCoverUpload → useImageUpload.getUploadPayload()** — `applyCoverUpload` in useEditBook.ts ignoriert `getUploadPayload()` aus dem Composable, baut eigene Logik (~30 Zeilen)
+- **T28: Extract useFileUpload composable** — `file` + `uploadPercentage` + progress-callback-Pattern 7x dupliziert (AutoImportFileModal, Imports, AddBook, useEditBook, EditAuthorModal) (~15–20 Zeilen)
+- **T29: Extract imageUrl resolver utility** — `image?.startsWith('http') ? image : '/files/' + image` 8x dupliziert (~5–8 Zeilen)
+- **T30: deleteBook() in BookDetail → useEditBook** — nahezu identische deleteBook()-Funktion in BookDetail.vue und useEditBook.ts (~40 Zeilen)
+- **T31: Extract usePageComputation composable** — `computePages`-Watcher 3x dupliziert (useEditBook, AddBook, ReadProgressModal) (~10 Zeilen)
+- **T32: BookDataCard → BookExternalLinks** — BookDataCard.vue hat inline externe Links, obwohl BookExternalLinks.vue existiert (~50 Zeilen)
 
 ### P4 — router.go(0) (B3)
 - **T26: Replace router.go(0) in EditBookModal** mit SPA-konformem router.push()

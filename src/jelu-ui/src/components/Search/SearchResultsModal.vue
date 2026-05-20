@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import { Metadata } from "../../model/Metadata";
+import { StringUtils } from "../../utils/StringUtils";
 
 const { t } = useI18n({
   inheritLocale: true,
@@ -75,7 +76,7 @@ const close = () => {
           >
             <img
               v-if="metadata.image"
-              :src="metadata.image?.startsWith('http') ? metadata.image : '/files/' + metadata.image"
+              :src="StringUtils.resolveImageUrl(metadata.image)"
               class="w-12 h-16 object-cover rounded flex-shrink-0"
               loading="lazy"
             >
