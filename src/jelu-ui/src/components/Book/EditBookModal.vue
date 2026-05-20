@@ -11,7 +11,7 @@ import { ObjectUtils } from "../../utils/ObjectUtils";
 
 import ImagePickerModal from '../Misc/ImagePickerModal.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
-import ClosableBadge from '../Global/ClosableBadge.vue';
+import TagInputField from '../Global/TagInputField.vue'
 import FormField from '../Global/FormField.vue';
 import AutoImportFormModal from '../Admin/AutoImportFormModal.vue';
 import MergeBookModal from './MergeBookModal.vue';
@@ -238,51 +238,29 @@ const openMetadataModal = () => {
         <div class="bg-base-100">
 <div class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
           <label class="text-sm opacity-60 w-24 shrink-0">{{ t('book.author', 2) }}</label>
-          <o-taginput
+          <TagInputField
             v-model="userbook.book.authors"
             :options="filteredAuthors"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
-            :validate-item="(item: Author|string) => beforeAdd(item, userbook.book.authors as Array<Author>)"
+            :validate-item="(item: any) => beforeAdd(item, userbook.book.authors as Array<Author>)"
             :create-item="ObjectUtils.createNamedItem"
             :placeholder="t('labels.add_author')"
+            :root-class="'flex-1 borderless-autocomplete'"
+            badge-class="badge-primary badge-sm"
             @input="(v: string) => getFilteredData(v, filteredAuthors)"
-            root-class="flex-1 borderless-autocomplete"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">{{ value.name }}</div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge v-for="(item, index) in items" :key="item.name" :content="item.name" class="badge-primary badge-sm" @closed="removeItem(index, $event)" />
-            </template>
-          </o-taginput>
+          />
         </div>
         <div class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
           <label class="text-sm opacity-60 w-24 shrink-0">{{ t('book.tag', 2) }}</label>
-          <o-taginput
+          <TagInputField
             v-model="userbook.book.tags"
             :options="filteredTags"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :validate-item="beforeAddTag"
             :create-item="ObjectUtils.createNamedItem"
             :placeholder="t('labels.add_tag')"
+            :root-class="'flex-1 borderless-autocomplete'"
+            badge-class="badge-primary badge-sm"
             @input="getFilteredTags"
-            root-class="flex-1 borderless-autocomplete"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">{{ value.name }}</div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge v-for="(item, index) in items" :key="item.name" :content="item.name" class="badge-primary badge-sm" @closed="removeItem(index, $event)" />
-            </template>
-          </o-taginput>
+          />
         </div>
         <div class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
           <label class="text-sm opacity-60 w-24 shrink-0">{{ t('book.publisher') }}</label>
@@ -327,51 +305,29 @@ const openMetadataModal = () => {
         </div>
         <div class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
           <label class="text-sm opacity-60 w-24 shrink-0">{{ t('book.translator', 2) }}</label>
-          <o-taginput
+          <TagInputField
             v-model="userbook.book.translators"
             :options="filteredTranslators"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
-            :validate-item="(item: Author|string) => beforeAdd(item, userbook.book.translators as Array<Author>)"
+            :validate-item="(item: any) => beforeAdd(item, userbook.book.translators as Array<Author>)"
             :create-item="ObjectUtils.createNamedItem"
             :placeholder="t('labels.add_translator')"
-@input="(v: string) => getFilteredData(v, filteredTranslators)"
-            root-class="flex-1 borderless-autocomplete"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">{{ value.name }}</div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge v-for="(item, index) in items" :key="item.name" :content="item.name" class="badge-primary badge-sm" @closed="removeItem(index, $event)" />
-            </template>
-          </o-taginput>
+            :root-class="'flex-1 borderless-autocomplete'"
+            badge-class="badge-primary badge-sm"
+            @input="(v: string) => getFilteredData(v, filteredTranslators)"
+          />
         </div>
         <div class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
           <label class="text-sm opacity-60 w-24 shrink-0">{{ t('book.narrator', 2) }}</label>
-          <o-taginput
+          <TagInputField
             v-model="userbook.book.narrators"
             :options="filteredNarrators"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
-            :validate-item="(item: Author|string) => beforeAdd(item, userbook.book.narrators as Array<Author>)"
+            :validate-item="(item: any) => beforeAdd(item, userbook.book.narrators as Array<Author>)"
             :create-item="ObjectUtils.createNamedItem"
             :placeholder="t('labels.add_narrator')"
-@input="(v: string) => getFilteredData(v, filteredNarrators)"
-            root-class="flex-1 borderless-autocomplete"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">{{ value.name }}</div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge v-for="(item, index) in items" :key="item.name" :content="item.name" class="badge-primary badge-sm" @closed="removeItem(index, $event)" />
-            </template>
-          </o-taginput>
+            :root-class="'flex-1 borderless-autocomplete'"
+            badge-class="badge-primary badge-sm"
+            @input="(v: string) => getFilteredData(v, filteredNarrators)"
+          />
         </div>
       </details>
 

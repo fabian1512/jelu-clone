@@ -13,6 +13,7 @@ import { tagService } from "../../services/tagService";
 import { ObjectUtils } from "../../utils/ObjectUtils";
 import MergeField from './MergeField.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
+import TagInputField from '../Global/TagInputField.vue';
 import { Role } from "../../model/Role";
 import useTypography from "../../composables/typography";
 
@@ -357,14 +358,9 @@ const { typographyClasses } = useTypography()
           <label class="label">
             <span class="label-text first-letter:capitalize">{{ t('book.author', 2) }}</span>
           </label>
-          <o-taginput
+          <TagInputField
             v-model="authors"
             :options="filteredAuthors"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :validate-item="beforeAdd"
             :create-item="createAuthor"
             icon-pack="mdi"
@@ -373,13 +369,7 @@ const { typographyClasses } = useTypography()
             @input="getFilteredAuthors"
             @add="authorAdded"
             @remove="authorRemoved"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-          </o-taginput>
+          />
         </div>
         <div class="form-control w-full">
           <div class="join w-full">
@@ -412,14 +402,9 @@ const { typographyClasses } = useTypography()
           <label class="label">
             <span class="label-text first-letter:capitalize">{{ t('book.tag', 2) }}</span>
           </label>
-          <o-taginput
+          <TagInputField
             v-model="tags"
             :options="filteredTags"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :validate-item="beforeAddTag"
             :create-item="createTag"
             icon-pack="mdi"
@@ -428,13 +413,7 @@ const { typographyClasses } = useTypography()
             @input="getFilteredTags"
             @add="tagAdded"
             @remove="tagRemoved"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-          </o-taginput>
+          />
         </div>
         <div class="form-control w-full">
           <div class="join w-full">
@@ -468,14 +447,9 @@ const { typographyClasses } = useTypography()
           <label class="label">
             <span class="label-text first-letter:capitalize">{{ t('book.translator', 2) }}</span>
           </label>
-          <o-taginput
+          <TagInputField
             v-model="translators"
             :options="filteredTranslators"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :validate-item="beforeAddTranslator"
             :create-item="createAuthor"
             icon-pack="mdi"
@@ -484,13 +458,7 @@ const { typographyClasses } = useTypography()
             @input="getFilteredTranslators"
             @add="translatorAdded"
             @remove="translatorRemoved"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-          </o-taginput>
+          />
         </div>
         <div class="form-control w-full">
           <div class="join w-full">
@@ -524,14 +492,9 @@ const { typographyClasses } = useTypography()
           <label class="label">
             <span class="label-text first-letter:capitalize">{{ t('book.narrator', 2) }}</span>
           </label>
-          <o-taginput
+          <TagInputField
             v-model="narrators"
             :options="filteredNarrators"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :validate-item="beforeAddNarrator"
             :create-item="createAuthor"
             icon-pack="mdi"
@@ -540,13 +503,7 @@ const { typographyClasses } = useTypography()
             @input="getFilteredNarrators"
             @add="narratorAdded"
             @remove="narratorRemoved"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-          </o-taginput>
+          />
         </div>
         <div class="form-control w-full">
           <div class="join w-full">

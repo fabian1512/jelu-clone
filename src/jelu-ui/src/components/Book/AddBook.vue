@@ -25,7 +25,7 @@ import AutoImportFileModalVue from '../Admin/AutoImportFileModal.vue';
 import AutoImportFormModalVue from '../Admin/AutoImportFormModal.vue';
 import ImagePickerModal from '../Misc/ImagePickerModal.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
-import ClosableBadge from '../Global/ClosableBadge.vue';
+import TagInputField from '../Global/TagInputField.vue'
 import BookIdentifiersFieldset from './BookIdentifiersFieldset.vue';
 import FormField from '../Global/FormField.vue';
 import { Role } from "../../model/Role";
@@ -597,144 +597,65 @@ onMounted(() => {
           <legend class="fieldset-legend capitalize">
             {{ t('book.author', 2) }}
           </legend>
-          <o-taginput
+          <TagInputField
             v-model="authors"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :options="filteredAuthors"
-            :validate-item="(item: Author|string) => beforeAdd(item, authors)"
+            :validate-item="(item: any) => beforeAdd(item, authors)"
             :create-item="ObjectUtils.createNamedItem"
             icon-pack="mdi"
             icon="account-plus"
             :placeholder="t('labels.add_author')"
             @input="(v: string) => getFilteredData(v, filteredAuthors)"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge
-                v-for="(item, index) in items"
-                :key="item.name"
-                :content="item.name"
-                class="badge-primary"
-                @closed="removeItem(index, $event)"
-              />
-            </template>
-          </o-taginput>
+          />
         </fieldset>
         <fieldset class="fieldset jelu-taginput">
           <legend class="fieldset-legend capitalize">
             {{ t('book.tag', 2) }}
           </legend>
-          <o-taginput
+          <TagInputField
             v-model="tags"
             :options="filteredTags"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
             :validate-item="beforeAddTag"
             :create-item="ObjectUtils.createNamedItem"
             icon-pack="mdi"
             icon="tag-plus"
-            field="name"
+            display-field="name"
             :placeholder="t('labels.add_tag')"
+            badge-class="badge-secondary"
             @input="getFilteredTags"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge
-                v-for="(item, index) in items"
-                :key="item.name"
-                :content="item.name"
-                class="badge-secondary"
-                @closed="removeItem(index, $event)"
-              />
-            </template>
-          </o-taginput>
+          />
         </fieldset>
         <fieldset class="field jelu-authorinput pb-2">
           <legend class="fieldset-legend capitalize">
             {{ t('book.translator', 2) }}
           </legend>
-          <o-taginput
+          <TagInputField
             v-model="translators"
             :options="filteredTranslators"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
-            :validate-item="(item: Author) => beforeAdd(item, translators)"
+            :validate-item="(item: any) => beforeAdd(item, translators)"
             :create-item="ObjectUtils.createNamedItem"
             icon-pack="mdi"
             icon="account-plus"
-            field="name"
+            display-field="name"
             :placeholder="t('labels.add_translator')"
             @input="(v: string) => getFilteredData(v, filteredTranslators)"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge
-                v-for="(item, index) in items"
-                :key="item.name"
-                :content="item.name"
-                class="badge-primary"
-                @closed="removeItem(index, $event)"
-              />
-            </template>
-          </o-taginput>
+          />
         </fieldset>
         <fieldset class="field jelu-authorinput pb-2">
           <legend class="fieldset-legend capitalize">
             {{ t('book.narrator', 2) }}
           </legend>
-          <o-taginput
+          <TagInputField
             v-model="narrators"
             :options="filteredNarrators"
-            :allow-autocomplete="true"
-            autocomplete="off"
-            :allow-new="true"
-            :allow-duplicates="false"
-            :open-on-focus="true"
-            :validate-item="(item: Author) => beforeAdd(item, narrators)"
+            :validate-item="(item: any) => beforeAdd(item, narrators)"
             :create-item="ObjectUtils.createNamedItem"
             icon-pack="mdi"
             icon="account-plus"
-            field="name"
+            display-field="name"
             :placeholder="t('labels.add_narrator')"
             @input="(v: string) => getFilteredData(v, filteredNarrators)"
-          >
-            <template #default="{ value }">
-              <div class="jl-taginput-item">
-                {{ value.name }}
-              </div>
-            </template>
-            <template #selected="{ removeItem, items }">
-              <ClosableBadge
-                v-for="(item, index) in items"
-                :key="item.name"
-                :content="item.name"
-                class="badge-primary"
-                @closed="removeItem(index, $event)"
-              />
-            </template>
-          </o-taginput>
+          />
         </fieldset>
         <fieldset class="fieldset">
           <legend class="fieldset-legend capitalize">
