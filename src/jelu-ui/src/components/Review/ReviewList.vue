@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useThrottleFn, useTitle } from '@vueuse/core';
-import { Ref, ref, watch } from "vue";
+import axios from 'axios';
+import { onUnmounted, Ref, ref, watch } from "vue";
 import { useI18n } from 'vue-i18n';
 import usePagination from '../../composables/pagination';
 import useSort from "../../composables/sort";
@@ -26,6 +27,11 @@ const { sortQuery, sortOrder, sortBy, sortOrderUpdated } = useSort('reviewDate,d
 const open = ref(false)
 
 const getBookIsLoading: Ref<boolean> = ref(false)
+let reviewsAbortController: AbortController | null = null
+
+onUnmounted(() => {
+  reviewsAbortController?.abort()
+})
 
 watch([page, sortQuery], (newVal, oldVal) => {
   if (newVal !== oldVal) {
@@ -34,10 +40,12 @@ watch([page, sortQuery], (newVal, oldVal) => {
 })
 
 const getReviews = () => {
+  reviewsAbortController?.abort()
+  reviewsAbortController = new AbortController()
   getBookIsLoading.value = true
   reviewService.findReviews(undefined, undefined, null,
   null, null,
-  pageAsNumber.value - 1, perPage.value, sortQuery.value)
+  pageAsNumber.value - 1, perPage.value, sortQuery.value, reviewsAbortController.signal)
   .then(res => {
           total.value = res.totalElements
           reviews.value = res.content
@@ -52,6 +60,9 @@ const getReviews = () => {
     }
     )
     .catch(e => {
+      if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+        return
+      }
       getBookIsLoading.value = false
       updatePageLoading(false)
     })

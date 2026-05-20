@@ -6,13 +6,17 @@ import { createApiClient } from "./apiClientFactory";
 class ShelfService {
     private client = createApiClient();
 
-    shelves = async (name?: string, targetId?: string, page?: number, size?: number, sort?: string): Promise<Page<Shelf>> => {
+    shelves = async (name?: string, targetId?: string, page?: number, size?: number, sort?: string, signal?: AbortSignal): Promise<Page<Shelf>> => {
         try {
             const response = await this.client.get<Page<Shelf>>("/shelves", {
-                params: { name, targetId, page, size, sort }
+                params: { name, targetId, page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

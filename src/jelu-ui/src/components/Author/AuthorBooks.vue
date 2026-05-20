@@ -2,7 +2,8 @@
 import { useOruga } from "@oruga-ui/oruga-next";
 import { useTitle } from '@vueuse/core';
 import { useRouteQuery } from "@vueuse/router";
-import { computed, Ref, ref, watch } from 'vue';
+import axios from 'axios';
+import { computed, onUnmounted, Ref, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import useDates from '../../composables/dates';
 import usePagination from '../../composables/pagination';
@@ -47,6 +48,11 @@ const roleFilter: Ref<Role> = useRouteQuery('roleFilter', 'ANY' as Role)
 const open = ref(false)
 
 const getBooksIsLoading: Ref<boolean> = ref(false)
+let booksAbortController: AbortController | null = null
+
+onUnmounted(() => {
+  booksAbortController?.abort()
+})
 
 watch([() => route.params.authorId, page, sortQuery, libraryFilter, roleFilter], (newVal, oldVal) => {
   if (newVal !== oldVal && route.name === name) {
@@ -69,10 +75,12 @@ const getAuthor = async () => {
 };
 
 const getBooks = () => {
+  booksAbortController?.abort()
+  booksAbortController = new AbortController()
   getBooksIsLoading.value = true
   authorService.getAuthorBooksById(route.params.authorId as string,
     pageAsNumber.value - 1, perPage.value, sortQuery.value,
-    libraryFilter.value, roleFilter.value)
+    libraryFilter.value, roleFilter.value, booksAbortController.signal)
     .then(res => {
           total.value = res.totalElements
           authorBooks.value = res.content
@@ -87,6 +95,9 @@ const getBooks = () => {
     }
     )
     .catch(e => {
+      if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+        return
+      }
       getBooksIsLoading.value = false
       updatePageLoading(false)
     })

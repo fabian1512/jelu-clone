@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useThrottleFn, useTitle } from '@vueuse/core';
 import { useRouteQuery } from "@vueuse/router";
-import { computed, Ref, ref, watch } from 'vue';
+import axios from 'axios';
+import { computed, onUnmounted, Ref, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import usePagination from '../../composables/pagination';
@@ -40,6 +41,11 @@ const { showSelect, selectAll, checkedCards, cardChecked, toggleEdit } = useBulk
 const open = ref(false)
 
 const getBooksIsLoading: Ref<boolean> = ref(false)
+let booksAbortController: AbortController | null = null
+
+onUnmounted(() => {
+  booksAbortController?.abort()
+})
 
 watch([() => route.params.tagId, page, sortQuery, libraryFilter, eventTypes], (newVal, oldVal) => {
   if (newVal !== oldVal && route.params.tagId !== undefined) {
@@ -62,10 +68,12 @@ const getTag = async () => {
 };
 
 const getBooks = () => {
+    booksAbortController?.abort()
+    booksAbortController = new AbortController()
     getBooksIsLoading.value = true
     tagService.getTagBooksById(route.params.tagId as string,
       pageAsNumber.value - 1, perPage.value, sortQuery.value,
-      libraryFilter.value, eventTypes.value)
+      libraryFilter.value, eventTypes.value, booksAbortController.signal)
       .then(res => {
             total.value = res.totalElements
             tagBooks.value = res.content
@@ -80,6 +88,9 @@ const getBooks = () => {
       }
       )
       .catch(e => {
+        if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+          return
+        }
         getBooksIsLoading.value = false
         updatePageLoading(false)
       })

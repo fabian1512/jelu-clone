@@ -42,7 +42,8 @@ class ReadingEventService {
         eventTypes?: Array<ReadingEventType> | null, bookId?: string,
         startedAfter?: string, startedBefore?: string,
         endedAfter?: string, endedBefore?: string,
-        page?: number, size?: number, sort?: string
+        page?: number, size?: number, sort?: string,
+        signal?: AbortSignal
     ): Promise<Page<ReadingEventWithUserBook>> => {
         try {
             const response = await this.client.get<Page<ReadingEventWithUserBook>>(`/reading-events/me`, {
@@ -60,10 +61,14 @@ class ReadingEventService {
                 paramsSerializer: {
                     serialize: (params) => qs.stringify(params, { arrayFormat: "comma" })
                 },
-                transformResponse: this.transformReadingEvents
+                transformResponse: this.transformReadingEvents,
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -75,7 +80,8 @@ class ReadingEventService {
         eventTypes?: Array<ReadingEventType> | null, userId?: string, bookId?: string,
         startedAfter?: string, startedBefore?: string,
         endedAfter?: string, endedBefore?: string,
-        page?: number, size?: number, sort?: string
+        page?: number, size?: number, sort?: string,
+        signal?: AbortSignal
     ): Promise<Page<ReadingEventWithUserBook>> => {
         try {
             const response = await this.client.get<Page<ReadingEventWithUserBook>>(`/reading-events`, {
@@ -94,10 +100,14 @@ class ReadingEventService {
                 paramsSerializer: {
                     serialize: (params) => qs.stringify(params, { arrayFormat: "comma" })
                 },
-                transformResponse: this.transformReadingEvents
+                transformResponse: this.transformReadingEvents,
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

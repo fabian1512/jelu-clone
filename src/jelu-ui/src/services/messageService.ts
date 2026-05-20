@@ -18,7 +18,8 @@ class MessageService {
 
     messages = async (
         messageCategories?: Array<MessageCategory> | null, read?: boolean,
-        page?: number, size?: number, sort?: string
+        page?: number, size?: number, sort?: string,
+        signal?: AbortSignal
     ): Promise<Page<UserMessage>> => {
         try {
             const response = await this.client.get<Page<UserMessage>>("/user-messages", {
@@ -26,10 +27,14 @@ class MessageService {
                 paramsSerializer: {
                     serialize: (params) => qs.stringify(params, { arrayFormat: "comma" })
                 },
-                transformResponse: this.transformUserMessage
+                transformResponse: this.transformUserMessage,
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

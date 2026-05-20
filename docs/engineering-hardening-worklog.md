@@ -72,35 +72,35 @@ Recent relevant commits (already done):
 ## Sprint 5 — Remaining Optimizations (Research-based)
 
 ### P0 — Critical Bug
-- **T14: Fix token key mismatch** — `userService` stores token under `"auth_token_jelu"` but `apiClientFactory.getToken()` reads from `"jelu-token"`. Token persists to wrong key → nach Reload wird User nicht erkannt.
+- **T14: Fix token key mismatch** — ✅ done (`5e8ccf2`)
 
 ### P1 — Bundle/CSS (A4)
-- **T15: Reduce daisyUI themes** — `themes: all` → auf 4 begrenzen (jelu, clear, light, dark)
-- **T16: Remove duplicate Oruga CSS** — doppelter Import in `style.css` + `main.ts`
-- **T17: Keep only woff2 fonts** — ~3MB Einsparung
-- **T18: Add `emptyOutDir: true`** — alte Build-Artefakte loswerden
+- **T15: Reduce daisyUI themes** — `themes: all` → `["light", "dark", "jelu", "clear"]` ✅ done (`ecf2830`), CSS -40KB
+- **T16: Remove duplicate Oruga CSS** — kein Duplikat vorhanden (style.css hat nur Overrides) → ✅ already clean
+- **T17: Keep only woff2 fonts** — ~3MB Einsparung, braucht TTF→WOFF2 Konvertierung → ⏸️ deferred
+- **T18: Add `emptyOutDir: true`** — ✅ already set in vite.config.mts
 
 ### P2 — Mega-Komponenten splitten (D1)
-- **T19: Extract MergeField.vue** aus MergeBookModal (773→~550) — überschneidet sich mit P3b MergeBookModal-Duplikaten
-- **T20: Extract BookIdentifiersFieldset** aus AddBook (1245→~1100)
-- **T21: Extract BookTimeline + BookExternalLinks** aus BookDetail (1200→~900)
-- **T22: Extract useEditBook composable** aus EditBookModal (984→~600)
-- **T23: Extract AuthorDetailForm** aus AdminAuthors (675→~250)
+- **T19: Extract MergeField.vue** aus MergeBookModal — ✅ done (MergeField.vue existiert + 14x verwendet)
+- **T20: Extract BookIdentifiersFieldset** aus AddBook (1245→~1100) — ✅ done
+- **T21: Extract BookTimeline + BookExternalLinks** aus BookDetail (1200→~900) — ✅ done
+- **T22: Extract useEditBook composable** aus EditBookModal (984→~600) — ✅ done
+- **T23: Extract AuthorDetailForm** aus AdminAuthors (675→~250) — ✅ done
 
 ### P3a — Request Cancellation (A5)
 - **T24: Add AbortSignal to all service methods** with paginated/list patterns
 - **T25: Add AbortController to watch-based re-fetchers** (~6 components)
 
 ### P3b — Duplicate Code Elimination (Refactoring)
-- **T27: useEditBook.applyCoverUpload → useImageUpload.getUploadPayload()** — `applyCoverUpload` in useEditBook.ts ignoriert `getUploadPayload()` aus dem Composable, baut eigene Logik (~30 Zeilen)
-- **T28: Extract useFileUpload composable** — `file` + `uploadPercentage` + progress-callback-Pattern 7x dupliziert (AutoImportFileModal, Imports, AddBook, useEditBook, EditAuthorModal) (~15–20 Zeilen)
-- **T29: Extract imageUrl resolver utility** — `image?.startsWith('http') ? image : '/files/' + image` 8x dupliziert (~5–8 Zeilen)
-- **T30: deleteBook() in BookDetail → useEditBook** — nahezu identische deleteBook()-Funktion in BookDetail.vue und useEditBook.ts (~40 Zeilen)
-- **T31: Extract usePageComputation composable** — `computePages`-Watcher 3x dupliziert (useEditBook, AddBook, ReadProgressModal) (~10 Zeilen)
-- **T32: BookDataCard → BookExternalLinks** — BookDataCard.vue hat inline externe Links, obwohl BookExternalLinks.vue existiert (~50 Zeilen)
+- **T27: useEditBook.applyCoverUpload → getUploadPayload()** — ✅ done (`ecf2830`)
+- **T28: Extract useFileUpload composable** — `file` + `uploadPercentage` + progress-callback-Pattern 7x, aber jede Site hat anderen Service-Call → ⏸️ low ROI
+- **T29: imageUrl resolver utility** — `StringUtils.resolveImageUrl()` + 6 call sites ✅ done (`ecf2830`)
+- **T30: deleteBook() in BookDetail → useEditBook** — unterschiedliche Nav-Targets, kein sauberes Sharing → ⏸️ skipped
+- **T31: computePages-Watcher composable** — zu geringe Einsparung → ⏸️ skipped
+- **T32: BookDataCard → BookExternalLinks** — visueller Unterschied ("Extern:" Label) → ⏸️ skipped
 
 ### P4 — router.go(0) (B3)
-- **T26: Replace router.go(0) in EditBookModal** mit SPA-konformem router.push()
+- **T26: Replace router.go(0) in EditBookModal** — ✅ done (`71e59dd`)
 
 ## Ticket Board (execution)
 
@@ -189,3 +189,7 @@ Recent relevant commits (already done):
 - 2026-05-19: T12 phase23 done (commit `fb0daf0`) — migrated last 7 components (AutoImportFormModal, Imports, AutoImportFileModal, EditAuthorModal, EditBookModal, AddBook, MergeBookModal, TagBooks), removed 5 dead DataService imports, stripped DataService to getToken() only.
 - 2026-05-19: T13 attempted CSRF re-enable, reverted (commit `a732f82`) — caused 403 on metadata search; `oruga.info/oruga.error → ObjectUtils.toast()` fix included.
 - 2026-05-19: Research done — token key bug (critical), CSS/bundle optimization, mega-components, cancellation gaps, router.go(0) documented as Sprint 5 plan.
+- 2026-05-20: T15 done — daisyUI themes restricted to 4 (jelu, clear, light, dark); CSS -40KB.
+- 2026-05-20: T27 done — useEditBook.applyCoverUpload refactored to delegate to useImageUpload.getUploadPayload().
+- 2026-05-20: T29 done — StringUtils.resolveImageUrl() added, 6 call sites updated.
+- 2026-05-20: T16/T18/T26 assessed as already done. T17/T28/T30/T31/T32 assessed as low ROI or blocked (see ticket board).

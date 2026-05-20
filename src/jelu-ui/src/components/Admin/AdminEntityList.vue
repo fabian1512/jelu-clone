@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useOruga } from "@oruga-ui/oruga-next"
 import { useTitle } from '@vueuse/core'
-import { computed, ref, Ref, watch } from 'vue'
+import axios from 'axios'
+import { computed, onUnmounted, ref, Ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import usePagination from "../../composables/pagination"
 import useSort from "../../composables/sort"
@@ -20,8 +21,8 @@ const props = defineProps<{
   routeName: string
   routeParam: string
   iconClass: string
-  findFn: (query: string) => Promise<Page<any>>
-  getOrphanFn: (page: number, size: number, sort: string) => Promise<Page<any>>
+  findFn: (query: string, signal?: AbortSignal) => Promise<Page<any>>
+  getOrphanFn: (page: number, size: number, sort: string, signal?: AbortSignal) => Promise<Page<any>>
   getByIdFn: (id: string) => Promise<any>
   getBooksByIdFn: (id: string) => Promise<Page<Book>>
   deleteFn: (id: string) => Promise<void>
@@ -50,6 +51,11 @@ const isFetching = ref(false)
 const selected: Ref<any> = ref({ name: "" })
 const selectedBooks: Ref<Page<Book> | null> = ref(null)
 const getBooksIsLoading: Ref<boolean> = ref(false)
+let orphansAbortController: AbortController | null = null
+
+onUnmounted(() => {
+  orphansAbortController?.abort()
+})
 
 const options = computed(() => filteredItems.value.map(t => ObjectUtils.wrapForOptions(t)))
 
@@ -60,8 +66,10 @@ function getFilteredItems(text: string) {
 }
 
 function getOrphans() {
+  orphansAbortController?.abort()
+  orphansAbortController = new AbortController()
   isOrphanFetching.value = true
-  props.getOrphanFn(pageAsNumber.value - 1, perPage.value, sortQuery.value)
+  props.getOrphanFn(pageAsNumber.value - 1, perPage.value, sortQuery.value, orphansAbortController.signal)
     .then((res) => {
       total.value = res.totalElements
       orphans.value = res.content
@@ -73,7 +81,10 @@ function getOrphans() {
       isOrphanFetching.value = false
       updatePageLoading(false)
     })
-    .catch(() => {
+    .catch((e) => {
+      if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+        return
+      }
       isOrphanFetching.value = false
       updatePageLoading(false)
     })
