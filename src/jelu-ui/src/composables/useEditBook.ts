@@ -17,6 +17,7 @@ import { tagService } from "../services/tagService";
 import { publisherService } from "../services/publisherService";
 import { ObjectUtils } from "../utils/ObjectUtils";
 import { StringUtils } from "../utils/StringUtils";
+import { useImageUpload } from "./useImageUpload";
 import { Role } from "../model/Role";
 import { key } from '../store';
 
@@ -156,7 +157,18 @@ export function useEditBook(
   const hasImage: Ref<boolean> = ref(userbook.value.book.image != null)
   const deleteImage: Ref<boolean> = ref(false)
 
-  const progress: Ref<boolean> = ref(false)
+  const {
+    imageUrl,
+    imagePath,
+    file,
+    uploadType,
+    uploadPercentage,
+    progress,
+    errorMessage,
+    handleFileUpload,
+    clearImageField,
+    canApplyUpload,
+  } = useImageUpload()
 
   const publishedDateString = computed({
     get: () => userbook.value.book.publishedDate || '',
@@ -165,14 +177,6 @@ export function useEditBook(
     }
   })
 
-  const handleFileUpload = (event: any) => {
-    file.value = event.target.files[0];
-  };
-
-  const imageUrl = ref<string | null>(null);
-  const imagePath = ref<string | null>(null);
-  const uploadType = ref('web');
-
   const smallCoverUrl = computed(() => {
     if (!userbook.value?.book?.image) return null
     if (userbook.value.book.image.startsWith('http')) {
@@ -180,15 +184,6 @@ export function useEditBook(
     }
     return StringUtils.thumbnailUrl(userbook.value.book.image, "thumb") ?? "/files/" + userbook.value.book.image
   })
-
-  const clearImageField = () => {
-    imageUrl.value = "";
-  };
-
-  const file = ref(null);
-
-  const uploadPercentage = ref(0);
-  const errorMessage = ref("");
 
   const seriesCopy: Array<SeriesOrder> = userbook.value.book.series ?? []
 
@@ -324,12 +319,6 @@ export function useEditBook(
   function toggleRemoveImage() {
     deleteImage.value = !deleteImage.value
   }
-
-  const canApplyUpload = computed(() => {
-    return (StringUtils.isNotBlank(imageUrl.value) && uploadType.value === 'web') ||
-           (StringUtils.isNotBlank(imagePath.value) && uploadType.value === 'server') ||
-           (file.value != null && uploadType.value === 'computer')
-  })
 
   const applyCoverUpload = () => {
     if (!canApplyUpload.value) return
