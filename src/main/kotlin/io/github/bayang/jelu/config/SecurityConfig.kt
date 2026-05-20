@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
 
 @Configuration
 @EnableWebSecurity
@@ -47,29 +48,10 @@ class SecurityConfig(
         http
             .cors { }
             .csrf { csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                csrf.ignoringRequestMatchers(
-                    "/api/v1/token",
-                    "/api/v1/setup/status",
-                    "/api/v1/server-settings",
-                    "/api/v1/reviews/**",
-                    "/api/v1/oauth2/providers",
-                    "/api/v1/username/**",
-                    "/api/v1/api-tokens/scopes",
-                    "/api/v1/exports",
-                    "/api/v1/imports",
-                    "/api/v1/metadata/**",
-                    "/api/v1/search/**",
-                    "/api/v1/books/**",
-                    "/api/v1/userbooks/**",
-                    "/api/v1/reading-events/**",
-                    "/api/v1/shelves/**",
-                    "/api/v1/custom-lists/**",
-                    "/api/v1/book-quotes/**",
-                    "/api/v1/series/**",
-                    "/api/v1/tags/**",
-                    "/api/v1/authors/**",
-                )
+                val tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse()
+                tokenRepository.setHeaderName("X-XSRF-TOKEN")
+                csrf.csrfTokenRepository(tokenRepository)
+                csrf.csrfTokenRequestHandler(CsrfTokenRequestAttributeHandler())
             }.logout {
                 it
                     .logoutUrl("/api/v1/logout")
