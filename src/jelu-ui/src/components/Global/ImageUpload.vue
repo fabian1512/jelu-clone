@@ -1,37 +1,27 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useImageUpload } from '../../composables/useImageUpload'
 
 const { t } = useI18n({
   inheritLocale: true,
   useScope: 'global'
 })
 
-const emit = defineEmits<{
-  (e: 'pick-server'): void
+const props = defineProps<{
+  uploadType: string
+  imageUrl: string | null
+  imagePath: string | null
+  uploadPercentage: number
+  progress: boolean
+  errorMessage: string | null
 }>()
 
-const {
-  uploadType,
-  imageUrl,
-  imagePath,
-  uploadPercentage,
-  progress,
-  errorMessage,
-  handleFileUpload,
-  clearImageField,
-  file,
-} = useImageUpload()
-
-defineExpose({
-  imageUrl,
-  imagePath,
-  uploadType,
-  uploadPercentage,
-  progress,
-  errorMessage,
-  file,
-})
+const emit = defineEmits<{
+  (e: 'update:uploadType', value: string): void
+  (e: 'update:imageUrl', value: string | null): void
+  (e: 'file-change', event: Event): void
+  (e: 'clear-image-url'): void
+  (e: 'pick-server'): void
+}>()
 </script>
 
 <template>
@@ -44,31 +34,34 @@ defineExpose({
         <label class="label cursor-pointer justify-start sm:justify-center gap-3 sm:gap-2 flex flex-wrap">
           <div>
             <input
-              v-model="uploadType"
+              :checked="uploadType === 'web'"
               type="radio"
               name="upload-type"
               class="radio radio-primary mx-3"
               value="web"
+              @change="emit('update:uploadType', 'web')"
             >
             <span class="label-text">{{ t('labels.upload_from_web') }}</span>
           </div>
           <div>
             <input
-              v-model="uploadType"
+              :checked="uploadType === 'computer'"
               type="radio"
               name="upload-type"
               class="radio radio-primary mx-3"
               value="computer"
+              @change="emit('update:uploadType', 'computer')"
             >
             <span class="label-text">{{ t('labels.upload_from_computer') }}</span>
           </div>
           <div>
             <input
-              v-model="uploadType"
+              :checked="uploadType === 'server'"
               type="radio"
               name="upload-type"
               class="radio radio-primary mx-3"
               value="server"
+              @change="emit('update:uploadType', 'server')"
             >
             <span class="label-text">{{ t('labels.upload_from_server') }}</span>
           </div>
@@ -86,8 +79,24 @@ defineExpose({
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </g>
         </svg>
-        <input v-model="imageUrl" type="url" required class="w-full" :placeholder="t('labels.url_must_start')" pattern="https?://.*">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 hover:cursor-pointer" @click="clearImageField">
+        <input
+          :value="imageUrl"
+          type="url"
+          required
+          class="w-full"
+          :placeholder="t('labels.url_must_start')"
+          pattern="https?://.*"
+          @input="emit('update:imageUrl', ($event.target as HTMLInputElement).value)"
+        >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-8 hover:cursor-pointer"
+          @click="emit('clear-image-url')"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
       </label>
@@ -95,9 +104,9 @@ defineExpose({
     </fieldset>
     <fieldset v-else-if="uploadType === 'computer'" class="fieldset">
       <legend class="file fieldset-legend">{{ t('labels.choose_file') }}</legend>
-      <input type="file" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-primary hover:file:bg-gray-300" @change="handleFileUpload">
+      <input type="file" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-primary hover:file:bg-gray-300" @change="emit('file-change', $event)">
       <br>
-      <progress v-if="(uploadPercentage ?? 0) > 0" :value="uploadPercentage" max="100" class="progress progress-primary" />
+      <progress v-if="uploadPercentage > 0" :value="uploadPercentage" max="100" class="progress progress-primary" />
     </fieldset>
     <fieldset v-else class="fieldset">
       <legend class="file fieldset-legend">{{ t('labels.choose_file') }}</legend>

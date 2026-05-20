@@ -955,7 +955,16 @@ onMounted(() => {
           v-if="!hasImage || deleteImage"
         >
           <ImageUpload
-            ref="imageUploadRef"
+            :upload-type="uploadType"
+            :image-url="imageUrl"
+            :image-path="imagePath"
+            :upload-percentage="uploadPercentage"
+            :progress="progress"
+            :error-message="errorMessage"
+            @update:upload-type="uploadType = $event"
+            @update:image-url="imageUrl = $event"
+            @file-change="handleFileUpload"
+            @clear-image-url="clearImageField"
             @pick-server="toggleImagePickerModal"
           />
         </div>

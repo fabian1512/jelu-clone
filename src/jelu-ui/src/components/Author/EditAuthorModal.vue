@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, Ref, ref, watch } from "vue";
+import { computed, Ref, ref } from "vue";
 import { Author } from "../../model/Author";
 import { WikipediaSearchResult, WikipediaSearchResultElement } from "../../model/WikipediaSearchResult";
 import { authorService } from "../../services/authorService";
@@ -8,6 +8,7 @@ import { StringUtils } from "../../utils/StringUtils";
 import { useI18n } from 'vue-i18n'
 import { useLocalStorage } from '@vueuse/core'
 import { useImageUpload } from "../../composables/useImageUpload"
+import ImageUpload from "../Global/ImageUpload.vue"
 import useTypography from "../../composables/typography";
 
 const { t } = useI18n({
@@ -21,7 +22,6 @@ const props = defineProps<{
 
 const currentAuthor: Ref<Author> = ref(props.author)
 const deleteImage: Ref<boolean> = ref(false)
-const uploadFromWeb = ref(true);
 
 const {
   imageUrl,
@@ -34,18 +34,6 @@ const {
   canApplyUpload,
   getUploadPayload,
 } = useImageUpload()
-
-watch(uploadFromWeb, (val) => {
-  uploadType.value = val ? 'web' : 'computer'
-}, { immediate: true })
-
-const uploadlabel = computed(() => {
-  if (uploadFromWeb.value) {
-    return t('labels.upload_from_web')
-  } else {
-    return t('labels.upload_from_file')
-  }
-})
 
 const storedLanguage = useLocalStorage("jelu_language", "en")
 const searchlanguage = ref(storedLanguage.value);
@@ -329,94 +317,18 @@ const { typographyClasses } = useTypography()
           v-if="!hasImage || deleteImage"
           class="py-2"
         >
-          <fieldset class="fieldset">
-            <legend class="text-sm opacity-60 capitalize">
-              {{ t('labels.upload_image') }}
-            </legend>
-            <label class="label">
-              <input
-                v-model="uploadFromWeb"
-                type="checkbox"
-                class="toggle toggle-primary"
-              >
-              {{ uploadlabel }}
-            </label>
-          </fieldset>
-          <fieldset
-            v-if="uploadFromWeb"
-            class="fieldset"
-          >
-            <legend class="text-sm opacity-60 capitalize">
-              {{ t('labels.enter_image_address') }}
-            </legend>
-            <label class="input validator w-full">
-              <svg
-                class="h-[1em] opacity-50"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-              >
-                <g
-                  stroke-linejoin="round"
-                  stroke-linecap="round"
-                  stroke-width="2.5"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </g>
-              </svg>
-              <input
-                v-model="imageUrl"
-                type="url"
-                required
-                class="w-full"
-                :placeholder="t('labels.url_must_start')"
-                pattern="https?://.*"
-              >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-6 hover:cursor-pointer"
-                @click="clearImageField"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                />
-              </svg>
-            </label>
-            <p class="validator-hint">
-              {{ t('labels.url_must_start') }}
-            </p>
-          </fieldset>
-          <fieldset
-            v-else
-            class="file fieldset"
-          >
-            <legend
-              class="file text-sm opacity-60"
-            >
-              {{ t('labels.choose_file') }}
-            </legend>
-            <input
-              type="file"
-              accept="image/*"
-              class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-primary hover:file:bg-gray-300"
-              @change="handleFileUpload($event)"
-            >
-            <br>
-            <progress
-              max="100"
-              :value.prop="uploadPercentage"
-              class="progress progress-primary"
-            />
-            <br>
-          </fieldset>
+          <ImageUpload
+            :upload-type="uploadType"
+            :image-url="imageUrl"
+            :image-path="''"
+            :upload-percentage="uploadPercentage"
+            :progress="progress"
+            :error-message="''"
+            @update:upload-type="uploadType = $event"
+            @update:image-url="imageUrl = $event"
+            @file-change="handleFileUpload"
+            @clear-image-url="clearImageField"
+          />
         </div>
         <div class="mt-2 flex flex-row justify-center space-x-8">
           <button
