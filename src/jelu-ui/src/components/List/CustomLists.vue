@@ -6,7 +6,7 @@ import { CustomList } from '../../model/custom-list'
 import { Tag } from "../../model/Tag"
 import { tagService } from "../../services/tagService";
 import { customListService } from "../../services/customListService"
-import ClosableBadge from '../Global/ClosableBadge.vue'
+import TagInputField from '../Global/TagInputField.vue'
 import useTypography from '../../composables/typography'
 
 const { t } = useI18n({
@@ -230,36 +230,16 @@ getCustomLists()
             </svg>
           </label>
           <div class="jelu-taginput mb-4">
-            <o-taginput
+            <TagInputField
               v-model="currentListTags"
               :options="filteredTags"
-              :allow-autocomplete="true"
-              autocomplete="off"
               :before-adding="beforeAddTag"
               :allow-new="false"
-              :allow-duplicates="false"
-              :open-on-focus="true"
-              icon-pack="mdi"
               icon="tag-plus"
-              field="name"
+              icon-pack="mdi"
               :placeholder="t('labels.add_tag')"
               @input="getFilteredTags"
-            >
-              <template #default="{ value }">
-                <div class="jl-taginput-item">
-                  {{ value }}
-                </div>
-              </template>
-              <template #selected="{ removeItem, items }">
-                <ClosableBadge
-                  v-for="(item, index) in items"
-                  :key="item"
-                  :content="item"
-                  class="badge-primary"
-                  @closed="removeItem(index, $event)"
-                />
-              </template>
-            </o-taginput>
+            />
           </div>
 
           <label class="label capitalize">{{ t("lists.actionable") }}
