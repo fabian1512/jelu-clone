@@ -18,26 +18,43 @@ export function useImageUpload() {
     imageUrl.value = ""
   }
 
+  function reset() {
+    imageUrl.value = null
+    imagePath.value = null
+    file.value = null
+    uploadType.value = 'web'
+    uploadPercentage.value = 0
+    errorMessage.value = ""
+    progress.value = false
+  }
+
   const canApplyUpload = computed(() => {
     return (StringUtils.isNotBlank(imageUrl.value) && uploadType.value === 'web') ||
            (StringUtils.isNotBlank(imagePath.value) && uploadType.value === 'server') ||
            (file.value != null && uploadType.value === 'computer')
   })
 
-  function applyCoverUpload(userbook: { book: { image: string | null } }, onProgress?: (percent: number) => void) {
-    if (!canApplyUpload.value) return
+  interface WebPayload { type: 'web'; url: string }
+  interface ComputerPayload { type: 'computer'; file: File }
+  interface ServerPayload { type: 'server'; path: string }
+  type UploadPayload = WebPayload | ComputerPayload | ServerPayload | null
 
+  function getUploadPayload(): UploadPayload {
+    if (!canApplyUpload.value) return null
     if (uploadType.value === 'web' && StringUtils.isNotBlank(imageUrl.value)) {
-      userbook.book.image = imageUrl.value
+      const url = imageUrl.value
       imageUrl.value = ''
-    } else if (uploadType.value === 'computer' && file.value != null) {
-      progress.value = true
-      return { file: file.value, onProgress, uploadPercentage }
-    } else if (uploadType.value === 'server' && StringUtils.isNotBlank(imagePath.value)) {
-      userbook.book.image = imagePath.value
-      imagePath.value = ''
+      return { type: 'web', url }
     }
-    return undefined
+    if (uploadType.value === 'computer' && file.value != null) {
+      return { type: 'computer', file: file.value }
+    }
+    if (uploadType.value === 'server' && StringUtils.isNotBlank(imagePath.value)) {
+      const path = imagePath.value
+      imagePath.value = ''
+      return { type: 'server', path }
+    }
+    return null
   }
 
   return {
@@ -50,7 +67,8 @@ export function useImageUpload() {
     progress,
     handleFileUpload,
     clearImageField,
+    reset,
     canApplyUpload,
-    applyCoverUpload,
+    getUploadPayload,
   }
 }
