@@ -5,13 +5,17 @@ import { createApiClient } from "./apiClientFactory";
 class PublisherService {
     private client = createApiClient();
 
-    findPublisherByCriteria = async (query?: string | null): Promise<Page<string>> => {
+    findPublisherByCriteria = async (query?: string | null, signal?: AbortSignal): Promise<Page<string>> => {
         try {
             const response = await this.client.get<Page<string>>("/books/publishers", {
-                params: { name: query }
+                params: { name: query },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

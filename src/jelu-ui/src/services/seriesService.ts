@@ -9,13 +9,17 @@ import { createApiClient } from "./apiClientFactory";
 class SeriesService {
     private client = createApiClient();
 
-    findSeriesByCriteria = async (query?: string | null): Promise<Page<Series>> => {
+    findSeriesByCriteria = async (query?: string | null, signal?: AbortSignal): Promise<Page<Series>> => {
         try {
             const response = await this.client.get<Page<Series>>("/series", {
-                params: { name: query }
+                params: { name: query },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -37,14 +41,19 @@ class SeriesService {
 
     getSeriesBooksById = async (
         seriesId: string, page?: number, size?: number, sort?: string,
-        libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null
+        libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null,
+        signal?: AbortSignal
     ): Promise<Page<Book>> => {
         try {
             const response = await this.client.get<Page<Book>>(`/series/${seriesId}/books`, {
-                params: { page, size, sort, libraryFilter, lastEventTypes }
+                params: { page, size, sort, libraryFilter, lastEventTypes },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -52,13 +61,17 @@ class SeriesService {
         }
     };
 
-    getOrphanSeries = async (page?: number, size?: number, sort?: string): Promise<Page<Series>> => {
+    getOrphanSeries = async (page?: number, size?: number, sort?: string, signal?: AbortSignal): Promise<Page<Series>> => {
         try {
             const response = await this.client.get<Page<Series>>("/series/orphans", {
-                params: { page, size, sort }
+                params: { page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

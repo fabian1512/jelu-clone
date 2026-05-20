@@ -20,14 +20,19 @@ class CustomListService {
     };
 
     findCustomLists = async (
-        name?: string, page?: number, size?: number, sort?: string | null
+        name?: string, page?: number, size?: number, sort?: string | null,
+        signal?: AbortSignal
     ): Promise<Page<CustomList>> => {
         try {
             const response = await this.client.get<Page<CustomList>>("/custom-lists", {
-                params: { name, page, size, sort }
+                params: { name, page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -60,14 +65,19 @@ class CustomListService {
     };
 
     booksForList = async (
-        listId: string, page?: number, size?: number, sort?: string | null
+        listId: string, page?: number, size?: number, sort?: string | null,
+        signal?: AbortSignal
     ): Promise<Page<Book>> => {
         try {
             const response = await this.client.get<Page<Book>>(`/custom-lists/${listId}/books`, {
-                params: { page, size, sort }
+                params: { page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

@@ -26,14 +26,19 @@ class AuthorService {
     findAuthorByCriteria = async (
         role: Role, query?: string | null,
         page: number = 0, size: number = 0,
-        sort: string | null = null, libraryFilter?: LibraryFilter
+        sort: string | null = null, libraryFilter?: LibraryFilter,
+        signal?: AbortSignal
     ): Promise<Page<Author>> => {
         try {
             const response = await this.client.get<Page<Author>>("/authors", {
-                params: { role, name: query, page, size, sort, libraryFilter }
+                params: { role, name: query, page, size, sort, libraryFilter },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -57,17 +62,22 @@ class AuthorService {
 
     getAuthorBooksById = async (
         authorId: string, page?: number, size?: number, sort?: string,
-        libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null
+        libraryFilter?: LibraryFilter, lastEventTypes?: Array<ReadingEventType> | null,
+        signal?: AbortSignal
     ): Promise<Page<Book>> => {
         try {
             const response = await this.client.get<Page<Book>>(`/authors/${authorId}/books`, {
                 params: { page, size, sort, libraryFilter, lastEventTypes },
                 paramsSerializer: {
                     serialize: (params) => qs.stringify(params, { arrayFormat: "comma" })
-                }
+                },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -75,13 +85,17 @@ class AuthorService {
         }
     };
 
-    getOrphanAuthors = async (page?: number, size?: number, sort?: string): Promise<Page<Author>> => {
+    getOrphanAuthors = async (page?: number, size?: number, sort?: string, signal?: AbortSignal): Promise<Page<Author>> => {
         try {
             const response = await this.client.get<Page<Author>>("/authors/orphans", {
-                params: { page, size, sort }
+                params: { page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

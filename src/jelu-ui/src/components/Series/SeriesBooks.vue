@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useThrottleFn, useTitle } from '@vueuse/core';
 import { useRouteQuery } from "@vueuse/router";
-import { computed, Ref, ref, watch } from 'vue';
+import axios from 'axios';
+import { computed, onUnmounted, Ref, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import useBulkEdition from '../../composables/bulkEdition';
@@ -40,6 +41,11 @@ const series: Ref<Series> = ref({name: ""})
 const books: Ref<Array<Book>> = ref([]);
 
 const getBooksIsLoading: Ref<boolean> = ref(false)
+let booksAbortController: AbortController | null = null
+
+onUnmounted(() => {
+  booksAbortController?.abort()
+})
 
 watch([() => route.params.seriesId, page, sortQuery, libraryFilter], (newVal, oldVal) => {
   if (newVal !== oldVal && route.params.seriesId !== undefined) {
@@ -62,10 +68,12 @@ const getSeries = async () => {
 };
 
 const getBooks = () => {
+    booksAbortController?.abort()
+    booksAbortController = new AbortController()
     getBooksIsLoading.value = true
     seriesService.getSeriesBooksById(route.params.seriesId as string,
       pageAsNumber.value - 1, perPage.value, sortQuery.value,
-      libraryFilter.value)
+      libraryFilter.value, booksAbortController.signal)
       .then(res => {
             total.value = res.totalElements
             books.value = res.content
@@ -80,6 +88,9 @@ const getBooks = () => {
       }
       )
       .catch(e => {
+        if (axios.isAxiosError(e) && e.code === 'ERR_CANCELED') {
+          return
+        }
         getBooksIsLoading.value = false
         updatePageLoading(false)
       })

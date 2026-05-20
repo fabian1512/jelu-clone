@@ -21,14 +21,19 @@ class BookQuoteService {
 
     findBookQuotes = async (
         userId?: string, bookId?: string, visibility: Visibility | null = null,
-        page?: number, size?: number, sort?: string
+        page?: number, size?: number, sort?: string,
+        signal?: AbortSignal
     ): Promise<Page<BookQuote>> => {
         try {
             const response = await this.client.get<Page<BookQuote>>("/book-quotes", {
-                params: { userId, bookId, visibility, page, size, sort }
+                params: { userId, bookId, visibility, page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

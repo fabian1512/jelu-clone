@@ -54,15 +54,20 @@ class ReviewService {
     findReviews = async (
         userId?: string, bookId?: string, visibility: Visibility | null = null,
         after?: string | null, before?: string | null,
-        page?: number, size?: number, sort?: string | null
+        page?: number, size?: number, sort?: string | null,
+        signal?: AbortSignal
     ): Promise<Page<Review>> => {
         try {
             const response = await this.client.get<Page<Review>>("/reviews", {
                 params: { userId, bookId, visibility, after, before, page, size, sort },
-                transformResponse: this.transformReviews
+                transformResponse: this.transformReviews,
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }

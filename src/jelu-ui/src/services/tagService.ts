@@ -10,13 +10,17 @@ import { createApiClient } from "./apiClientFactory";
 class TagService {
     private client = createApiClient();
 
-    findTagsByCriteria = async (query?: string | null): Promise<Page<Tag>> => {
+    findTagsByCriteria = async (query?: string | null, signal?: AbortSignal): Promise<Page<Tag>> => {
         try {
             const response = await this.client.get<Page<Tag>>("/tags", {
-                params: { name: query }
+                params: { name: query },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -40,17 +44,22 @@ class TagService {
         tagId: string,
         page?: number, size?: number, sort?: string,
         libraryFilter?: LibraryFilter,
-        lastEventTypes?: Array<ReadingEventType> | null
+        lastEventTypes?: Array<ReadingEventType> | null,
+        signal?: AbortSignal
     ): Promise<Page<Book>> => {
         try {
             const response = await this.client.get<Page<Book>>(`/tags/${tagId}/books`, {
                 params: { page, size, sort, libraryFilter, lastEventTypes },
                 paramsSerializer: {
                     serialize: (params) => qs.stringify(params, { arrayFormat: "comma" })
-                }
+                },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
@@ -58,13 +67,17 @@ class TagService {
         }
     };
 
-    getOrphanTags = async (page?: number, size?: number, sort?: string): Promise<Page<Tag>> => {
+    getOrphanTags = async (page?: number, size?: number, sort?: string, signal?: AbortSignal): Promise<Page<Tag>> => {
         try {
             const response = await this.client.get<Page<Tag>>("/tags/orphans", {
-                params: { page, size, sort }
+                params: { page, size, sort },
+                signal
             });
             return response.data;
         } catch (error) {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                throw error;
+            }
             if (axios.isAxiosError(error) && error.response) {
                 // intentionally empty catch
             }
