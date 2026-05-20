@@ -12,6 +12,7 @@ import { ObjectUtils } from "../../utils/ObjectUtils";
 import ImagePickerModal from '../Misc/ImagePickerModal.vue';
 import SeriesCompleteInput from '../Series/SeriesCompleteInput.vue';
 import TagInputField from '../Global/TagInputField.vue'
+import ImageUpload from '../Global/ImageUpload.vue'
 import FormField from '../Global/FormField.vue';
 import AutoImportFormModal from '../Admin/AutoImportFormModal.vue';
 import MergeBookModal from './MergeBookModal.vue';
@@ -403,31 +404,19 @@ const openMetadataModal = () => {
         <span class="text-base-content/60 transition-transform group-open:rotate-90">›</span>
       </summary>
       <div class="bg-base-100 p-4">
-        <div class="flex gap-3 mb-3 justify-center">
-          <label class="label cursor-pointer gap-1 mb-0">
-            <input v-model="uploadType" type="radio" value="web" class="radio radio-sm">
-            <span class="label-text text-sm">{{ t('labels.upload_from_web') }}</span>
-          </label>
-          <label class="label cursor-pointer gap-1 mb-0">
-            <input v-model="uploadType" type="radio" value="computer" class="radio radio-sm">
-            <span class="label-text text-sm">{{ t('labels.upload_from_computer') }}</span>
-          </label>
-          <label class="label cursor-pointer gap-1 mb-0">
-            <input v-model="uploadType" type="radio" value="server" class="radio radio-sm">
-            <span class="label-text text-sm">{{ t('labels.upload_from_server') }}</span>
-          </label>
-        </div>
-        <div v-if="uploadType === 'web'" class="mt-2">
-          <input v-model="imageUrl" :placeholder="t('labels.url_must_start')" class="input input-sm w-full">
-        </div>
-        <div v-else-if="uploadType === 'computer'" class="mt-2">
-          <input type="file" accept="image/*" @change="handleFileUpload" class="file-input file-input-sm w-full">
-          <progress v-if="uploadPercentage > 0" :value="uploadPercentage" max="100" class="progress progress-primary w-full mt-2"></progress>
-        </div>
-        <div v-else class="mt-2 text-center">
-          <button @click="toggleImagePickerModal" class="btn btn-sm btn-primary">{{ t('labels.choose_file') }}</button>
-          <span v-if="imagePath" class="block text-xs mt-1 opacity-60">{{ imagePath }}</span>
-        </div>
+        <ImageUpload
+          :upload-type="uploadType"
+          :image-url="imageUrl"
+          :image-path="imagePath"
+          :upload-percentage="uploadPercentage"
+          :progress="progress"
+          :error-message="errorMessage"
+          @update:upload-type="uploadType = $event"
+          @update:image-url="imageUrl = $event"
+          @file-change="handleFileUpload"
+          @clear-image-url="clearImageField"
+          @pick-server="toggleImagePickerModal"
+        />
         <div class="mt-3 flex justify-end gap-2">
           <button @click="applyCoverUpload" class="btn btn-sm btn-success" :disabled="!canApplyUpload">
             <i class="mdi mdi-check mdi-18px"></i>
