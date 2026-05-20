@@ -24,7 +24,10 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
+import org.springframework.security.web.csrf.CsrfFilter
+import org.springframework.security.web.csrf.CsrfToken
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
+import org.springframework.web.filter.OncePerRequestFilter
 
 @Configuration
 @EnableWebSecurity
@@ -52,7 +55,13 @@ class SecurityConfig(
                 tokenRepository.setHeaderName("X-XSRF-TOKEN")
                 csrf.csrfTokenRepository(tokenRepository)
                 csrf.csrfTokenRequestHandler(CsrfTokenRequestAttributeHandler())
-            }.logout {
+            }.addFilterAfter(object : OncePerRequestFilter() {
+                override fun doFilterInternal(request: jakarta.servlet.http.HttpServletRequest, response: jakarta.servlet.http.HttpServletResponse, chain: jakarta.servlet.FilterChain) {
+                    val deferred = request.getAttribute(CsrfToken::class.java.name) as? CsrfToken
+                    deferred?.token
+                    chain.doFilter(request, response)
+                }
+            }, CsrfFilter::class.java).logout {
                 it
                     .logoutUrl("/api/v1/logout")
                     .invalidateHttpSession(true)
