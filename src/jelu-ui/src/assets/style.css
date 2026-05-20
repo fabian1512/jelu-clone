@@ -1,7 +1,7 @@
 @import "tailwindcss" important;
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
-  themes: all;
+  themes: ["light", "dark", "jelu", "clear"];
 }
 
 @plugin "daisyui/theme" {

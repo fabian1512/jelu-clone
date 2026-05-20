@@ -168,6 +168,7 @@ export function useEditBook(
     handleFileUpload,
     clearImageField,
     canApplyUpload,
+    getUploadPayload,
   } = useImageUpload()
 
   const publishedDateString = computed({
@@ -321,18 +322,18 @@ export function useEditBook(
   }
 
   const applyCoverUpload = () => {
-    if (!canApplyUpload.value) return
+    const payload = getUploadPayload()
+    if (!payload) return
 
-    if (uploadType.value === 'web' && StringUtils.isNotBlank(imageUrl.value)) {
-      userbook.value.book.image = imageUrl.value
+    if (payload.type === 'web') {
+      userbook.value.book.image = payload.url
       hasImage.value = true
       deleteImage.value = false
-      imageUrl.value = ''
-    } else if (uploadType.value === 'computer' && file.value != null) {
+    } else if (payload.type === 'computer') {
       progress.value = true
       userBookService.saveUserBookImage(
         userbook.value,
-        file.value,
+        payload.file,
         (event: { loaded: number; total: number }) => {
           const percent = Math.round((100 * event.loaded) / event.total);
           uploadPercentage.value = percent;
@@ -350,11 +351,10 @@ export function useEditBook(
         errorMessage.value = error.message || 'Upload failed'
       })
       return
-    } else if (uploadType.value === 'server' && StringUtils.isNotBlank(imagePath.value)) {
-      userbook.value.book.image = imagePath.value
+    } else if (payload.type === 'server') {
+      userbook.value.book.image = payload.path
       hasImage.value = true
       deleteImage.value = false
-      imagePath.value = ''
     }
   }
 
