@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, Ref, ref } from "vue";
+import { computed, Ref, ref, watch } from "vue";
 import { Author } from "../../model/Author";
 import { WikipediaSearchResult, WikipediaSearchResultElement } from "../../model/WikipediaSearchResult";
 import { authorService } from "../../services/authorService";
@@ -7,6 +7,7 @@ import { wikipediaService } from "../../services/wikipediaService";
 import { StringUtils } from "../../utils/StringUtils";
 import { useI18n } from 'vue-i18n'
 import { useLocalStorage } from '@vueuse/core'
+import { useImageUpload } from "../../composables/useImageUpload"
 import useTypography from "../../composables/typography";
 
 const { t } = useI18n({
@@ -19,9 +20,25 @@ const props = defineProps<{
 }>()
 
 const currentAuthor: Ref<Author> = ref(props.author)
-const progress: Ref<boolean> = ref(false)
 const deleteImage: Ref<boolean> = ref(false)
 const uploadFromWeb = ref(true);
+
+const {
+  imageUrl,
+  file,
+  uploadPercentage,
+  progress,
+  uploadType,
+  handleFileUpload,
+  clearImageField,
+  canApplyUpload,
+  getUploadPayload,
+} = useImageUpload()
+
+watch(uploadFromWeb, (val) => {
+  uploadType.value = val ? 'web' : 'computer'
+}, { immediate: true })
+
 const uploadlabel = computed(() => {
   if (uploadFromWeb.value) {
     return t('labels.upload_from_web')
@@ -29,9 +46,6 @@ const uploadlabel = computed(() => {
     return t('labels.upload_from_file')
   }
 })
-const imageUrl = ref<string | null>(null);
-const file = ref(null);
-const uploadPercentage = ref(0);
 
 const storedLanguage = useLocalStorage("jelu_language", "en")
 const searchlanguage = ref(storedLanguage.value);
@@ -52,20 +66,14 @@ function toggleRemoveImage() {
   deleteImage.value = !deleteImage.value
 }
 
-const clearImageField = () => {
-  imageUrl.value = "";
-};
-
-const handleFileUpload = (event: any) => {
-  file.value = event.target.files[0];
-};
-
 const update = () => {
   progress.value = true
-  if (imageUrl.value != null) {
-    currentAuthor.value.image = imageUrl.value
+  const payload = getUploadPayload()
+  if (payload?.type === 'web') {
+    currentAuthor.value.image = payload.url
   }
-  authorService.updateAuthor(currentAuthor.value, file.value, (event: { loaded: number; total: number }) => {
+  const uploadFile = payload?.type === 'computer' ? payload.file : null
+  authorService.updateAuthor(currentAuthor.value, uploadFile, (event: { loaded: number; total: number }) => {
           const percent = Math.round((100 * event.loaded) / event.total);
           uploadPercentage.value = percent;
         })
