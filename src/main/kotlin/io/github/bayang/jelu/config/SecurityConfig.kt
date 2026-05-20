@@ -55,13 +55,20 @@ class SecurityConfig(
                 tokenRepository.setHeaderName("X-XSRF-TOKEN")
                 csrf.csrfTokenRepository(tokenRepository)
                 csrf.csrfTokenRequestHandler(CsrfTokenRequestAttributeHandler())
-            }.addFilterAfter(object : OncePerRequestFilter() {
-                override fun doFilterInternal(request: jakarta.servlet.http.HttpServletRequest, response: jakarta.servlet.http.HttpServletResponse, chain: jakarta.servlet.FilterChain) {
-                    val deferred = request.getAttribute(CsrfToken::class.java.name) as? CsrfToken
-                    deferred?.token
-                    chain.doFilter(request, response)
-                }
-            }, CsrfFilter::class.java).logout {
+            }.addFilterAfter(
+                object : OncePerRequestFilter() {
+                    override fun doFilterInternal(
+                        request: jakarta.servlet.http.HttpServletRequest,
+                        response: jakarta.servlet.http.HttpServletResponse,
+                        chain: jakarta.servlet.FilterChain,
+                    ) {
+                        val deferred = request.getAttribute(CsrfToken::class.java.name) as? CsrfToken
+                        deferred?.token
+                        chain.doFilter(request, response)
+                    }
+                },
+                CsrfFilter::class.java,
+            ).logout {
                 it
                     .logoutUrl("/api/v1/logout")
                     .invalidateHttpSession(true)
