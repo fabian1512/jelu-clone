@@ -74,11 +74,12 @@ const store = createStore<State>({
           commit('login', true)
           commit('user', user)
           dispatch('getServerSettings')
-          if (state.route != null) {
+        if (state.route != null) {
             await router.push(state.route)
-          }
-          else {
-          }
+        }
+        else {
+            await router.push({ name: 'my-books' })
+        }
         } catch (error) {
           commit('login', false)
           throw error
