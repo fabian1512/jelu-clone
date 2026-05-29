@@ -74,7 +74,7 @@ class GoodreadsMetadataProvider(
             val request =
                 restClient
                     .get()
-                    .uri(url)
+                    .uri(java.net.URI.create(url))
                     .header("User-Agent", userAgent)
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .header("Accept-Language", "en-US,en;q=0.9")
