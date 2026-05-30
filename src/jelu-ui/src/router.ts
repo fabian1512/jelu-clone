@@ -26,8 +26,9 @@ const router = createRouter({
     routes: [
         {
             path: '/',
-            component: () => import(/* webpackChunkName: "recommend" */ './components/Misc/Welcome.vue'),
-            name: 'home'
+            component: () => import(/* webpackChunkName: "recommend" */ './components/Book/BookList.vue'),
+            name: 'home',
+            beforeEnter: [isLogged],
         },
         {
             path: '/books/:bookId/reviews',
@@ -49,9 +50,7 @@ const router = createRouter({
         },
         {
             path: '/books',
-            component: () => import(/* webpackChunkName: "recommend" */ './components/Book/BookList.vue'),
-            name: 'my-books',
-            beforeEnter: [isLogged],
+            redirect: '/',
         },
         {
             path: '/login',
@@ -66,8 +65,14 @@ const router = createRouter({
         },
         {
             path: '/to-read',
-            component: () => import(/* webpackChunkName: "recommend" */ './components/Misc/ToReadList.vue'),
+            component: () => import(/* webpackChunkName: "recommend" */ './components/Misc/Welcome.vue'),
             name: 'to-read',
+            beforeEnter: [isLogged],
+        },
+        {
+            path: '/reading-list',
+            component: () => import(/* webpackChunkName: "recommend" */ './components/Misc/ToReadList.vue'),
+            name: 'reading-list',
             beforeEnter: [isLogged],
         },
         {

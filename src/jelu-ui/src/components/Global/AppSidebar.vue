@@ -31,8 +31,9 @@ function toggleShelvesModal() {
 }
 
 const mainLinks = computed(() => [
-  { to: '/books', icon: 'mdi mdi-bookshelf', label: t('nav.my_books') },
-  { to: '/to-read', icon: 'mdi mdi-book-open-page-variant', label: t('nav.to_read') },
+  { to: '/', icon: 'mdi mdi-bookshelf', label: t('nav.my_books') },
+  { to: '/to-read', icon: 'mdi mdi-home', label: t('nav.dashboard') },
+  { to: '/reading-list', icon: 'mdi mdi-book-open-page-variant', label: t('nav.to_read') },
   { to: '/random', icon: 'mdi mdi-shuffle', label: t('nav.random') },
   { to: '/history', icon: 'mdi mdi-history', label: t('nav.history') },
   { to: '/reviews', icon: 'mdi mdi-star', label: t('nav.activity') },

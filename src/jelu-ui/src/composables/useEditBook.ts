@@ -90,7 +90,7 @@ export function useEditBook(
     promise?.then(res => {
       ObjectUtils.toast(oruga, "success", t('labels.book_was_deleted'), 4000);
       emit('close', 'cancel')
-      router.push('/books')
+      router.push('/')
     })
       .catch(err => {
         ObjectUtils.toast(oruga, "danger", t('labels.error_deleting', {msg : err.message}), 4000);

@@ -207,7 +207,7 @@ const importBook = async () => {
       progress.value = false
       ObjectUtils.toast(oruga, "success", t('labels.book_title_saved', {title : res.book.title}), 4000)
       clearForm();
-      await router.push({name: 'my-books'})
+      await router.push({name: 'home'})
     } catch (error: any) {
       progress.value = false
       ObjectUtils.toast(oruga, "danger", t('labels.error_message', {msg : error.message}), 4000)
