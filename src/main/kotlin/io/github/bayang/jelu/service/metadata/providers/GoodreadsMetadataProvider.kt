@@ -9,6 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.Resource
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.parser.Parser
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import java.time.Instant
@@ -614,16 +615,16 @@ class GoodreadsMetadataProvider(
             val root = objectMapper.readTree(json)
 
             // Title
-            root.get("name")?.asText()?.let { dto.title = it }
+            root.get("name")?.asText()?.let { dto.title = Parser.unescapeEntities(it, false) }
 
             // Authors
             val authorNode = root.get("author")
             if (authorNode != null) {
                 val authorList =
                     if (authorNode.isArray) {
-                        authorNode.mapNotNull { it.get("name")?.asText() }
+                        authorNode.mapNotNull { it.get("name")?.asText()?.let { name -> Parser.unescapeEntities(name, false) } }
                     } else {
-                        listOfNotNull(authorNode.get("name")?.asText())
+                        listOfNotNull(authorNode.get("name")?.asText()?.let { name -> Parser.unescapeEntities(name, false) })
                     }
                 dto.authors = authorList.toMutableSet()
             }
@@ -652,9 +653,9 @@ class GoodreadsMetadataProvider(
             val genreNode = root.get("genre")
             if (genreNode != null) {
                 if (genreNode.isArray) {
-                    genreNode.forEach { genre -> genre.asText()?.let { dto.tags.add(it) } }
+                    genreNode.forEach { genre -> genre.asText()?.let { dto.tags.add(Parser.unescapeEntities(it, false)) } }
                 } else {
-                    genreNode.asText()?.let { dto.tags.add(it) }
+                    genreNode.asText()?.let { dto.tags.add(Parser.unescapeEntities(it, false)) }
                 }
             }
 
