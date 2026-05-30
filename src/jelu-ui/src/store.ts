@@ -78,7 +78,7 @@ const store = createStore<State>({
             await router.push(state.route)
         }
         else {
-            await router.push({ name: 'my-books' })
+            await router.push({ name: 'home' })
         }
         } catch (error) {
           commit('login', false)

@@ -72,7 +72,7 @@ const logout = () => {
                 </router-link>
               </li>
               <li v-if="isLogged">
-                <router-link class="capitalize" to="/books">
+                <router-link class="capitalize" to="/">
                   {{ t('nav.my_books') }}
                 </router-link>
               </li>

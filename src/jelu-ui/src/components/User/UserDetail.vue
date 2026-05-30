@@ -128,7 +128,7 @@ const { typographyClasses } = useTypography()
 
       class="link text-3xl py-4"
       :class="typographyClasses"
-      :to="{ name: 'my-books', query: { userId: route.params.userId } }"
+      :to="{ name: 'home', query: { userId: route.params.userId } }"
     >
       {{ t('labels.books_from_name', { name: user.login }) }}
     </router-link>
