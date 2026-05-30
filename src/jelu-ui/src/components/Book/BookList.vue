@@ -96,7 +96,7 @@ watch([page, eventTypes, toRead, owned, borrowed, sortQuery], (newVal, oldVal) =
   if (newVal !== oldVal) {
     throttledGetBooks()
   }
-})
+}, { immediate: true })
 
 const message = computed(() => {
   if (userId.value != null) {
@@ -194,7 +194,6 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  getBooks()
 });
 
 function modalClosed() {
