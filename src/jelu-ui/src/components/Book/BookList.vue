@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import useBulkEdition from '../../composables/bulkEdition';
 import usePagination from '../../composables/pagination';
 import useSort from "../../composables/sort";
+import { onBusEvent, BOOK_SAVED } from "../../composables/eventBus";
 import { UserBook } from "../../model/Book";
 import { ReadingEventType } from "../../model/ReadingEvent";
 import { userService } from "../../services/userService";
@@ -187,12 +188,18 @@ const throttledGetBooks = useThrottleFn(() => {
   getBooks()
 }, 100, false)
 
+let unsubscribeBookSaved: (() => void) | null = null
+
 onUnmounted(() => {
   booksAbortController?.abort()
+  unsubscribeBookSaved?.()
 })
 
 onMounted(() => {
   getBooks()
+  unsubscribeBookSaved = onBusEvent(BOOK_SAVED, () => {
+    throttledGetBooks()
+  })
 });
 
 function modalClosed() {
