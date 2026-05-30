@@ -11,7 +11,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
-import java.net.URLEncoder
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -74,7 +73,7 @@ class GoodreadsMetadataProvider(
             val request =
                 restClient
                     .get()
-                    .uri(java.net.URI.create(url))
+                    .uri(url)
                     .header("User-Agent", userAgent)
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .header("Accept-Language", "en-US,en;q=0.9")
@@ -127,7 +126,7 @@ class GoodreadsMetadataProvider(
         }
 
         return try {
-            val searchUrl = "$baseUrl/search/index.html?q=${URLEncoder.encode(query, "UTF-8")}"
+            val searchUrl = "$baseUrl/search/index.html?q=$query"
             val html = fetchHtml(searchUrl, cookie) ?: return emptyList()
             val searchDoc = Jsoup.parse(html)
 
