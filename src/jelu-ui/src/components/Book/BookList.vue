@@ -92,11 +92,9 @@ const getUsername = async () => {
 
 getUsername()
 
-watch([page, eventTypes, toRead, owned, borrowed, sortQuery], (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    throttledGetBooks()
-  }
-}, { immediate: true })
+watch([page, eventTypes, toRead, owned, borrowed, sortQuery], () => {
+  throttledGetBooks()
+})
 
 const message = computed(() => {
   if (userId.value != null) {
@@ -194,6 +192,7 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
+  getBooks()
 });
 
 function modalClosed() {
