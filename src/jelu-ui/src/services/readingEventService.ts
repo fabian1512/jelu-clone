@@ -120,7 +120,7 @@ class ReadingEventService {
             const resp = await this.client.put<ReadingEvent>(`/reading-events/${event.id}`, {
                 eventType: event.eventType,
                 startDate: event.startDate,
-                endDate: event.endDate,
+                eventDate: event.endDate,
                 text: event.text,
                 userBookId: event.userBook,
                 id: event.id,

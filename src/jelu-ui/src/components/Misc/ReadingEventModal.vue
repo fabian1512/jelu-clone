@@ -26,6 +26,7 @@ const currentEvent: Ref<ReadingEvent> = ref(props.readingEvent)
 const currentCreateEvent: Ref<CreateReadingEvent> = ref(props.readingEvent)
 
 watch(() => currentCreateEvent.value.eventType, (newValue, oldValue) => {
+  if (props.edit) return
   if (currentCreateEvent.value.eventType == ReadingEventType.CURRENTLY_READING) {
     currentCreateEvent.value.eventDate = undefined
     currentCreateEvent.value.startDate = new Date()
