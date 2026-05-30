@@ -194,6 +194,7 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
+  getBooks()
 });
 
 function modalClosed() {
