@@ -20,6 +20,7 @@ import { StringUtils } from "../utils/StringUtils";
 import { useImageUpload } from "./useImageUpload";
 import { Role } from "../model/Role";
 import { key } from '../store';
+import { emitBusEvent, BOOK_SAVED } from "./eventBus";
 
 export function useEditBook(
   props: { book: UserBook | Metadata | null },
@@ -232,6 +233,7 @@ export function useEditBook(
       .then(res => {
         progress.value = false
         ObjectUtils.toast(oruga, "success", t('labels.book_title_updated', { title : res.book.title}), 4000);
+        emitBusEvent(BOOK_SAVED)
         emit('close', 'save')
       })
       .catch(err => {
