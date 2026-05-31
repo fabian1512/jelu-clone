@@ -77,7 +77,7 @@ function openImportBookModal() {
           v-model="searchQuery"
           type="text"
           :placeholder="t('labels.search_query')"
-          class="input input-bordered join-item flex-1 min-w-0"
+          class="input input-bordered join-item flex-1 min-w-0 focus:outline-none"
           @keyup.enter="search"
         />
         <button class="btn btn-primary join-item w-11" @click="search">
