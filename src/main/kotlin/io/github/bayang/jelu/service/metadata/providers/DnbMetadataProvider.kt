@@ -170,6 +170,16 @@ class DnbMetadataProvider(
             val subtitle = cleanMarc21Text(getDatafieldSubfield(record, "245", "b"))
             dto.title = title
 
+            // Price from 020$c
+            val priceStr = getDatafieldSubfield(record, "020", "c")
+            if (!priceStr.isNullOrBlank()) {
+                val parsed = extractPrice(priceStr)
+                if (parsed != null) {
+                    dto.price = parsed.first
+                    dto.currency = parsed.second
+                }
+            }
+
             // Publisher
             dto.publisher = cleanMarc21Text(getDatafieldSubfield(record, "264", "b"))
 
@@ -345,6 +355,20 @@ class DnbMetadataProvider(
         // "2019" or "februar de 2025" or "[2024]"
         val match = Regex("\\d{4}").find(dateStr)
         return match?.value ?: dateStr.trim()
+    }
+
+    /**
+     * Parse MARC21 020$c price string like
+     * "Festeinband : circa EUR 25.00 (DE), circa EUR 25.70 (AT), circa CHF 33.63"
+     * Returns Pair(price, currency) for the first price found.
+     */
+    private fun extractPrice(priceStr: String): Pair<Double, String>? {
+        // Match: optional "circa", currency code (3 uppercase letters), amount
+        val match = Regex("(?:circa\\s+)?([A-Z]{3})\\s+([\\d.,]+)").find(priceStr) ?: return null
+        val currency = match.groupValues[1]
+        val amountStr = match.groupValues[2].replace(",", ".")
+        val amount = amountStr.toDoubleOrNull() ?: return null
+        return Pair(amount, currency)
     }
 
     private fun extractPageCount(pagesStr: String): Int? {

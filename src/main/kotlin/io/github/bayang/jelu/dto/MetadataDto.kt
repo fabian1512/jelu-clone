@@ -15,6 +15,8 @@ data class MetadataDto(
     var series: String? = null,
     var numberInSeries: Double? = null,
     var language: String? = null,
+    var price: Double? = null,
+    var currency: String? = null,
     var googleId: String? = null,
     var amazonId: String? = null,
     var goodreadsId: String? = null,

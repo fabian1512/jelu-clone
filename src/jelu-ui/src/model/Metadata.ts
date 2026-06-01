@@ -15,6 +15,8 @@ export interface Metadata {
     series?: string,
     numberInSeries?: number,
     language?: string,
+    price?: number,
+    currency?: string,
     googleId?: string,
     amazonId?: string,
     goodreadsId?: string,
