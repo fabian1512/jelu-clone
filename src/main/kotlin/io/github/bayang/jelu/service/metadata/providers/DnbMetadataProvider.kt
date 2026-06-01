@@ -207,11 +207,11 @@ class DnbMetadataProvider(
                 dto.language = mapLanguage(lang)
             }
 
-            // Keywords/tags (max 10, filter internal codes)
+            // Keywords/tags (max 5, filter internal codes)
             val keywords = getDatafieldSubfields(record, "653", "a")
             var tagCount = 0
             for (keyword in keywords) {
-                if (!keyword.startsWith("(") && tagCount < 10) {
+                if (!keyword.startsWith("(") && tagCount < 5) {
                     dto.tags.add(keyword)
                     tagCount++
                 }
@@ -227,18 +227,15 @@ class DnbMetadataProvider(
                 }
             }
 
-            // Description from 856 link (Inhaltstext)
+            // Description from 856 links (Inhaltstext)
             if (dto.summary.isNullOrBlank()) {
-                val descriptionUrl = findDescriptionUrl(record)
-                if (!descriptionUrl.isNullOrBlank()) {
-                    dto.summary = fetchDescription(descriptionUrl)
-                }
+                dto.summary = fetchDescription(record)
             }
 
-            // Cover image from DNB
+            // Cover image — prefer OpenLibrary (DNB covers often unavailable)
             val coverIsbn = dto.isbn13 ?: dto.isbn10
             if (!coverIsbn.isNullOrBlank()) {
-                dto.image = "$coverBaseUrl?isbn=$coverIsbn"
+                dto.image = "https://covers.openlibrary.org/b/isbn/$coverIsbn-L.jpg"
             }
 
             dto
@@ -371,21 +368,31 @@ class DnbMetadataProvider(
         }
     }
 
-    private fun findDescriptionUrl(record: Element): String? {
+    private fun findDescriptionUrls(record: Element): List<String> {
+        val urls = mutableListOf<String>()
         val datafields = record.getElementsByTagName("datafield")
         for (i in 0 until datafields.length) {
             val df = datafields.item(i) as? Element ?: continue
             if (df.getAttribute("tag") == "856") {
                 val label = getSubfield(df, "3")
                 if (label == "Inhaltstext") {
-                    return getSubfield(df, "u")
+                    getSubfield(df, "u")?.let { urls.add(it) }
                 }
             }
+        }
+        return urls
+    }
+
+    private fun fetchDescription(record: Element): String? {
+        val urls = findDescriptionUrls(record)
+        for (url in urls) {
+            val text = fetchDescriptionFromUrl(url)
+            if (!text.isNullOrBlank()) return text
         }
         return null
     }
 
-    private fun fetchDescription(url: String): String? {
+    private fun fetchDescriptionFromUrl(url: String): String? {
         return try {
             val response =
                 restClient
