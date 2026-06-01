@@ -331,12 +331,10 @@ class DnbMetadataProvider(
     private fun cleanMarc21Text(text: String?): String? {
         if (text.isNullOrBlank()) return text
         // Strip C1 control characters (U+0080–U+009F) used as MARC21 field terminators
-        // and any other non-printable characters below U+00A0 (except regular space)
         val sb = StringBuilder(text.length)
         for (c in text) {
             val code = c.code
-            if (code >= 0x20 && code != 0x7F && code < 0xA0) {
-                // Skip C1 control characters (0x80-0x9F)
+            if (code in 0x80..0x9F) {
                 continue
             }
             sb.append(c)
