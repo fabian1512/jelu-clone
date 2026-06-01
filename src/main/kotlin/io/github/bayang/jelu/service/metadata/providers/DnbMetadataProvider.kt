@@ -153,7 +153,7 @@ class DnbMetadataProvider(
             }
 
             // Author — prefer pen name from 245$c over real name from 100$a
-            val titleStatement = getDatafieldSubfield(record, "245", "c")
+            val titleStatement = cleanMarc21Text(getDatafieldSubfield(record, "245", "c"))
             val authorFromTitle = extractAuthorFromTitleStatement(titleStatement)
             if (!authorFromTitle.isNullOrBlank()) {
                 dto.authors.add(authorFromTitle)
@@ -165,15 +165,15 @@ class DnbMetadataProvider(
             }
 
             // Title
-            val title = getDatafieldSubfield(record, "245", "a")
-            val subtitle = getDatafieldSubfield(record, "245", "b")
+            val title = cleanMarc21Text(getDatafieldSubfield(record, "245", "a"))
+            val subtitle = cleanMarc21Text(getDatafieldSubfield(record, "245", "b"))
             dto.title = title
             if (!subtitle.isNullOrBlank()) {
                 dto.summary = subtitle
             }
 
             // Publisher
-            dto.publisher = getDatafieldSubfield(record, "264", "b")
+            dto.publisher = cleanMarc21Text(getDatafieldSubfield(record, "264", "b"))
 
             // Publication date
             val dateStr = getDatafieldSubfield(record, "264", "c")
@@ -189,8 +189,8 @@ class DnbMetadataProvider(
 
             // Series
             val seriesName =
-                getDatafieldSubfield(record, "490", "a")
-                    ?: getDatafieldSubfield(record, "830", "a")
+                cleanMarc21Text(getDatafieldSubfield(record, "490", "a"))
+                    ?: cleanMarc21Text(getDatafieldSubfield(record, "830", "a"))
             if (!seriesName.isNullOrBlank()) {
                 dto.series = seriesName
             }
@@ -211,8 +211,9 @@ class DnbMetadataProvider(
             val keywords = getDatafieldSubfields(record, "653", "a")
             var tagCount = 0
             for (keyword in keywords) {
-                if (!keyword.startsWith("(") && tagCount < 5) {
-                    dto.tags.add(keyword)
+                val cleaned = cleanMarc21Text(keyword)
+                if (!cleaned.isNullOrBlank() && !cleaned.startsWith("(") && tagCount < 5) {
+                    dto.tags.add(cleaned)
                     tagCount++
                 }
             }
@@ -221,7 +222,7 @@ class DnbMetadataProvider(
             val contributors = getDatafieldsByTag(record, "700")
             for (contributor in contributors) {
                 val roleCode = getSubfield(contributor, "4")
-                val contributorName = getSubfield(contributor, "a")
+                val contributorName = cleanMarc21Text(getSubfield(contributor, "a"))
                 if (!contributorName.isNullOrBlank() && roleCode == "trl") {
                     dto.translators.add(reorderName(contributorName))
                 }
@@ -232,10 +233,10 @@ class DnbMetadataProvider(
                 dto.summary = fetchDescription(record)
             }
 
-            // Cover image — prefer OpenLibrary (DNB covers often unavailable)
+            // Cover image from DNB
             val coverIsbn = dto.isbn13 ?: dto.isbn10
             if (!coverIsbn.isNullOrBlank()) {
-                dto.image = "https://covers.openlibrary.org/b/isbn/$coverIsbn-L.jpg"
+                dto.image = "$coverBaseUrl?isbn=$coverIsbn"
             }
 
             dto
@@ -318,12 +319,19 @@ class DnbMetadataProvider(
 
     private fun reorderName(name: String): String {
         // "Lamballe, Marie" → "Marie Lamballe"
-        val parts = name.split(",", limit = 2)
+        val cleaned = cleanMarc21Text(name) ?: name
+        val parts = cleaned.split(",", limit = 2)
         return if (parts.size == 2) {
             "${parts[1].trim()} ${parts[0].trim()}"
         } else {
-            name.trim()
+            cleaned.trim()
         }
+    }
+
+    private fun cleanMarc21Text(text: String?): String? {
+        if (text.isNullOrBlank()) return text
+        // Strip C1 control characters (U+0080–U+009F) used as MARC21 field terminators
+        return text.replace(Regex("[\\x80-\\x9F]"), "").trim()
     }
 
     private fun extractYear(dateStr: String): String {
