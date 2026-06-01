@@ -169,9 +169,6 @@ class DnbMetadataProvider(
             val title = cleanMarc21Text(getDatafieldSubfield(record, "245", "a"))
             val subtitle = cleanMarc21Text(getDatafieldSubfield(record, "245", "b"))
             dto.title = title
-            if (!subtitle.isNullOrBlank()) {
-                dto.summary = subtitle
-            }
 
             // Publisher
             dto.publisher = cleanMarc21Text(getDatafieldSubfield(record, "264", "b"))
@@ -229,9 +226,10 @@ class DnbMetadataProvider(
                 }
             }
 
-            // Description from 856 links (Inhaltstext)
-            if (dto.summary.isNullOrBlank()) {
-                dto.summary = fetchDescription(record)
+            // Description from 856 links (Inhaltstext), fallback to subtitle
+            dto.summary = fetchDescription(record)
+            if (dto.summary.isNullOrBlank() && !subtitle.isNullOrBlank()) {
+                dto.summary = subtitle
             }
 
             // Cover image from DNB
