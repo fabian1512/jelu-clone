@@ -420,7 +420,7 @@ class DnbMetadataProvider(
                     .body(String::class.java)
             if (response.isNullOrBlank()) return null
             // Extract text from HTML — look for common description patterns
-            val doc = org.jsoup.Jsoup.parse(response)
+            val doc = Jsoup.parse(response)
             // Try meta description first
             val metaDesc = doc.selectFirst("meta[name=description]")?.attr("content")
             if (!metaDesc.isNullOrBlank()) return metaDesc.trim()
@@ -432,6 +432,12 @@ class DnbMetadataProvider(
             for (p in paragraphs) {
                 val text = p.text().trim()
                 if (text.length > 50) return text
+            }
+            // Try div with substantial text (DNB deposit pages use inline-styled divs)
+            val divs = doc.select("div, body")
+            for (div in divs) {
+                val text = div.text().trim()
+                if (text.length > 100 && text.length < 5000) return text
             }
             null
         } catch (e: Exception) {
