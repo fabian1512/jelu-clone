@@ -4,6 +4,7 @@ import io.github.bayang.jelu.dto.MetadataDto
 import io.github.bayang.jelu.dto.MetadataRequestDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.Resource
+import org.jsoup.Jsoup
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.w3c.dom.Element
@@ -151,10 +152,16 @@ class DnbMetadataProvider(
                 }
             }
 
-            // Author (main entry - personal name)
-            val authorRaw = getDatafieldSubfield(record, "100", "a")
-            if (!authorRaw.isNullOrBlank()) {
-                dto.authors.add(reorderName(authorRaw))
+            // Author — prefer pen name from 245$c over real name from 100$a
+            val titleStatement = getDatafieldSubfield(record, "245", "c")
+            val authorFromTitle = extractAuthorFromTitleStatement(titleStatement)
+            if (!authorFromTitle.isNullOrBlank()) {
+                dto.authors.add(authorFromTitle)
+            } else {
+                val authorRaw = getDatafieldSubfield(record, "100", "a")
+                if (!authorRaw.isNullOrBlank()) {
+                    dto.authors.add(reorderName(authorRaw))
+                }
             }
 
             // Title
@@ -200,12 +207,13 @@ class DnbMetadataProvider(
                 dto.language = mapLanguage(lang)
             }
 
-            // Keywords/tags
+            // Keywords/tags (max 10, filter internal codes)
             val keywords = getDatafieldSubfields(record, "653", "a")
+            var tagCount = 0
             for (keyword in keywords) {
-                // Filter out internal codes like "(Produktform)...", "(Lesealter)..."
-                if (!keyword.startsWith("(")) {
+                if (!keyword.startsWith("(") && tagCount < 10) {
                     dto.tags.add(keyword)
+                    tagCount++
                 }
             }
 
@@ -216,6 +224,14 @@ class DnbMetadataProvider(
                 val contributorName = getSubfield(contributor, "a")
                 if (!contributorName.isNullOrBlank() && roleCode == "trl") {
                     dto.translators.add(reorderName(contributorName))
+                }
+            }
+
+            // Description from 856 link (Inhaltstext)
+            if (dto.summary.isNullOrBlank()) {
+                val descriptionUrl = findDescriptionUrl(record)
+                if (!descriptionUrl.isNullOrBlank()) {
+                    dto.summary = fetchDescription(descriptionUrl)
                 }
             }
 
@@ -341,4 +357,62 @@ class DnbMetadataProvider(
             "ara" -> "ar"
             else -> lang.take(2).lowercase()
         }
+
+    private fun extractAuthorFromTitleStatement(titleStatement: String?): String? {
+        if (titleStatement.isNullOrBlank()) return null
+        // "Lucinda Riley als Lucinda Edmonds ; aus dem Englischen von ..."
+        // → extract "Lucinda Riley" (before " als " or " ; ")
+        val beforeSemicolon = titleStatement.split(" ; ").first().trim()
+        val parts = beforeSemicolon.split(" als ", ignoreCase = true)
+        return if (parts.size >= 2) {
+            parts[0].trim()
+        } else {
+            null
+        }
+    }
+
+    private fun findDescriptionUrl(record: Element): String? {
+        val datafields = record.getElementsByTagName("datafield")
+        for (i in 0 until datafields.length) {
+            val df = datafields.item(i) as? Element ?: continue
+            if (df.getAttribute("tag") == "856") {
+                val label = getSubfield(df, "3")
+                if (label == "Inhaltstext") {
+                    return getSubfield(df, "u")
+                }
+            }
+        }
+        return null
+    }
+
+    private fun fetchDescription(url: String): String? {
+        return try {
+            val response =
+                restClient
+                    .get()
+                    .uri(url)
+                    .header("User-Agent", "Mozilla/5.0 (compatible; JeluBot/1.0)")
+                    .retrieve()
+                    .body(String::class.java)
+            if (response.isNullOrBlank()) return null
+            // Extract text from HTML — look for common description patterns
+            val doc = org.jsoup.Jsoup.parse(response)
+            // Try meta description first
+            val metaDesc = doc.selectFirst("meta[name=description]")?.attr("content")
+            if (!metaDesc.isNullOrBlank()) return metaDesc.trim()
+            // Try og:description
+            val ogDesc = doc.selectFirst("meta[property=og:description]")?.attr("content")
+            if (!ogDesc.isNullOrBlank()) return ogDesc.trim()
+            // Try paragraph text in main content areas
+            val paragraphs = doc.select("p, .description, .klappentext, .inhalt")
+            for (p in paragraphs) {
+                val text = p.text().trim()
+                if (text.length > 50) return text
+            }
+            null
+        } catch (e: Exception) {
+            logger.debug { "DNB description fetch failed for $url: ${e.message}" }
+            null
+        }
+    }
 }
