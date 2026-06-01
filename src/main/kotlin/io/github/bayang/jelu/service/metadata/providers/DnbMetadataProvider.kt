@@ -74,13 +74,14 @@ class DnbMetadataProvider(
         title: String?,
         authors: String?,
     ): List<MetadataDto> {
-        if (title.isNullOrBlank()) return emptyList()
-
         val queryParts = mutableListOf<String>()
-        queryParts.add("tit=$title")
+        if (!title.isNullOrBlank()) {
+            queryParts.add("tit=$title")
+        }
         if (!authors.isNullOrBlank()) {
             queryParts.add("per=$authors")
         }
+        if (queryParts.isEmpty()) return emptyList()
         val query = queryParts.joinToString(" AND ")
 
         val records = fetchSruRecords(query, 20)
@@ -91,7 +92,7 @@ class DnbMetadataProvider(
                 results.add(dto)
             }
         }
-        logger.debug { "DNB title search for '$query': ${results.size} results" }
+        logger.debug { "DNB search for '$query': ${results.size} results" }
         return results
     }
 
