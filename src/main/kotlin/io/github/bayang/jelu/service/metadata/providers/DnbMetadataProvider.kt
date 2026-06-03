@@ -89,6 +89,7 @@ class DnbMetadataProvider(
         for (record in records) {
             val dto = parseRecord(record)
             if (dto != null && !dto.title.isNullOrBlank()) {
+                logger.debug { "DNB search result: title='${dto.title}', image='${dto.image}', isbn13='${dto.isbn13}'" }
                 results.add(dto)
             }
         }
@@ -246,6 +247,9 @@ class DnbMetadataProvider(
             val coverIsbn = dto.isbn13 ?: dto.isbn10
             if (!coverIsbn.isNullOrBlank()) {
                 dto.image = "$coverBaseUrl?isbn=$coverIsbn"
+                logger.debug { "DNB cover URL: ${dto.image}" }
+            } else {
+                logger.debug { "DNB cover: no ISBN found (isbn13=${dto.isbn13}, isbn10=${dto.isbn10})" }
             }
 
             dto
