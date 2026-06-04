@@ -33,6 +33,7 @@ export class StringUtils {
     public static resolveImageUrl(image: string | null | undefined): string | null {
         if (!image) return null
         if (image.startsWith('http')) return image
+        if (image.startsWith('/')) return image
         return '/files/' + image
     }
 }
