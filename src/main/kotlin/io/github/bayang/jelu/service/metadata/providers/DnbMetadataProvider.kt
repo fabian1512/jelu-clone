@@ -243,10 +243,10 @@ class DnbMetadataProvider(
                 dto.summary = subtitle
             }
 
-            // Cover image from DNB
+            // Cover image proxied through backend (DNB has Anubis anti-bot)
             val coverIsbn = dto.isbn13 ?: dto.isbn10
             if (!coverIsbn.isNullOrBlank()) {
-                dto.image = "$coverBaseUrl?isbn=$coverIsbn"
+                dto.image = "/api/v1/dnb-cover/$coverIsbn"
                 logger.debug { "DNB cover URL: ${dto.image}" }
             } else {
                 logger.debug { "DNB cover: no ISBN found (isbn13=${dto.isbn13}, isbn10=${dto.isbn10})" }
