@@ -89,6 +89,7 @@ class SecurityConfig(
                         "/api/v1/oauth2/providers",
                         "/api/v1/username/**",
                         "/api/v1/api-tokens/scopes",
+                        "/api/v1/dnb-cover/**",
                     ).permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/v1/reviews").permitAll()

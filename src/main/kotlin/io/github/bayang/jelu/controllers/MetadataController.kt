@@ -12,14 +12,20 @@ import io.github.bayang.jelu.service.metadata.PluginInfoHolder
 import io.github.bayang.jelu.service.metadata.WikipediaService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.Operation
+import jakarta.annotation.Resource
 import jakarta.validation.Valid
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.client.RestClient
 import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Mono
 
@@ -33,6 +39,7 @@ class MetadataController(
     private val wikipediaService: WikipediaService,
     private val pluginInfoHolder: PluginInfoHolder,
     private val fileMetadataService: FileMetadataService,
+    @Resource(name = "springRestClient") private val restClient: RestClient,
 ) {
     @Operation(description = "fetch metadata from the configured providers")
     @GetMapping(path = ["/metadata"])
@@ -102,4 +109,30 @@ class MetadataController(
         @RequestParam(name = "pageTitle", required = true) pageTitle: String,
         @RequestParam(name = "language", defaultValue = "en") language: String,
     ): Mono<WikipediaPageResult> = wikipediaService.fetchPage(pageTitle, language)
+
+    @Operation(description = "proxy DNB cover image (avoids Anubis anti-bot)")
+    @GetMapping(path = ["/dnb-cover/{isbn}"])
+    fun dnbCover(
+        @PathVariable("isbn") isbn: String,
+    ): ResponseEntity<ByteArray> =
+        try {
+            val imageBytes =
+                restClient
+                    .get()
+                    .uri("https://portal.dnb.de/opac/mvb/cover?isbn=$isbn")
+                    .retrieve()
+                    .body(ByteArray::class.java)
+            if (imageBytes != null && imageBytes.isNotEmpty()) {
+                ResponseEntity
+                    .ok()
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(imageBytes)
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: Exception) {
+            logger.debug { "DNB cover proxy failed for isbn=$isbn: ${e.message}" }
+            ResponseEntity.notFound().build()
+        }
 }
