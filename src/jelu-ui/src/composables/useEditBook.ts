@@ -181,7 +181,7 @@ export function useEditBook(
 
   const smallCoverUrl = computed(() => {
     if (!userbook.value?.book?.image) return null
-    if (userbook.value.book.image.startsWith('http')) {
+    if (userbook.value.book.image.startsWith('http') || userbook.value.book.image.startsWith('/api/')) {
       return userbook.value.book.image
     }
     return StringUtils.thumbnailUrl(userbook.value.book.image, "thumb") ?? "/files/" + userbook.value.book.image
