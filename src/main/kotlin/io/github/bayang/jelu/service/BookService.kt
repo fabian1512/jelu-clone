@@ -39,6 +39,7 @@ import io.github.bayang.jelu.utils.resizeImage
 import io.github.bayang.jelu.utils.slugify
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.io.FilenameUtils
+import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -63,6 +64,7 @@ class BookService(
     private val shelfService: ShelfService,
     private val searchIndexService: SearchIndexService,
     private val luceneHelper: LuceneHelper,
+    private val serverProperties: ServerProperties,
 ) {
     @Transactional
     fun findAll(
@@ -451,11 +453,19 @@ class BookService(
                     val succeeded = currentFile.renameTo(targetFile)
                     logger.debug { "renaming of metadata imported file $dtoImage was successful: $succeeded" }
                     savedImage = targetFilename
-                } else if (dtoImage.startsWith("http://", true) || dtoImage.startsWith("https://", true)) {
-                    // file is from the internet
+                } else if (dtoImage.startsWith("http://", true) || dtoImage.startsWith("https://", true) || dtoImage.startsWith("/api/")) {
+                    // file is from the internet or from internal API proxy
+                    val downloadUrl =
+                        if (dtoImage.startsWith("/api/")) {
+                            // Convert relative API path to absolute URL
+                            val port = serverProperties.port
+                            "http://localhost:$port$dtoImage"
+                        } else {
+                            dtoImage
+                        }
                     val destFileName: String =
                         downloadService.download(
-                            dtoImage,
+                            downloadUrl,
                             slugify(title),
                             id,
                             targetDir,

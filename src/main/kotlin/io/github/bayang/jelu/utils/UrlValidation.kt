@@ -28,7 +28,12 @@ fun validateDownloadUrl(urlString: String): URI {
         throw JeluException("Download URL must use http or https, got: $scheme")
     }
     val host = uri.host?.lowercase() ?: throw JeluException("Download URL must have a host")
-    if (host in BLOCKED_HOSTS) {
+    val path = uri.path ?: ""
+
+    // Allow localhost for internal API endpoints (e.g., /api/v1/dnb-cover/)
+    val isInternalApi = host in listOf("localhost", "127.0.0.1") && path.startsWith("/api/")
+
+    if (!isInternalApi && host in BLOCKED_HOSTS) {
         throw JeluException("Download to local/private host is not allowed: $host")
     }
     if (host.endsWith(".local") || host.endsWith(".internal")) {
@@ -40,7 +45,7 @@ fun validateDownloadUrl(urlString: String): URI {
         } catch (e: UnknownHostException) {
             throw JeluException("Download URL host cannot be resolved: $host")
         }
-    if (addr.isLoopbackAddress || addr.isLinkLocalAddress || addr.isSiteLocalAddress || addr.isMulticastAddress) {
+    if (!isInternalApi && (addr.isLoopbackAddress || addr.isLinkLocalAddress || addr.isSiteLocalAddress || addr.isMulticastAddress)) {
         throw JeluException("Download to private/reserved address is not allowed: ${addr.hostAddress}")
     }
     return uri
