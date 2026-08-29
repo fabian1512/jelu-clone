@@ -125,7 +125,7 @@ onUnmounted(() => {
   searchAbortController?.abort()
 })
 
-watch([page, sortQuery, libraryFilter, eventTypes, toRead, owned, borrowed], (newVal, oldVal) => {
+watch([searchQuery, page, sortQuery, libraryFilter, eventTypes, toRead, owned, borrowed], (newVal, oldVal) => {
   if (newVal !== oldVal) {
     search()
   }
