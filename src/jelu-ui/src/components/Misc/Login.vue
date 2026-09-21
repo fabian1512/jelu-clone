@@ -237,7 +237,7 @@ getOauthproviders()
           </button>
         </p>
         <p
-          v-if="errorMessage"
+          v-show="errorMessage"
           class="text-error"
         >
           {{ errorMessage }}
