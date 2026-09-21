@@ -195,7 +195,13 @@ class ReadingEventRepository {
             userBook.lastReadingEvent = createReadingEventDto.eventType
             userBook.lastReadingEventDate = createReadingEventDto.eventDate ?: instant
         }
-        if (alreadyReadingEvent != null) {
+        // Only update existing CURRENTLY_READING event for reading progress events (CURRENTLY_READING, FINISHED, DROPPED)
+        // Status events (MARKED_OWNED, MARKED_TO_READ, MARKED_BORROWED) should always create a new event
+        if (alreadyReadingEvent != null &&
+            createReadingEventDto.eventType != ReadingEventType.MARKED_OWNED &&
+            createReadingEventDto.eventType != ReadingEventType.MARKED_TO_READ &&
+            createReadingEventDto.eventType != ReadingEventType.MARKED_BORROWED
+        ) {
             if (createReadingEventDto.eventDate == null || createReadingEventDto.eventDate.isAfter(alreadyReadingEvent.startDate)) {
                 logger.debug {
                     "found ${userBook.readingEvents.count()} older events in CURRENTLY_READING state for book ${userBook.book.id}"
