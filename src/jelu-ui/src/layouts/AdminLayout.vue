@@ -67,8 +67,8 @@ const logout = () => {
             </label>
             <ul class="mt-3 p-2 shadow menu menu-sm dropdown-content z-50 bg-base-100 rounded-box w-52">
               <li v-if="isLogged">
-                <router-link class="capitalize" to="/profile">
-                  {{ t('nav.dashboard') }}
+                <router-link class="capitalize" to="/profile/me">
+                  {{ t('settings.profile') }}
                 </router-link>
               </li>
               <li v-if="isLogged">

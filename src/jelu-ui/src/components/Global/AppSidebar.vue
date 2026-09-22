@@ -4,31 +4,17 @@ import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import Avatar from 'vue-avatar-sdh'
 import { key } from '../../store'
-import { useOruga } from '@oruga-ui/oruga-next'
-import UserShelvesModal from '../User/UserShelvesModal.vue'
 
 const emit = defineEmits<{
   close: []
 }>()
 
 const store = useStore(key)
-const oruga = useOruga()
 const { t } = useI18n({ inheritLocale: true, useScope: 'global' })
 
 const username = computed(() => store.getters.getUsername)
 const isLogged = computed(() => store.getters.getLogged)
 const isAdmin = computed(() => store.getters.isAdmin)
-
-function toggleShelvesModal() {
-  oruga.modal.open({
-    component: UserShelvesModal,
-    trapFocus: true,
-    active: true,
-    cancelable: ['outside'],
-    scroll: 'keep',
-  })
-  emit('close')
-}
 
 const mainLinks = computed(() => [
   { to: '/', icon: 'mdi mdi-bookshelf', label: t('nav.my_books') },
@@ -43,28 +29,28 @@ const mainLinks = computed(() => [
 ])
 
 const adminLinks = computed(() => [
-  { to: '/profile/me', icon: 'mdi mdi-account-cog', label: t('settings.profile') },
-  { to: '/profile/messages', icon: 'mdi mdi-message-text', label: t('settings.messages') },
   { to: '/profile/admin/users', icon: 'mdi mdi-account-multiple', label: t('settings.users') },
   { to: '/profile/tags', icon: 'mdi mdi-tag', label: t('nav.tags-admin') },
   { to: '/profile/data', icon: 'mdi mdi-database', label: t('nav.data-admin') },
   { to: '/profile/metadata-providers', icon: 'mdi mdi-tune', label: t('settings.metadata_providers') },
-  { to: '/profile/api-tokens', icon: 'mdi mdi-key', label: t('settings.api_tokens') },
-  { to: '/profile/settings', icon: 'mdi mdi-cog', label: t('settings.title') },
 ])
 </script>
 
 <template>
   <aside class="bg-base-200 w-64 min-h-screen flex flex-col">
     <!-- User-Profil -->
-    <div v-if="isLogged" class="p-4 border-b border-base-300">
-      <div class="flex items-center gap-3">
-        <Avatar :size="40" :username="username" />
-        <div class="min-w-0">
-          <p class="font-bold truncate">{{ username }}</p>
-        </div>
+    <router-link
+      v-if="isLogged"
+      to="/profile/me"
+      class="p-4 border-b border-base-300 flex items-center gap-3 hover:bg-base-300"
+      @click="emit('close')"
+    >
+      <Avatar :size="40" :username="username" />
+      <div class="min-w-0 flex-1">
+        <p class="font-bold truncate">{{ username }}</p>
       </div>
-    </div>
+      <i class="mdi mdi-chevron-right text-xl opacity-60" />
+    </router-link>
 
     <!-- Hauptnavigation -->
     <nav class="flex-1 p-2 overflow-y-auto">
@@ -77,12 +63,6 @@ const adminLinks = computed(() => [
           >
             <i :class="item.icon" class="text-xl" />
             {{ item.label }}
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/profile/me?tab=SHELVES" class="flex items-center gap-3" @click="emit('close')">
-            <i class="mdi mdi-bookshelf text-xl" />
-            {{ t('settings.shelves') }}
           </router-link>
         </li>
       </ul>
