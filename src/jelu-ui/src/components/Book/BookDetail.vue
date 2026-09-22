@@ -530,13 +530,13 @@ getBook()
       <div
         class="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6"
       >
-      <div class="sm:justify-self-start flex justify-center">
-        <figure class="sm:justify-self-start relative">
+      <div class="sm:justify-self-start flex justify-center items-start">
+        <figure class="sm:justify-self-start relative self-start h-fit">
           <img
             v-if="book?.book?.image"
             :src="'/files/' + book.book.image + (book.book.modificationDate ? '?v=' + book.book.modificationDate : '')"
             alt="cover image"
-            class="max-h-64 sm:max-h-96 max-w-full"
+            class="block max-h-64 sm:max-h-96 max-w-full"
             fetchpriority="high"
             loading="eager"
             decoding="async"
@@ -545,6 +545,7 @@ getBook()
             v-else
             src="../../assets/placeholder_asset.jpg"
             alt="cover placeholder"
+            class="block max-w-full"
             fetchpriority="high"
             loading="eager"
             decoding="async"
