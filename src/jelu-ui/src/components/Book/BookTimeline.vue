@@ -38,12 +38,18 @@ interface TimelineEntry {
   originalEvent: ReadingEvent
 }
 
+const isStatusEvent = (type: ReadingEventType) => {
+  return type === ReadingEventType.MARKED_OWNED ||
+    type === ReadingEventType.MARKED_TO_READ ||
+    type === ReadingEventType.MARKED_BORROWED
+}
+
 const timelineEntries = computed((): TimelineEntry[] => {
   const entries: TimelineEntry[] = []
   sortedEvents.value.forEach(event => {
     const hasStart = event.startDate != null
     const hasEnd = event.endDate != null
-    if (hasStart && hasEnd) {
+    if (hasStart && hasEnd && !isStatusEvent(event.eventType)) {
       entries.push({
         event: { ...event, eventType: ReadingEventType.CURRENTLY_READING } as ReadingEvent,
         date: event.startDate as Date,
@@ -138,10 +144,7 @@ const eventLabel = (type: ReadingEventType) => {
 </script>
 
 <template>
-  <div
-    v-if="timelineEntries.length > 0"
-    class="mt-4"
-  >
+  <div class="mt-4">
     <p
       v-if="timelineEntries.length > 0"
       class="text-lg mt-6 mb-3 capitalize text-center"
@@ -168,7 +171,10 @@ const eventLabel = (type: ReadingEventType) => {
           </div>
         </div>
       </div>
-      <div class="absolute left-4 md:left-1/2 top-10 bottom-0 w-0.5 bg-base-300 -translate-x-1/2"></div>
+      <div
+        v-if="timelineEntries.length > 0"
+        class="absolute left-4 md:left-1/2 top-10 bottom-0 w-0.5 bg-base-300 -translate-x-1/2"
+      />
 
       <div
         v-for="(entry, index) in timelineEntries"

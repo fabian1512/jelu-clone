@@ -207,9 +207,9 @@
     },
     "reading_events": {
         "finished": "beendet",
-        "currently_reading": "Aktuell gelesen",
+        "currently_reading": "Am Lesen",
         "dropped": "Aufgegeben",
-        "last_event_type": "Letzter Ereignistyp",
+        "last_event_type": "Ereignis",
         "none": "keine",
         "reading_events": "Lese-Ereignisse",
         "now": "Jetzt",
